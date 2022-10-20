@@ -1,0 +1,33 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: manager-role
+rules:
+- apiGroups:
+  - swift.openstack.org
+  resources:
+  - swiftproxies
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - swift.openstack.org
+  resources:
+  - swiftproxies/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - swift.openstack.org
+  resources:
+  - swiftproxies/status
+  verbs:
+  - get
+  - patch
+  - update
