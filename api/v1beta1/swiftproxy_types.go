@@ -17,6 +17,7 @@ limitations under the License.
 package v1beta1
 
 import (
+	condition "github.com/openstack-k8s-operators/lib-common/modules/common/condition"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -28,14 +29,33 @@ type SwiftProxySpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of SwiftProxy. Edit swiftproxy_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default=1
+	// +kubebuilder:validation:Maximum=32
+	// +kubebuilder:validation:Minimum=0
+	// Replicas of Swift Proxy
+	Replicas int32 `json:"replicas"`
+
+	// +kubebuilder:validation:Required
+	// Name of ConfigMap containing Swift rings
+	SwiftRingConfigMap string `json:"swiftRingConfigMap,omitempty"`
+
+	// +kubebuilder:validation:Required
+	// Swift Proxy Container Image URL
+	ContainerImageProxy string `json:"containerImageProxy,omitempty"`
+
+	// +kubebuilder:validation:Required
+	// Image URL for Memcache servicd
+	ContainerImageMemcached string `json:"containerImageMemcached,omitempty"`
 }
 
 // SwiftProxyStatus defines the observed state of SwiftProxy
 type SwiftProxyStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+
+	// Conditions
+	Conditions condition.Conditions `json:"conditions,omitempty" optional:"true"`
 }
 
 //+kubebuilder:object:root=true

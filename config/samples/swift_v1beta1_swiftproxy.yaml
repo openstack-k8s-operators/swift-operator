@@ -3,4 +3,7 @@ kind: SwiftProxy
 metadata:
   name: swiftproxy-sample
 spec:
-  # TODO(user): Add fields here
+  swiftRingConfigMap: swiftring-sample-ring-data
+  containerImageProxy: quay.io/tripleowallabycentos9/openstack-swift-proxy-server:current-tripleo
+  containerImageMemcached: quay.io/tripleowallabycentos9/openstack-memcached:current-tripleo
+  replicas: 1
