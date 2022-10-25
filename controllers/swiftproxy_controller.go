@@ -31,8 +31,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 
+	"github.com/openstack-k8s-operators/lib-common/modules/common/configmap"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/deployment"
+	"github.com/openstack-k8s-operators/lib-common/modules/common/env"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/helper"
+	"github.com/openstack-k8s-operators/lib-common/modules/common/util"
 
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
 	swift "github.com/openstack-k8s-operators/swift-operator/pkg/swift"
@@ -84,6 +87,14 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 
 	labels := swift.GetLabelsProxy()
 
+	// Create a ConfigMap populated with content from templates/
+	envVars := make(map[string]env.Setter)
+	tpl := getProxyConfigMapTemplates(instance, labels)
+	err = configmap.EnsureConfigMaps(ctx, helper, instance, tpl, &envVars)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
 	// Create Deployment
 	depl := deployment.NewDeployment(getProxyDeployment(instance, labels), 5)
 	ctrlResult, err := depl.CreateOrPatch(ctx, helper)
@@ -104,6 +115,18 @@ func (r *SwiftProxyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&swiftv1beta1.SwiftProxy{}).
 		Owns(&appsv1.Deployment{}).
 		Complete(r)
+}
+
+func getProxyConfigMapTemplates(instance *swiftv1beta1.SwiftProxy, labels map[string]string) []util.Template {
+	return []util.Template{
+		{
+			Name:         fmt.Sprintf("%s-config-data", instance.Name),
+			Namespace:    instance.Namespace,
+			Type:         util.TemplateTypeConfig,
+			InstanceType: instance.Kind,
+			Labels:       labels,
+		},
+	}
 }
 
 func getProxyVolumes(instance *swiftv1beta1.SwiftProxy) []corev1.Volume {

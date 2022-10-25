@@ -23,6 +23,10 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o manager main.go
 FROM gcr.io/distroless/static:nonroot
 WORKDIR /
 COPY --from=builder /workspace/manager .
+
+ENV OPERATOR_TEMPLATES=/usr/share/swift-operator/templates/
+COPY templates ${OPERATOR_TEMPLATES}
+
 USER 65532:65532
 
 ENTRYPOINT ["/manager"]
