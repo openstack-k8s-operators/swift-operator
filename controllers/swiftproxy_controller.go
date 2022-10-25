@@ -85,6 +85,15 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return ctrl.Result{}, err
 	}
 
+	// Check if there is a ConfigMap for the Swift rings
+	_, ctrlResult, err := configmap.GetConfigMap(
+		ctx, helper, instance, instance.Spec.SwiftRingConfigMap, 5)
+	if err != nil {
+		return ctrlResult, err
+	} else if (ctrlResult != ctrl.Result{}) {
+		return ctrlResult, nil
+	}
+
 	labels := swift.GetLabelsProxy()
 
 	// Create a ConfigMap populated with content from templates/
@@ -97,7 +106,7 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 
 	// Create Deployment
 	depl := deployment.NewDeployment(getProxyDeployment(instance, labels), 5)
-	ctrlResult, err := depl.CreateOrPatch(ctx, helper)
+	ctrlResult, err = depl.CreateOrPatch(ctx, helper)
 	if err != nil {
 		return ctrlResult, err
 	} else if (ctrlResult != ctrl.Result{}) {
