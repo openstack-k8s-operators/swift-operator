@@ -1,0 +1,24 @@
+# permissions for end users to edit swiftstorages.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: swiftstorage-editor-role
+rules:
+- apiGroups:
+  - swift.openstack.org
+  resources:
+  - swiftstorages
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - swift.openstack.org
+  resources:
+  - swiftstorages/status
+  verbs:
+  - get
