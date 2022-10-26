@@ -43,3 +43,29 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+  - swift.openstack.org
+  resources:
+  - swiftstorages
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - swift.openstack.org
+  resources:
+  - swiftstorages/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - swift.openstack.org
+  resources:
+  - swiftstorages/status
+  verbs:
+  - get
+  - patch
+  - update
