@@ -27,6 +27,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	helper "github.com/openstack-k8s-operators/lib-common/modules/common/helper"
+	service "github.com/openstack-k8s-operators/lib-common/modules/common/service"
 	statefulset "github.com/openstack-k8s-operators/lib-common/modules/common/statefulset"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -51,6 +52,7 @@ type SwiftStorageReconciler struct {
 //+kubebuilder:rbac:groups=swift.openstack.org,resources=swiftstorages/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=swift.openstack.org,resources=swiftstorages/finalizers,verbs=update
 //+kubebuilder:rbac:groups=apps,resources=statefulsets,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=core,resources=services,verbs=get;list;watch;create;update;patch;delete
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -91,9 +93,18 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 
 	ls := swift.GetLabelsStorage()
 
+	// Headless Service
+	svc := service.NewService(getStorageService(instance), ls, 5)
+	ctrlResult, err := svc.CreateOrPatch(ctx, helper)
+	if err != nil {
+		return ctrlResult, err
+	} else if (ctrlResult != ctrl.Result{}) {
+		return ctrlResult, nil
+	}
+
 	// Statefulset with all backend containers
 	sset := statefulset.NewStatefulSet(getStorageStatefulSet(instance, ls), 5)
-	ctrlResult, err := sset.CreateOrPatch(ctx, helper)
+	ctrlResult, err = sset.CreateOrPatch(ctx, helper)
 	if err != nil {
 		return ctrlResult, err
 	} else if (ctrlResult != ctrl.Result{}) {
@@ -325,6 +336,46 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.Cont
 	}
 }
 
+func getStorageService(
+	swiftstorage *swiftv1beta1.SwiftStorage) *corev1.Service {
+
+	selector := swift.GetLabelsStorage()
+
+	return &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      swiftstorage.Name,
+			Namespace: swiftstorage.Namespace,
+			Labels:    selector,
+		},
+		Spec: corev1.ServiceSpec{
+			Selector: selector,
+			Ports: []corev1.ServicePort{
+				{
+					Name:     "account",
+					Port:     swift.AccountServerPort,
+					Protocol: corev1.ProtocolTCP,
+				},
+				{
+					Name:     "container",
+					Port:     swift.ContainerServerPort,
+					Protocol: corev1.ProtocolTCP,
+				},
+				{
+					Name:     "object",
+					Port:     swift.ObjectServerPort,
+					Protocol: corev1.ProtocolTCP,
+				},
+				{
+					Name:     "rsync",
+					Port:     swift.RsyncPort,
+					Protocol: corev1.ProtocolTCP,
+				},
+			},
+			ClusterIP: "None", // headless service
+		},
+	}
+}
+
 func getStorageStatefulSet(
 	swiftstorage *swiftv1beta1.SwiftStorage, labels map[string]string) *appsv1.StatefulSet {
 
@@ -391,5 +442,6 @@ func (r *SwiftStorageReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&swiftv1beta1.SwiftStorage{}).
 		Owns(&appsv1.StatefulSet{}).
+		Owns(&corev1.Service{}).
 		Complete(r)
 }
