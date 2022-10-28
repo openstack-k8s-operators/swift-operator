@@ -38,6 +38,8 @@ import (
 
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
 	swift "github.com/openstack-k8s-operators/swift-operator/pkg/swift"
+
+	"github.com/openstack-k8s-operators/lib-common/modules/common/condition"
 )
 
 // SwiftStorageReconciler reconciles a SwiftStorage object
@@ -80,6 +82,13 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		return ctrl.Result{}, err
 	}
 
+	if instance.Status.Conditions == nil {
+		instance.Status.Conditions.Init(nil)
+		if err := r.Status().Update(ctx, instance); err != nil {
+			return ctrl.Result{}, err
+		}
+	}
+
 	helper, err := helper.NewHelper(
 		instance,
 		r.Client,
@@ -111,8 +120,15 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		return ctrlResult, nil
 	}
 
-	r.Log.Info(fmt.Sprintf("Reconciled SwiftStorage '%s' successfully", instance.Name))
+	if sset.GetStatefulSet().Status.ReadyReplicas > 0 {
+		instance.Status.Conditions.MarkTrue(condition.ReadyCondition, condition.ReadyMessage)
 
+		if err := r.Status().Update(ctx, instance); err != nil {
+			return ctrl.Result{}, err
+		}
+	}
+
+	r.Log.Info(fmt.Sprintf("Reconciled SwiftStorage '%s' successfully", instance.Name))
 	return ctrl.Result{}, nil
 }
 
