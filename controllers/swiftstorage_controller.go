@@ -93,6 +93,10 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		}
 	}
 
+	if !instance.DeletionTimestamp.IsZero() {
+		return ctrl.Result{}, nil
+	}
+
 	helper, err := helper.NewHelper(
 		instance,
 		r.Client,
