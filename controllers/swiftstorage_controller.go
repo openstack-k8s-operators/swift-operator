@@ -40,6 +40,9 @@ import (
 	swift "github.com/openstack-k8s-operators/swift-operator/pkg/swift"
 
 	"github.com/openstack-k8s-operators/lib-common/modules/common/condition"
+	"github.com/openstack-k8s-operators/lib-common/modules/common/configmap"
+	"github.com/openstack-k8s-operators/lib-common/modules/common/env"
+	"github.com/openstack-k8s-operators/lib-common/modules/common/util"
 )
 
 // SwiftStorageReconciler reconciles a SwiftStorage object
@@ -55,6 +58,7 @@ type SwiftStorageReconciler struct {
 //+kubebuilder:rbac:groups=swift.openstack.org,resources=swiftstorages/finalizers,verbs=update
 //+kubebuilder:rbac:groups=apps,resources=statefulsets,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=core,resources=services,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=core,resources=configmaps,verbs=get;list;watch;create;update;patch;delete
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -102,6 +106,14 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 
 	ls := swift.GetLabelsStorage()
 
+	// Create a ConfigMap populated with content from templates/
+	envVars := make(map[string]env.Setter)
+	tpl := getStorageConfigMapTemplates(instance, ls)
+	err = configmap.EnsureConfigMaps(ctx, helper, instance, tpl, &envVars)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
 	// Headless Service
 	svc := service.NewService(getStorageService(instance), ls, 5)
 	ctrlResult, err := svc.CreateOrPatch(ctx, helper)
@@ -130,6 +142,18 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 
 	r.Log.Info(fmt.Sprintf("Reconciled SwiftStorage '%s' successfully", instance.Name))
 	return ctrl.Result{}, nil
+}
+
+func getStorageConfigMapTemplates(instance *swiftv1beta1.SwiftStorage, labels map[string]string) []util.Template {
+	return []util.Template{
+		{
+			Name:         fmt.Sprintf("%s-config-data", instance.Name),
+			Namespace:    instance.Namespace,
+			Type:         util.TemplateTypeConfig,
+			InstanceType: instance.Kind,
+			Labels:       labels,
+		},
+	}
 }
 
 func getStorageVolumes(instance *swiftv1beta1.SwiftStorage) []corev1.Volume {
@@ -457,6 +481,7 @@ func getStorageStatefulSet(
 func (r *SwiftStorageReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&swiftv1beta1.SwiftStorage{}).
+		Owns(&corev1.ConfigMap{}).
 		Owns(&appsv1.StatefulSet{}).
 		Owns(&corev1.Service{}).
 		Complete(r)
