@@ -24,6 +24,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/openstack-k8s-operators/lib-common/modules/common/condition"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/configmap"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/env"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/helper"
@@ -79,6 +80,13 @@ func (r *SwiftRingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, err
 	}
 
+	if instance.Status.Conditions == nil {
+		instance.Status.Conditions.Init(nil)
+		if err := r.Status().Update(ctx, instance); err != nil {
+			return ctrl.Result{}, err
+		}
+	}
+
 	helper, err := helper.NewHelper(
 		instance,
 		r.Client,
@@ -109,9 +117,25 @@ func (r *SwiftRingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	ringCreateJob := job.NewJob(getRingJob(instance, ls), swiftv1beta1.RingCreateHash, false, 5, ringCreateHash)
 	ctrlResult, err := ringCreateJob.DoJob(ctx, helper)
 	if (ctrlResult != ctrl.Result{}) {
+		instance.Status.Conditions.Set(condition.FalseCondition(
+			condition.ReadyCondition,
+			condition.RequestedReason,
+			condition.SeverityInfo,
+			"Ring init job still running"))
+		if err := r.Status().Update(ctx, instance); err != nil {
+			return ctrl.Result{}, err
+		}
 		return ctrlResult, nil
 	}
 	if err != nil {
+		instance.Status.Conditions.Set(condition.FalseCondition(
+			condition.ReadyCondition,
+			condition.ErrorReason,
+			condition.SeverityWarning,
+			err.Error()))
+		if err := r.Status().Update(ctx, instance); err != nil {
+			return ctrl.Result{}, err
+		}
 		return ctrl.Result{}, err
 	}
 
@@ -121,6 +145,11 @@ func (r *SwiftRingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			return ctrl.Result{}, err
 		}
 		r.Log.V(1).Info(fmt.Sprintf("Job %s hash added - %s", instance.Name, instance.Status.Hash[swiftv1beta1.RingCreateHash]))
+	}
+
+	instance.Status.Conditions.MarkTrue(condition.ReadyCondition, condition.ReadyMessage)
+	if err := r.Status().Update(ctx, instance); err != nil {
+		return ctrl.Result{}, err
 	}
 	// Swift ring init job - end
 
