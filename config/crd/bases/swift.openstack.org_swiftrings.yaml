@@ -35,13 +35,78 @@ spec:
           spec:
             description: SwiftRingSpec defines the desired state of SwiftRing
             properties:
-              foo:
-                description: Foo is an example field of SwiftRing. Edit swiftring_types.go
-                  to remove/update
+              containerImage:
+                description: Image URL for Swift proxy service
+                type: string
+              devices:
+                default: 1
+                description: Number of devices/pods/nodes. Must be same or larger
+                  than replicas
+                format: int64
+                type: integer
+              replicas:
+                default: 1
+                description: Number of Swift object replicas (=copies)
+                format: int64
+                type: integer
+              storagePodPrefix:
+                description: Storage Pod prefix
+                type: string
+              storageServiceName:
+                description: Storage Service name
                 type: string
             type: object
           status:
             description: SwiftRingStatus defines the observed state of SwiftRing
+            properties:
+              conditions:
+                description: Conditions
+                items:
+                  description: Condition defines an observation of a API resource
+                    operational state.
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another. This should be when the underlying condition changed.
+                        If that is not known, then using the time when the API field
+                        changed is acceptable.
+                      format: date-time
+                      type: string
+                    message:
+                      description: A human readable message indicating details about
+                        the transition.
+                      type: string
+                    reason:
+                      description: The reason for the condition's last transition
+                        in CamelCase.
+                      type: string
+                    severity:
+                      description: Severity provides a classification of Reason code,
+                        so the current situation is immediately understandable and
+                        could act accordingly. It is meant for situations where Status=False
+                        and it should be indicated if it is just informational, warning
+                        (next reconciliation might fix it) or an error (e.g. DB create
+                        issue and no actions to automatically resolve the issue can/should
+                        be done). For conditions where Status=Unknown or Status=True
+                        the Severity should be SeverityNone.
+                      type: string
+                    status:
+                      description: Status of the condition, one of True, False, Unknown.
+                      type: string
+                    type:
+                      description: Type of condition in CamelCase.
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - status
+                  - type
+                  type: object
+                type: array
+              hash:
+                additionalProperties:
+                  type: string
+                description: Map of hashes to track e.g. job status
+                type: object
             type: object
         type: object
     served: true

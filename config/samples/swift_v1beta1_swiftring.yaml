@@ -3,4 +3,8 @@ kind: SwiftRing
 metadata:
   name: swiftring-sample
 spec:
-  # TODO(user): Add fields here
+  replicas: 1
+  devices: 1
+  containerImage: quay.io/tripleowallabycentos9/openstack-swift-proxy-server:current-tripleo
+  storagePodPrefix: swiftstorage-sample
+  storageServiceName: swiftstorage-sample

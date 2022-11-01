@@ -43,3 +43,7 @@ func GetLabelsProxy() map[string]string {
 func GetLabelsStorage() map[string]string {
 	return map[string]string{"app.kubernetes.io/name": "SwiftStorage"}
 }
+
+func GetLabelsRing() map[string]string {
+	return map[string]string{"app.kubernetes.io/name": "SwiftRing"}
+}

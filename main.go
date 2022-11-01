@@ -121,8 +121,10 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&controllers.SwiftRingReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+		Client:  mgr.GetClient(),
+		Scheme:  mgr.GetScheme(),
+		Log:     mgr.GetLogger(),
+		Kclient: kclient,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "SwiftRing")
 		os.Exit(1)

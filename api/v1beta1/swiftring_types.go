@@ -17,7 +17,12 @@ limitations under the License.
 package v1beta1
 
 import (
+	condition "github.com/openstack-k8s-operators/lib-common/modules/common/condition"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
+const (
+	RingCreateHash = "ringcreate"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -28,14 +33,36 @@ type SwiftRingSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of SwiftRing. Edit swiftring_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default=1
+	// Number of Swift object replicas (=copies)
+	Replicas int64 `json:"replicas"`
+
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default=1
+	// Number of devices/pods/nodes. Must be same or larger than replicas
+	Devices int64 `json:"devices"`
+
+	// +kubebuilder:validation:Required
+	// Image URL for Swift proxy service
+	ContainerImage string `json:"containerImage,omitempty"`
+
+	// +kubebuilder:validation:Required
+	// Storage Pod prefix
+	StoragePodPrefix string `json:"storagePodPrefix,omitempty"`
+
+	// +kubebuilder:validation:Required
+	// Storage Service name
+	StorageServiceName string `json:"storageServiceName,omitempty"`
 }
 
 // SwiftRingStatus defines the observed state of SwiftRing
 type SwiftRingStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// Conditions
+	Conditions condition.Conditions `json:"conditions,omitempty" optional:"true"`
+
+	// Map of hashes to track e.g. job status
+	Hash map[string]string `json:"hash,omitempty"`
 }
 
 //+kubebuilder:object:root=true
