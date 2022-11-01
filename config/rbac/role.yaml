@@ -82,6 +82,32 @@ rules:
 - apiGroups:
   - swift.openstack.org
   resources:
+  - swiftrings
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - swift.openstack.org
+  resources:
+  - swiftrings/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - swift.openstack.org
+  resources:
+  - swiftrings/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - swift.openstack.org
+  resources:
   - swiftstorages
   verbs:
   - create
