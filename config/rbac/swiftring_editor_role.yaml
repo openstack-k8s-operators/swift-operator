@@ -1,0 +1,24 @@
+# permissions for end users to edit swiftrings.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: swiftring-editor-role
+rules:
+- apiGroups:
+  - swift.openstack.org
+  resources:
+  - swiftrings
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - swift.openstack.org
+  resources:
+  - swiftrings/status
+  verbs:
+  - get
