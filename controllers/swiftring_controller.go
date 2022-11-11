@@ -23,6 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	"github.com/openstack-k8s-operators/lib-common/modules/common/condition"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/configmap"
@@ -35,6 +36,7 @@ import (
 	swift "github.com/openstack-k8s-operators/swift-operator/pkg/swift"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -94,6 +96,32 @@ func (r *SwiftRingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		r.Scheme,
 		r.Log,
 	)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	if !instance.DeletionTimestamp.IsZero() {
+		err = r.deleteRolesAndBindings(ctx, instance)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+		removedFinalizer := controllerutil.RemoveFinalizer(instance, helper.GetFinalizer())
+		if removedFinalizer {
+			if err := r.Update(ctx, instance); err != nil {
+				return ctrl.Result{}, err
+			}
+		}
+		return ctrl.Result{}, nil
+	}
+
+	addedFinalizer := controllerutil.AddFinalizer(instance, helper.GetFinalizer())
+	if addedFinalizer {
+		if err := r.Update(ctx, instance); err != nil {
+			return ctrl.Result{}, err
+		}
+	}
+
+	err = r.createRolesAndBindings(ctx, instance)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -255,11 +283,103 @@ func getRingConfigMapTemplates(instance *swiftv1beta1.SwiftRing, labels map[stri
 	}
 }
 
+//+kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=clusterroles,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=clusterrolebindings,verbs=get;list;watch;create;update;patch;delete
+
+func (r *SwiftRingReconciler) createRolesAndBindings(
+	ctx context.Context,
+	instance *swiftv1beta1.SwiftRing,
+) error {
+
+	cr := &rbacv1.ClusterRole{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "cr-" + instance.Name,
+			Namespace: instance.Namespace,
+		},
+		Rules: []rbacv1.PolicyRule{
+			{
+				Verbs:     []string{"create"},
+				APIGroups: []string{"*"},
+				Resources: []string{"configmaps"},
+			},
+		},
+	}
+
+	err := r.Client.Create(ctx, cr)
+	if err != nil && !apierrors.IsAlreadyExists(err) {
+		r.Log.Error(err, "Error creating ClusterRole")
+		return err
+	}
+
+	crb := &rbacv1.ClusterRoleBinding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "crb-" + instance.Name,
+			Namespace: instance.Namespace,
+		},
+		Subjects: []rbacv1.Subject{
+			{
+				Kind:      "ServiceAccount",
+				Name:      "default",
+				Namespace: "default",
+			},
+		},
+		RoleRef: rbacv1.RoleRef{
+			APIGroup: "rbac.authorization.k8s.io",
+			Kind:     "ClusterRole",
+			Name:     "cr-" + instance.Name,
+		},
+	}
+
+	err = r.Client.Create(ctx, crb)
+	if err != nil && !apierrors.IsAlreadyExists(err) {
+		r.Log.Error(err, "Error creating ClusterRoleBindung")
+		return err
+	}
+
+	return nil
+}
+
+func (r *SwiftRingReconciler) deleteRolesAndBindings(
+	ctx context.Context,
+	instance *swiftv1beta1.SwiftRing,
+) error {
+
+	cr := &rbacv1.ClusterRole{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "cr-" + instance.Name,
+			Namespace: instance.Namespace,
+		},
+	}
+
+	err := r.Client.Delete(ctx, cr)
+	if err != nil && apierrors.IsNotFound(err) {
+		r.Log.Error(err, "Error deleting ClusterRole")
+		return err
+	}
+
+	crb := &rbacv1.ClusterRoleBinding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "crb-" + instance.Name,
+			Namespace: instance.Namespace,
+		},
+	}
+
+	err = r.Client.Delete(ctx, crb)
+	if err != nil && apierrors.IsNotFound(err) {
+		r.Log.Error(err, "Error deleting ClusteRoleBinding")
+		return err
+	}
+
+	return nil
+}
+
 // SetupWithManager sets up the controller with the Manager.
 func (r *SwiftRingReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&swiftv1beta1.SwiftRing{}).
 		Owns(&batchv1.Job{}).
 		Owns(&corev1.ConfigMap{}).
+		Owns(&rbacv1.ClusterRole{}).
+		Owns(&rbacv1.ClusterRoleBinding{}).
 		Complete(r)
 }
