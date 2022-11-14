@@ -32,8 +32,10 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	networkingv1 "k8s.io/api/networking/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
 
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
@@ -129,6 +131,15 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	// Headless Service
 	svc := service.NewService(getStorageService(instance), ls, 5)
 	ctrlResult, err = svc.CreateOrPatch(ctx, helper)
+	if err != nil {
+		return ctrlResult, err
+	} else if (ctrlResult != ctrl.Result{}) {
+		return ctrlResult, nil
+	}
+
+	// Limit internal storage traffic to Swift services
+	np := swift.NewNetworkPolicy(getStorageNetworkPolicy(instance), ls, 5)
+	ctrlResult, err = np.CreateOrPatch(ctx, helper)
 	if err != nil {
 		return ctrlResult, err
 	} else if (ctrlResult != ctrl.Result{}) {
@@ -489,6 +500,77 @@ func getStorageStatefulSet(
 	}
 }
 
+//+kubebuilder:rbac:groups=networking.k8s.io,resources=networkpolicies,verbs=get;list;watch;create;update;patch;delete
+
+func getStorageNetworkPolicy(
+	swiftstorage *swiftv1beta1.SwiftStorage) *networkingv1.NetworkPolicy {
+
+	portAccountServer := intstr.FromInt(int(swift.AccountServerPort))
+	portContainerServer := intstr.FromInt(int(swift.ContainerServerPort))
+	portObjectServer := intstr.FromInt(int(swift.ObjectServerPort))
+	portRsync := intstr.FromInt(int(swift.RsyncPort))
+
+	storageLabels := swift.GetLabelsStorage()
+	proxyLabels := swift.GetLabelsProxy()
+
+	return &networkingv1.NetworkPolicy{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "np-" + swiftstorage.Name,
+			Namespace: swiftstorage.Namespace,
+		},
+		Spec: networkingv1.NetworkPolicySpec{
+			PodSelector: metav1.LabelSelector{
+				MatchLabels: storageLabels,
+			},
+			Ingress: []networkingv1.NetworkPolicyIngressRule{
+				{
+					Ports: []networkingv1.NetworkPolicyPort{
+						{
+							Port: &portAccountServer,
+						},
+						{
+							Port: &portContainerServer,
+						},
+						{
+							Port: &portObjectServer,
+						},
+						{
+							Port: &portRsync,
+						},
+					},
+					From: []networkingv1.NetworkPolicyPeer{
+						{
+							PodSelector: &metav1.LabelSelector{
+								MatchLabels: storageLabels,
+							},
+						},
+					},
+				},
+				{
+					Ports: []networkingv1.NetworkPolicyPort{
+						{
+							Port: &portAccountServer,
+						},
+						{
+							Port: &portContainerServer,
+						},
+						{
+							Port: &portObjectServer,
+						},
+					},
+					From: []networkingv1.NetworkPolicyPeer{
+						{
+							PodSelector: &metav1.LabelSelector{
+								MatchLabels: proxyLabels,
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
 // SetupWithManager sets up the controller with the Manager.
 func (r *SwiftStorageReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
@@ -496,5 +578,6 @@ func (r *SwiftStorageReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Owns(&corev1.ConfigMap{}).
 		Owns(&appsv1.StatefulSet{}).
 		Owns(&corev1.Service{}).
+		Owns(&networkingv1.NetworkPolicy{}).
 		Complete(r)
 }
