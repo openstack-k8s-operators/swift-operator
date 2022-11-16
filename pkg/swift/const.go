@@ -24,4 +24,6 @@ const (
 	ContainerServerPort int32 = 6201
 	ObjectServerPort    int32 = 6200
 	RsyncPort           int32 = 873
+
+	ServiceName = "swift"
 )

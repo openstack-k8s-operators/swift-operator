@@ -25,6 +25,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	routev1 "github.com/openshift/api/route/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -34,6 +35,7 @@ import (
 	"github.com/openstack-k8s-operators/lib-common/modules/common/condition"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/configmap"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/deployment"
+	"github.com/openstack-k8s-operators/lib-common/modules/common/endpoint"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/env"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/helper"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/util"
@@ -54,6 +56,7 @@ type SwiftProxyReconciler struct {
 //+kubebuilder:rbac:groups=swift.openstack.org,resources=swiftproxies/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=swift.openstack.org,resources=swiftproxies/finalizers,verbs=update
 //+kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=route.openshift.io,resources=routes,verbs=get;list;watch;create;update;patch;delete;
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -112,6 +115,33 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return ctrl.Result{}, err
 	}
 
+	// Create a Service and endpoints for the proxy
+	var swiftPorts = map[endpoint.Endpoint]endpoint.Data{
+		endpoint.EndpointAdmin: endpoint.Data{
+			Port: swift.ProxyPort,
+		},
+		endpoint.EndpointPublic: endpoint.Data{
+			Port: swift.ProxyPort,
+		},
+		endpoint.EndpointInternal: endpoint.Data{
+			Port: swift.ProxyPort,
+		},
+	}
+
+	_, ctrlResult, err = endpoint.ExposeEndpoints(
+		ctx,
+		helper,
+		swift.ServiceName,
+		labels,
+		swiftPorts,
+	)
+	if err != nil {
+		r.Log.Error(err, "Failed to expose endpoints for Swift Proxy")
+		return ctrlResult, err
+	} else if (ctrlResult != ctrl.Result{}) {
+		return ctrlResult, nil
+	}
+
 	// Create Deployment
 	depl := deployment.NewDeployment(getProxyDeployment(instance, labels), 5)
 	ctrlResult, err = depl.CreateOrPatch(ctx, helper)
@@ -139,6 +169,9 @@ func (r *SwiftProxyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&swiftv1beta1.SwiftProxy{}).
 		Owns(&appsv1.Deployment{}).
+		Owns(&corev1.Service{}).
+		Owns(&corev1.ConfigMap{}).
+		Owns(&routev1.Route{}).
 		Complete(r)
 }
 
