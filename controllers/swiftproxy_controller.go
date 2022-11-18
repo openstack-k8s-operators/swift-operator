@@ -24,6 +24,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	routev1 "github.com/openshift/api/route/v1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -94,6 +95,15 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	helper, err := helper.NewHelper(instance, r.Client, r.Kclient, r.Scheme, r.Log)
 	if err != nil {
 		return ctrl.Result{}, err
+	}
+
+	controllerutil.AddFinalizer(instance, helper.GetFinalizer())
+	if err := r.Update(ctx, instance); err != nil {
+		return ctrl.Result{}, err
+	}
+
+	if !instance.DeletionTimestamp.IsZero() {
+		return r.reconcileDelete(ctx, instance, helper)
 	}
 
 	// Check if there is a ConfigMap for the Swift rings
@@ -312,4 +322,17 @@ func getProxyDeployment(
 			},
 		},
 	}
+}
+
+func (r *SwiftProxyReconciler) reconcileDelete(ctx context.Context, instance *swiftv1beta1.SwiftProxy, helper *helper.Helper) (ctrl.Result, error) {
+	r.Log.Info(fmt.Sprintf("Reconciling Service '%s' delete", instance.Name))
+
+	controllerutil.RemoveFinalizer(instance, helper.GetFinalizer())
+	if err := r.Update(ctx, instance); err != nil && !apierrors.IsNotFound(err) {
+		return ctrl.Result{}, err
+	}
+
+	r.Log.Info(fmt.Sprintf("Reconciled SwiftProxy '%s' delete successfully", instance.Name))
+
+	return ctrl.Result{}, nil
 }
