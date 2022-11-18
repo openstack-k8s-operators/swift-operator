@@ -7,3 +7,6 @@ spec:
   containerImageProxy: quay.io/tripleowallabycentos9/openstack-swift-proxy-server:current-tripleo
   containerImageMemcached: quay.io/tripleowallabycentos9/openstack-memcached:current-tripleo
   replicas: 1
+  secret: keystone-secret
+  serviceUser: swift
+  passwordSelector: SwiftPassword

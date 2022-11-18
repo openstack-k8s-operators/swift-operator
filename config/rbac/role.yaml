@@ -68,7 +68,51 @@ rules:
 - apiGroups:
   - ""
   resources:
+  - secrets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
   - services
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - keystone.openstack.org
+  resources:
+  - keystoneapis
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - keystone.openstack.org
+  resources:
+  - keystoneendpoints
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - keystone.openstack.org
+  resources:
+  - keystoneservices
   verbs:
   - create
   - delete

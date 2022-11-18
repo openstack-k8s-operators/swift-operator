@@ -41,6 +41,7 @@ import (
 	"github.com/openstack-k8s-operators/lib-common/modules/common/helper"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/util"
 
+	keystonev1 "github.com/openstack-k8s-operators/keystone-operator/api/v1beta1"
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
 	swift "github.com/openstack-k8s-operators/swift-operator/pkg/swift"
 )
@@ -58,6 +59,10 @@ type SwiftProxyReconciler struct {
 //+kubebuilder:rbac:groups=swift.openstack.org,resources=swiftproxies/finalizers,verbs=update
 //+kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=route.openshift.io,resources=routes,verbs=get;list;watch;create;update;patch;delete;
+//+kubebuilder:rbac:groups=keystone.openstack.org,resources=keystoneapis,verbs=get;list;watch
+//+kubebuilder:rbac:groups=keystone.openstack.org,resources=keystoneendpoints,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=keystone.openstack.org,resources=keystoneservices,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=core,resources=secrets,verbs=get;list;watch;create;update;patch;delete;
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -117,28 +122,23 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 
 	labels := swift.GetLabelsProxy()
 
-	// Create a ConfigMap populated with content from templates/
-	envVars := make(map[string]env.Setter)
-	tpl := getProxyConfigMapTemplates(instance, labels)
-	err = configmap.EnsureConfigMaps(ctx, helper, instance, tpl, &envVars)
-	if err != nil {
-		return ctrl.Result{}, err
-	}
-
 	// Create a Service and endpoints for the proxy
 	var swiftPorts = map[endpoint.Endpoint]endpoint.Data{
 		endpoint.EndpointAdmin: endpoint.Data{
 			Port: swift.ProxyPort,
+			Path: "",
 		},
 		endpoint.EndpointPublic: endpoint.Data{
 			Port: swift.ProxyPort,
+			Path: "/v1/AUTH_%(tenant_id)s",
 		},
 		endpoint.EndpointInternal: endpoint.Data{
 			Port: swift.ProxyPort,
+			Path: "/v1/AUTH_%(tenant_id)s",
 		},
 	}
 
-	_, ctrlResult, err = endpoint.ExposeEndpoints(
+	apiEndpoints, ctrlResult, err := endpoint.ExposeEndpoints(
 		ctx,
 		helper,
 		swift.ServiceName,
@@ -150,6 +150,43 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return ctrlResult, err
 	} else if (ctrlResult != ctrl.Result{}) {
 		return ctrlResult, nil
+	}
+
+	if instance.Status.APIEndpoints == nil {
+		instance.Status.APIEndpoints = map[string]map[string]string{}
+	}
+	instance.Status.APIEndpoints[swift.ServiceName] = apiEndpoints
+
+	// Create Keystone Service
+	ksh := getKeystoneServiceHelper(instance, labels)
+	ctrlResult, err = ksh.CreateOrPatch(ctx, helper)
+	if err != nil {
+		return ctrlResult, err
+	}
+
+	// Create Keystone endpoints
+	eph := getKeystoneEndpointHelper(instance, labels)
+	ctrlResult, err = eph.CreateOrPatch(ctx, helper)
+	if err != nil {
+		return ctrlResult, err
+	}
+
+	// Get the Keystone authURL
+	keystoneAPI, err := keystonev1.GetKeystoneAPI(ctx, helper, instance.Namespace, map[string]string{})
+	if err != nil {
+		return ctrlResult, err
+	}
+	authURL, err := keystoneAPI.GetEndpoint(endpoint.EndpointPublic)
+	if err != nil {
+		return ctrlResult, err
+	}
+
+	// Create a ConfigMap populated with content from templates/
+	envVars := make(map[string]env.Setter)
+	tpl := getProxyConfigMapTemplates(instance, labels, authURL)
+	err = configmap.EnsureConfigMaps(ctx, helper, instance, tpl, &envVars)
+	if err != nil {
+		return ctrl.Result{}, err
 	}
 
 	// Create Deployment
@@ -171,13 +208,15 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 
 	r.Log.Info(fmt.Sprintf("Reconciled SwiftProxy '%s' successfully", instance.Name))
 	return ctrl.Result{}, nil
-
 }
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *SwiftProxyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&swiftv1beta1.SwiftProxy{}).
+		Owns(&corev1.Secret{}).
+		Owns(&keystonev1.KeystoneService{}).
+		Owns(&keystonev1.KeystoneEndpoint{}).
 		Owns(&appsv1.Deployment{}).
 		Owns(&corev1.Service{}).
 		Owns(&corev1.ConfigMap{}).
@@ -185,14 +224,20 @@ func (r *SwiftProxyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func getProxyConfigMapTemplates(instance *swiftv1beta1.SwiftProxy, labels map[string]string) []util.Template {
+func getProxyConfigMapTemplates(instance *swiftv1beta1.SwiftProxy, labels map[string]string, authURL string) []util.Template {
+	templateParameters := make(map[string]interface{})
+	templateParameters["ServiceUser"] = instance.Spec.ServiceUser
+	templateParameters["KeystonePublicURL"] = authURL
+	//instance.Status.APIEndpoints[keystone.ServiceName][string(endpoint.EndpointPublic)]
+
 	return []util.Template{
 		{
-			Name:         fmt.Sprintf("%s-config-data", instance.Name),
-			Namespace:    instance.Namespace,
-			Type:         util.TemplateTypeConfig,
-			InstanceType: instance.Kind,
-			Labels:       labels,
+			Name:          fmt.Sprintf("%s-config-data", instance.Name),
+			Namespace:     instance.Namespace,
+			Type:          util.TemplateTypeConfig,
+			InstanceType:  instance.Kind,
+			ConfigOptions: templateParameters,
+			Labels:        labels,
 		},
 	}
 }
@@ -250,6 +295,19 @@ func getProxyVolumeMounts() []corev1.VolumeMount {
 }
 
 func getInitContainers(swiftproxy *swiftv1beta1.SwiftProxy) []corev1.Container {
+	envs := []corev1.EnvVar{
+		{
+			Name: "SwiftPassword",
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: swiftproxy.Spec.Secret,
+					},
+					Key: swiftproxy.Spec.PasswordSelectors.Service,
+				},
+			},
+		},
+	}
 	securityContext := swift.GetSecurityContext()
 	return []corev1.Container{
 		{
@@ -258,7 +316,8 @@ func getInitContainers(swiftproxy *swiftv1beta1.SwiftProxy) []corev1.Container {
 			ImagePullPolicy: corev1.PullIfNotPresent,
 			SecurityContext: &securityContext,
 			VolumeMounts:    getProxyVolumeMounts(),
-			Command:         []string{"/bin/sh", "-c", "cp -t /etc/swift/ /var/lib/config-data/default/* /var/lib/config-data/rings/*"},
+			Env:             envs,
+			Command:         []string{"/bin/sh", "-c", "cp -t /etc/swift/ /var/lib/config-data/default/* /var/lib/config-data/rings/* ; crudini --set /etc/swift/proxy-server.conf 'filter:authtoken' password $SwiftPassword"},
 		},
 	}
 }
@@ -324,8 +383,72 @@ func getProxyDeployment(
 	}
 }
 
+func getKeystoneServiceHelper(
+	instance *swiftv1beta1.SwiftProxy, labels map[string]string) *keystonev1.KeystoneServiceHelper {
+
+	spec := keystonev1.KeystoneServiceSpec{
+		ServiceType:        swift.ServiceType,
+		ServiceName:        swift.ServiceName,
+		ServiceDescription: swift.ServiceDescription,
+		Enabled:            true,
+		ServiceUser:        instance.Spec.ServiceUser,
+		Secret:             instance.Spec.Secret,
+		PasswordSelector:   instance.Spec.PasswordSelectors.Service,
+	}
+
+	return keystonev1.NewKeystoneService(spec, instance.Namespace, labels, 10)
+}
+
+func getKeystoneEndpointHelper(
+	instance *swiftv1beta1.SwiftProxy, labels map[string]string) *keystonev1.KeystoneEndpointHelper {
+
+	spec := keystonev1.KeystoneEndpointSpec{
+		ServiceName: swift.ServiceName,
+		Endpoints:   instance.Status.APIEndpoints[swift.ServiceName],
+	}
+
+	return keystonev1.NewKeystoneEndpoint(
+		swift.ServiceName,
+		instance.Namespace,
+		spec,
+		labels,
+		10)
+}
+
 func (r *SwiftProxyReconciler) reconcileDelete(ctx context.Context, instance *swiftv1beta1.SwiftProxy, helper *helper.Helper) (ctrl.Result, error) {
 	r.Log.Info(fmt.Sprintf("Reconciling Service '%s' delete", instance.Name))
+
+	// It's possible to get here before the endpoints have been set in the status, so check for this
+	if instance.Status.APIEndpoints != nil {
+
+		// Remove the finalizer from our KeystoneEndpoint CR
+		keystoneEndpoint, err := keystonev1.GetKeystoneEndpointWithName(ctx, helper, swift.ServiceName, instance.Namespace)
+		if err != nil && !apierrors.IsNotFound(err) {
+			return ctrl.Result{}, err
+		}
+
+		if err == nil {
+			controllerutil.RemoveFinalizer(keystoneEndpoint, helper.GetFinalizer())
+			if err = helper.GetClient().Update(ctx, keystoneEndpoint); err != nil && !apierrors.IsNotFound(err) {
+				return ctrl.Result{}, err
+			}
+			util.LogForObject(helper, "Removed finalizer from our KeystoneEndpoint", instance)
+		}
+
+		// Remove the finalizer from our KeystoneService CR
+		keystoneService, err := keystonev1.GetKeystoneServiceWithName(ctx, helper, swift.ServiceName, instance.Namespace)
+		if err != nil && !apierrors.IsNotFound(err) {
+			return ctrl.Result{}, err
+		}
+
+		if err == nil {
+			controllerutil.RemoveFinalizer(keystoneService, helper.GetFinalizer())
+			if err = helper.GetClient().Update(ctx, keystoneService); err != nil && !apierrors.IsNotFound(err) {
+				return ctrl.Result{}, err
+			}
+			util.LogForObject(helper, "Removed finalizer from our KeystoneService", instance)
+		}
+	}
 
 	controllerutil.RemoveFinalizer(instance, helper.GetFinalizer())
 	if err := r.Update(ctx, instance); err != nil && !apierrors.IsNotFound(err) {

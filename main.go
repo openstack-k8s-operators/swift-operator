@@ -34,6 +34,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
+	keystonev1beta1 "github.com/openstack-k8s-operators/keystone-operator/api/v1beta1"
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
 	"github.com/openstack-k8s-operators/swift-operator/controllers"
 	//+kubebuilder:scaffold:imports
@@ -47,6 +48,7 @@ var (
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 	utilruntime.Must(swiftv1beta1.AddToScheme(scheme))
+	utilruntime.Must(keystonev1beta1.AddToScheme(scheme))
 	utilruntime.Must(routev1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }

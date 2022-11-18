@@ -41,6 +41,21 @@ spec:
               containerImageProxy:
                 description: Swift Proxy Container Image URL
                 type: string
+              passwordSelectors:
+                description: PasswordSelector - Selector to choose the Swift user
+                  password from the Secret
+                properties:
+                  admin:
+                    default: SwiftPassword
+                    description: Database - Selector to get the Swift service password
+                      from the Secret
+                    type: string
+                  transportUrl:
+                    default: TransportURL
+                    description: Database - Selector to get the Swift service password
+                      from the Secret
+                    type: string
+                type: object
               replicas:
                 default: 1
                 description: Replicas of Swift Proxy
@@ -48,6 +63,15 @@ spec:
                 maximum: 32
                 minimum: 0
                 type: integer
+              secret:
+                description: Secret containing OpenStack password information for
+                  Swift service user password
+                type: string
+              serviceUser:
+                default: swift
+                description: ServiceUser - optional username used for this service
+                  to register in Swift
+                type: string
               swiftRingConfigMap:
                 description: Name of ConfigMap containing Swift rings
                 type: string
@@ -55,6 +79,13 @@ spec:
           status:
             description: SwiftProxyStatus defines the observed state of SwiftProxy
             properties:
+              apiEndpoints:
+                additionalProperties:
+                  additionalProperties:
+                    type: string
+                  type: object
+                description: API endpoints
+                type: object
               conditions:
                 description: Conditions
                 items:

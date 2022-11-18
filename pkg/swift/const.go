@@ -25,5 +25,8 @@ const (
 	ObjectServerPort    int32 = 6200
 	RsyncPort           int32 = 873
 
-	ServiceName = "swift"
+	ServiceName        = "swift"
+	ServiceType        = "object-store"
+	ServiceAccount     = "swift-operator-swift"
+	ServiceDescription = "Swift Object Storage"
 )

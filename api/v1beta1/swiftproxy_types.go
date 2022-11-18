@@ -24,6 +24,18 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
+// PasswordSelector to identify the AdminUser password from the Secret
+type PasswordSelector struct {
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default="SwiftPassword"
+	// Database - Selector to get the Swift service password from the Secret
+	Service string `json:"admin,omitempty"`
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default="TransportURL"
+	// Database - Selector to get the Swift service password from the Secret
+	TransportURL string `json:"transportUrl,omitempty"`
+}
+
 // SwiftProxySpec defines the desired state of SwiftProxy
 type SwiftProxySpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
@@ -47,6 +59,19 @@ type SwiftProxySpec struct {
 	// +kubebuilder:validation:Required
 	// Image URL for Memcache servicd
 	ContainerImageMemcached string `json:"containerImageMemcached,omitempty"`
+
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default=swift
+	// ServiceUser - optional username used for this service to register in Swift
+	ServiceUser string `json:"serviceUser"`
+
+	// +kubebuilder:validation:Optional
+	// Secret containing OpenStack password information for Swift service user password
+	Secret string `json:"secret,omitempty"`
+
+	// +kubebuilder:validation:Optional
+	// PasswordSelector - Selector to choose the Swift user password from the Secret
+	PasswordSelectors PasswordSelector `json:"passwordSelectors,omitempty"`
 }
 
 // SwiftProxyStatus defines the observed state of SwiftProxy
@@ -56,6 +81,9 @@ type SwiftProxyStatus struct {
 
 	// Conditions
 	Conditions condition.Conditions `json:"conditions,omitempty" optional:"true"`
+
+	// API endpoints
+	APIEndpoints map[string]map[string]string `json:"apiEndpoints,omitempty"`
 }
 
 //+kubebuilder:object:root=true
