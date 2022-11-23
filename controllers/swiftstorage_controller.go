@@ -146,6 +146,22 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		return ctrlResult, nil
 	}
 
+	// Ensure the StatefulSet is not resized after initial deployment
+	found, err := statefulset.GetStatefulSetWithName(ctx, helper, instance.Name, instance.Namespace)
+	if err != nil && !apierrors.IsNotFound(err) {
+		return ctrlResult, err
+	} else if err == nil {
+		if *found.Spec.Replicas != instance.Spec.Replicas {
+			r.Log.Info(fmt.Sprintf(
+				"Resizing (%d -> %d) number of replicas not yet supported",
+				*found.Spec.Replicas, instance.Spec.Replicas))
+			instance.Spec.Replicas = *found.Spec.Replicas
+			if err := r.Client.Update(ctx, instance); err != nil {
+				return ctrl.Result{}, err
+			}
+		}
+	}
+
 	// Statefulset with all backend containers
 	sset := statefulset.NewStatefulSet(getStorageStatefulSet(instance, ls), 5)
 	ctrlResult, err = sset.CreateOrPatch(ctx, helper)
