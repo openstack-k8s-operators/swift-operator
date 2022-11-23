@@ -22,6 +22,7 @@ import (
 	"github.com/go-logr/logr"
 
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -328,6 +329,26 @@ func getProxyDeployment(
 	trueVal := true
 	securityContext := swift.GetSecurityContext()
 
+	livenessProbe := &corev1.Probe{
+		TimeoutSeconds:      5,
+		PeriodSeconds:       3,
+		InitialDelaySeconds: 5,
+	}
+	readinessProbe := &corev1.Probe{
+		TimeoutSeconds:      5,
+		PeriodSeconds:       5,
+		InitialDelaySeconds: 5,
+	}
+
+	livenessProbe.HTTPGet = &corev1.HTTPGetAction{
+		Path: "/healthcheck",
+		Port: intstr.FromInt(int(swift.ProxyPort)),
+	}
+	readinessProbe.HTTPGet = &corev1.HTTPGetAction{
+		Path: "/healthcheck",
+		Port: intstr.FromInt(int(swift.ProxyPort)),
+	}
+
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      instance.Name,
@@ -361,8 +382,10 @@ func getProxyDeployment(
 								ContainerPort: swift.ProxyPort,
 								Name:          "instance",
 							}},
-							VolumeMounts: getProxyVolumeMounts(),
-							Command:      []string{"/usr/bin/swift-proxy-server", "/etc/swift/proxy-server.conf", "-v"},
+							ReadinessProbe: readinessProbe,
+							LivenessProbe:  livenessProbe,
+							VolumeMounts:   getProxyVolumeMounts(),
+							Command:        []string{"/usr/bin/swift-proxy-server", "/etc/swift/proxy-server.conf", "-v"},
 						},
 						{
 							Image:           instance.Spec.ContainerImageMemcached,
