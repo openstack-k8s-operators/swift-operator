@@ -4,8 +4,8 @@ metadata:
   name: swiftproxy-sample
 spec:
   swiftRingConfigMap: swiftring-sample-ring-data
-  containerImageProxy: quay.io/tripleowallabycentos9/openstack-swift-proxy-server:current-tripleo
-  containerImageMemcached: quay.io/tripleowallabycentos9/openstack-memcached:current-tripleo
+  containerImageProxy: quay.io/tripleozedcentos9/openstack-swift-proxy-server:current-tripleo
+  containerImageMemcached: quay.io/tripleozedcentos9/openstack-memcached:current-tripleo
   replicas: 1
   secret: keystone-secret
   serviceUser: swift
