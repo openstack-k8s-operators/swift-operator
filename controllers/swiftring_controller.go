@@ -169,7 +169,7 @@ func getRingJob(instance *swiftv1beta1.SwiftRing, labels map[string]string) *bat
 
 	envVars := map[string]env.Setter{}
 	envVars["CM_NAME"] = env.SetValue(instance.Name + "-ring-data")
-	envVars["CM_NAMESPACE"] = env.SetValue(instance.Namespace)
+	envVars["NAMESPACE"] = env.SetValue(instance.Namespace)
 	envVars["STORAGE_POD_PREFIX"] = env.SetValue(instance.Spec.StoragePodPrefix)
 	envVars["STORAGE_SVC_NAME"] = env.SetValue(instance.Spec.StorageServiceName)
 	envVars["SWIFT_REPLICAS"] = env.SetValue(fmt.Sprint(instance.Spec.Replicas))

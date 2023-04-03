@@ -9,9 +9,9 @@ swift-ring-builder container.builder create 8 ${SWIFT_REPLICAS} 1
 swift-ring-builder object.builder create 8 ${SWIFT_REPLICAS} 1
 
 for POD_REPLICA in `seq 0 $((SWIFT_DEVICES - 1))`; do
-	swift-ring-builder account.builder add --region 1 --zone 1 --ip ${STORAGE_POD_PREFIX}-${POD_REPLICA}.${STORAGE_SVC_NAME}.default.svc.cluster.local --port 6202 --device d1 --weight 100
-	swift-ring-builder container.builder add --region 1 --zone 1 --ip ${STORAGE_POD_PREFIX}-${POD_REPLICA}.${STORAGE_SVC_NAME}.default.svc.cluster.local --port 6201 --device d1 --weight 100
-	swift-ring-builder object.builder add --region 1 --zone 1 --ip ${STORAGE_POD_PREFIX}-${POD_REPLICA}.${STORAGE_SVC_NAME}.default.svc.cluster.local --port 6200 --device d1 --weight 100
+	swift-ring-builder account.builder add --region 1 --zone 1 --ip ${STORAGE_POD_PREFIX}-${POD_REPLICA}.${STORAGE_SVC_NAME}.${NAMESPACE}.svc.cluster.local --port 6202 --device d1 --weight 100
+	swift-ring-builder container.builder add --region 1 --zone 1 --ip ${STORAGE_POD_PREFIX}-${POD_REPLICA}.${STORAGE_SVC_NAME}.${NAMESPACE}.svc.cluster.local --port 6201 --device d1 --weight 100
+	swift-ring-builder object.builder add --region 1 --zone 1 --ip ${STORAGE_POD_PREFIX}-${POD_REPLICA}.${STORAGE_SVC_NAME}.${NAMESPACE}.svc.cluster.local --port 6200 --device d1 --weight 100
 done
 
 swift-ring-builder account.builder rebalance
@@ -30,7 +30,7 @@ CONFIGMAP_JSON='{
 	"kind":"ConfigMap",
 	"metadata":{
 		"name":"'${CM_NAME}'",
-		"namespace":"'${CM_NAMESPACE}'",
+		"namespace":"'${NAMESPACE}'",
 		"ownerReferences": [
 			{
 				"apiVersion": "'${OWNER_APIVERSION}'",
@@ -59,4 +59,4 @@ TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
 	-H "Authorization: Bearer $TOKEN" \
 	--data-binary "${CONFIGMAP_JSON}" \
 	-H 'Content-Type: application/json' \
-	-X POST "https://kubernetes/api/v1/namespaces/${CM_NAMESPACE}/configmaps"
+	-X POST "https://kubernetes.default.svc/api/v1/namespaces/${NAMESPACE}/configmaps"
