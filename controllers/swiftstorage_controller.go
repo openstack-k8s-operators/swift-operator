@@ -479,6 +479,7 @@ func getStorageStatefulSet(
 					Labels: labels,
 				},
 				Spec: corev1.PodSpec{
+					ServiceAccountName: swift.ServiceAccount,
 					SecurityContext: &corev1.PodSecurityContext{
 						FSGroup:             &user,
 						FSGroupChangePolicy: &OnRootMismatch,

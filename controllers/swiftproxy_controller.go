@@ -364,6 +364,7 @@ func getProxyDeployment(
 					Labels: labels,
 				},
 				Spec: corev1.PodSpec{
+					ServiceAccountName: swift.ServiceAccount,
 					SecurityContext: &corev1.PodSecurityContext{
 						RunAsNonRoot: &trueVal,
 						SeccompProfile: &corev1.SeccompProfile{
