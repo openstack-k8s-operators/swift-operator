@@ -231,6 +231,12 @@ func getStorageVolumes(instance *swiftv1beta1.SwiftStorage) []corev1.Volume {
 				EmptyDir: &corev1.EmptyDirVolumeSource{Medium: ""},
 			},
 		},
+		{
+			Name: "cache",
+			VolumeSource: corev1.VolumeSource{
+				EmptyDir: &corev1.EmptyDirVolumeSource{Medium: ""},
+			},
+		},
 	}
 
 }
@@ -255,6 +261,11 @@ func getStorageVolumeMounts() []corev1.VolumeMount {
 		{
 			Name:      "config-data-merged",
 			MountPath: "/etc/swift",
+			ReadOnly:  false,
+		},
+		{
+			Name:      "cache",
+			MountPath: "/var/cache/swift",
 			ReadOnly:  false,
 		},
 	}
