@@ -1,0 +1,12 @@
+apiVersion: swift.openstack.org/v1beta1
+kind: Swift
+metadata:
+  labels:
+    app.kubernetes.io/name: swift
+    app.kubernetes.io/instance: swift-sample
+    app.kubernetes.io/part-of: swift-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: swift-operator
+  name: swift-sample
+spec:
+  # TODO(user): Add fields here

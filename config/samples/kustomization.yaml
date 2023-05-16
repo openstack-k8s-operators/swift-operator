@@ -3,4 +3,5 @@ resources:
 - swift_v1beta1_swiftproxy.yaml
 - swift_v1beta1_swiftstorage.yaml
 - swift_v1beta1_swiftring.yaml
+- swift_v1beta1_swift.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples

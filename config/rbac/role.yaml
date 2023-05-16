@@ -224,6 +224,32 @@ rules:
 - apiGroups:
   - swift.openstack.org
   resources:
+  - swifts
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - swift.openstack.org
+  resources:
+  - swifts/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - swift.openstack.org
+  resources:
+  - swifts/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - swift.openstack.org
+  resources:
   - swiftstorages
   verbs:
   - create

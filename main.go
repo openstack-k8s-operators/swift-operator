@@ -37,6 +37,7 @@ import (
 
 	keystonev1beta1 "github.com/openstack-k8s-operators/keystone-operator/api/v1beta1"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/util"
+
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
 	"github.com/openstack-k8s-operators/swift-operator/controllers"
 	//+kubebuilder:scaffold:imports
@@ -132,6 +133,13 @@ func main() {
 		Kclient: kclient,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "SwiftRing")
+		os.Exit(1)
+	}
+	if err = (&controllers.SwiftReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Swift")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder
