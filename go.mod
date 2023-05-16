@@ -1,6 +1,6 @@
 module github.com/openstack-k8s-operators/swift-operator
 
-go 1.18
+go 1.19
 
 require (
 	github.com/go-logr/logr v1.2.3
@@ -9,6 +9,7 @@ require (
 	github.com/openshift/api v3.9.0+incompatible
 	github.com/openstack-k8s-operators/keystone-operator/api v0.0.0-20221117151156-a148a378279b
 	github.com/openstack-k8s-operators/lib-common/modules/common v0.0.0-20221117092428-c1190ea3bf3d
+	github.com/openstack-k8s-operators/swift-operator/api v0.0.0-00010101000000-000000000000
 	k8s.io/api v0.25.0
 	k8s.io/apimachinery v0.25.0
 	k8s.io/client-go v0.25.0
@@ -84,3 +85,5 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
+
+replace github.com/openstack-k8s-operators/swift-operator/api => ./api
