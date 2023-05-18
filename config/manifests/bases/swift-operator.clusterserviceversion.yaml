@@ -21,6 +21,11 @@ spec:
       kind: SwiftRing
       name: swiftrings.swift.openstack.org
       version: v1beta1
+    - description: Swift is the Schema for the swifts API
+      displayName: Swift
+      kind: Swift
+      name: swifts.swift.openstack.org
+      version: v1beta1
     - description: SwiftStorage is the Schema for the swiftstorages API
       displayName: Swift Storage
       kind: SwiftStorage

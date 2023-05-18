@@ -17,6 +17,7 @@ limitations under the License.
 package v1beta1
 
 import (
+	condition "github.com/openstack-k8s-operators/lib-common/modules/common/condition"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -28,14 +29,26 @@ type SwiftSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of Swift. Edit swift_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	// +kubebuilder:validation:Required
+        // SwiftRing - Spec definition for the Ring service of this Swift deployment
+        SwiftRing SwiftRingSpec `json:"swiftRing"`
+
+	// +kubebuilder:validation:Required
+        // SwiftStorage - Spec definition for the Storage service of this Swift deployment
+        SwiftStorage SwiftStorageSpec `json:"swiftStorage"`
+
+	// +kubebuilder:validation:Required
+        // SwiftProxy - Spec definition for the Proxy service of this Swift deployment
+        SwiftProxy SwiftProxySpec `json:"swiftProxy"`
 }
 
 // SwiftStatus defines the observed state of Swift
 type SwiftStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+
+	// Conditions
+	Conditions condition.Conditions `json:"conditions,omitempty" optional:"true"`
 }
 
 //+kubebuilder:object:root=true
@@ -61,4 +74,19 @@ type SwiftList struct {
 
 func init() {
 	SchemeBuilder.Register(&Swift{}, &SwiftList{})
+}
+
+// RbacConditionsSet - set the conditions for the rbac object
+func (instance Swift) RbacConditionsSet(c *condition.Condition) {
+	instance.Status.Conditions.Set(c)
+}
+
+// RbacNamespace - return the namespace
+func (instance Swift) RbacNamespace() string {
+	return instance.Namespace
+}
+
+// RbacResourceName - return the name to be used for rbac objects (serviceaccount, role, rolebinding)
+func (instance Swift) RbacResourceName() string {
+	return "swift-" + instance.Name
 }
