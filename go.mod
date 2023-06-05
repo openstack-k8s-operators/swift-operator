@@ -9,7 +9,7 @@ require (
 	github.com/openshift/api v3.9.0+incompatible
 	github.com/openstack-k8s-operators/keystone-operator/api v0.0.0-20221117151156-a148a378279b
 	github.com/openstack-k8s-operators/lib-common/modules/common v0.0.0-20221117092428-c1190ea3bf3d
-	github.com/openstack-k8s-operators/swift-operator/api v0.0.0-20230516155343-58dc2434afeb
+	github.com/openstack-k8s-operators/swift-operator/api v0.0.0-20230605172841-846df08022f7
 	k8s.io/api v0.25.0
 	k8s.io/apimachinery v0.25.0
 	k8s.io/client-go v0.25.0
