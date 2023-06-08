@@ -27,6 +27,6 @@ const (
 
 	ServiceName        = "swift"
 	ServiceType        = "object-store"
-	ServiceAccount     = "swift-operator-swift"
+	ServiceAccount     = "swift-swift"
 	ServiceDescription = "Swift Object Storage"
 )
