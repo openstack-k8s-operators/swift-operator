@@ -1,0 +1,31 @@
+# permissions for end users to edit swifts.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: swift-editor-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: swift-operator
+    app.kubernetes.io/part-of: swift-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: swift-editor-role
+rules:
+- apiGroups:
+  - swift.openstack.org
+  resources:
+  - swifts
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - swift.openstack.org
+  resources:
+  - swifts/status
+  verbs:
+  - get

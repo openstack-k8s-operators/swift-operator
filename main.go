@@ -37,6 +37,7 @@ import (
 
 	keystonev1beta1 "github.com/openstack-k8s-operators/keystone-operator/api/v1beta1"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/util"
+
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
 	"github.com/openstack-k8s-operators/swift-operator/controllers"
 	//+kubebuilder:scaffold:imports
@@ -134,6 +135,14 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "SwiftRing")
 		os.Exit(1)
 	}
+	if err = (&controllers.SwiftReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+		Log:    mgr.GetLogger(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Swift")
+		os.Exit(1)
+	}
 	//+kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
@@ -145,7 +154,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	tp := util.GetTemplatesPath()
+	tp, _ := util.GetTemplatesPath()
 	setupLog.V(1).Info(fmt.Sprintf("Loading templates from %s", tp))
 
 	setupLog.Info("starting manager")

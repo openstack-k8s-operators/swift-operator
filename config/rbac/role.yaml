@@ -6,6 +6,28 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - serviceaccounts
+  verbs:
+  - create
+  - get
+  - list
+  - update
+  - watch
+- apiGroups:
   - '*'
   resources:
   - configmaps
@@ -158,6 +180,26 @@ rules:
   - update
   - watch
 - apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - rolebindings
+  verbs:
+  - create
+  - get
+  - list
+  - update
+  - watch
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - roles
+  verbs:
+  - create
+  - get
+  - list
+  - update
+  - watch
+- apiGroups:
   - route.openshift.io
   resources:
   - routes
@@ -169,6 +211,15 @@ rules:
   - patch
   - update
   - watch
+- apiGroups:
+  - security.openshift.io
+  resourceNames:
+  - anyuid
+  - privileged
+  resources:
+  - securitycontextconstraints
+  verbs:
+  - use
 - apiGroups:
   - swift.openstack.org
   resources:
@@ -217,6 +268,32 @@ rules:
   - swift.openstack.org
   resources:
   - swiftrings/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - swift.openstack.org
+  resources:
+  - swifts
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - swift.openstack.org
+  resources:
+  - swifts/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - swift.openstack.org
+  resources:
+  - swifts/status
   verbs:
   - get
   - patch
