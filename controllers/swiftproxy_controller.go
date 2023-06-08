@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-logr/logr"
+	"time"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -145,6 +146,7 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		swift.ServiceName,
 		labels,
 		swiftPorts,
+		time.Duration(5)*time.Second,
 	)
 	if err != nil {
 		r.Log.Error(err, "Failed to expose endpoints for Swift Proxy")

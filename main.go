@@ -145,7 +145,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	tp := util.GetTemplatesPath()
+	tp, _ := util.GetTemplatesPath()
 	setupLog.V(1).Info(fmt.Sprintf("Loading templates from %s", tp))
 
 	setupLog.Info("starting manager")
