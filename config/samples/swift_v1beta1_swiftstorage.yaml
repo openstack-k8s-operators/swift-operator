@@ -5,9 +5,4 @@ metadata:
 spec:
   swiftRingConfigMap: swiftring-sample-ring-data
   storageClassName: "local-storage"
-  containerImageAccount: quay.io/tripleozedcentos9/openstack-swift-account:current-tripleo
-  containerImageContainer: quay.io/tripleozedcentos9/openstack-swift-container:current-tripleo
-  containerImageObject: quay.io/tripleozedcentos9/openstack-swift-object:current-tripleo
-  containerImageProxy: quay.io/tripleozedcentos9/openstack-swift-proxy-server:current-tripleo
-  containerImageMemcached: quay.io/tripleozedcentos9/openstack-memcached:current-tripleo
   replicas: 3

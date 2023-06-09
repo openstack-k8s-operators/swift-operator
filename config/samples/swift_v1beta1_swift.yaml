@@ -7,7 +7,6 @@ spec:
   swiftRing:
     replicas: 3
     devices: 3
-    containerImage: quay.io/tripleozedcentos9/openstack-swift-proxy-server:current-tripleo
     storagePodPrefix: swift-storage
     storageServiceName: swift-storage
 
@@ -15,11 +14,6 @@ spec:
     replicas: 3
     storageClassName: "local-storage"
     swiftRingConfigMap: swift-ring-ring-data
-    containerImageAccount: quay.io/tripleozedcentos9/openstack-swift-account:current-tripleo
-    containerImageContainer: quay.io/tripleozedcentos9/openstack-swift-container:current-tripleo
-    containerImageObject: quay.io/tripleozedcentos9/openstack-swift-object:current-tripleo
-    containerImageProxy: quay.io/tripleozedcentos9/openstack-swift-proxy-server:current-tripleo
-    containerImageMemcached: quay.io/tripleozedcentos9/openstack-memcached:current-tripleo
 
   swiftProxy:
     replicas: 1
@@ -27,5 +21,3 @@ spec:
     serviceUser: swift
     secret: osp-secret
     swiftRingConfigMap: swift-ring-ring-data
-    containerImageProxy: quay.io/tripleozedcentos9/openstack-swift-proxy-server:current-tripleo
-    containerImageMemcached: quay.io/tripleozedcentos9/openstack-memcached:current-tripleo

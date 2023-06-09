@@ -5,6 +5,5 @@ metadata:
 spec:
   replicas: 3
   devices: 3
-  containerImage: quay.io/tripleozedcentos9/openstack-swift-proxy-server:current-tripleo
   storagePodPrefix: swiftstorage-sample
   storageServiceName: swiftstorage-sample

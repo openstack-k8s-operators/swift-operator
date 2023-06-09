@@ -23,8 +23,26 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
 
+// SwiftDefaults -
+type SwiftDefaults struct {
+	AccountContainerImageURL	string
+	ContainerContainerImageURL	string
+	ObjectContainerImageURL		string
+	ProxyContainerImageURL		string
+	MemcachedContainerImageURL	string
+}
+
+var swiftDefaults SwiftDefaults
+
+
+
 // log is for logging in this package.
 var swiftlog = logf.Log.WithName("swift-resource")
+
+func SetupSwiftDefaults(defaults SwiftDefaults) {
+	swiftDefaults = defaults
+	swiftlog.Info("Swift defaults initialized", "defaults", defaults)
+}
 
 func (r *Swift) SetupWebhookWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewWebhookManagedBy(mgr).
@@ -38,11 +56,51 @@ func (r *Swift) SetupWebhookWithManager(mgr ctrl.Manager) error {
 
 var _ webhook.Defaulter = &Swift{}
 
+
 // Default implements webhook.Defaulter so a webhook will be registered for the type
 func (r *Swift) Default() {
 	swiftlog.Info("default", "name", r.Name)
 
-	// TODO(user): fill in your defaulting logic.
+	r.Spec.Default()
+}
+
+// Default - set defaults for this Swift spec
+func (spec *SwiftSpec) Default() {
+	// ring
+	if spec.SwiftRing.ContainerImage == "" {
+		spec.SwiftRing.ContainerImage = swiftDefaults.ProxyContainerImageURL
+	}
+
+	// storage
+	if spec.SwiftStorage.ContainerImageAccount == "" {
+		spec.SwiftStorage.ContainerImageAccount = swiftDefaults.AccountContainerImageURL
+	}
+
+	if spec.SwiftStorage.ContainerImageContainer == "" {
+		spec.SwiftStorage.ContainerImageContainer = swiftDefaults.ContainerContainerImageURL
+	}
+
+	if spec.SwiftStorage.ContainerImageObject == "" {
+		spec.SwiftStorage.ContainerImageObject = swiftDefaults.ObjectContainerImageURL
+	}
+
+
+	if spec.SwiftStorage.ContainerImageProxy == "" {
+		spec.SwiftStorage.ContainerImageProxy = swiftDefaults.ProxyContainerImageURL
+	}
+
+	if spec.SwiftStorage.ContainerImageMemcached == "" {
+		spec.SwiftStorage.ContainerImageMemcached = swiftDefaults.MemcachedContainerImageURL
+	}
+
+	// proxy
+	if spec.SwiftProxy.ContainerImageProxy == "" {
+		spec.SwiftProxy.ContainerImageProxy = swiftDefaults.ProxyContainerImageURL
+	}
+
+	if spec.SwiftProxy.ContainerImageMemcached == "" {
+		spec.SwiftProxy.ContainerImageMemcached = swiftDefaults.MemcachedContainerImageURL
+	}
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.

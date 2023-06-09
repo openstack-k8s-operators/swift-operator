@@ -1,0 +1,23 @@
+# This patch inject custom ENV settings to the manager container
+# Used to set our default image locations
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: controller-manager
+  namespace: system
+spec:
+  template:
+    spec:
+      containers:
+      - name: manager
+        env:
+        - name: SWIFT_PROXY_IMAGE_URL_DEFAULT
+          value: quay.io/podified-antelope-centos9/openstack-swift-proxy-server:current-podified
+        - name: SWIFT_ACCOUNT_IMAGE_URL_DEFAULT
+          value: quay.io/podified-antelope-centos9/openstack-swift-account:current-podified
+        - name: SWIFT_CONTAINER_IMAGE_URL_DEFAULT
+          value: quay.io/podified-antelope-centos9/openstack-swift-container:current-podified
+        - name: SWIFT_OBJECT_IMAGE_URL_DEFAULT
+          value: quay.io/podified-antelope-centos9/openstack-swift-object:current-podified
+        - name: SWIFT_MEMCACHED_IMAGE_URL_DEFAULT
+          value: quay.io/podified-antelope-centos9/openstack-memcached:current-podified

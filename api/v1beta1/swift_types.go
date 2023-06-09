@@ -17,12 +17,19 @@ limitations under the License.
 package v1beta1
 
 import (
+	"github.com/openstack-k8s-operators/lib-common/modules/common/util"
 	condition "github.com/openstack-k8s-operators/lib-common/modules/common/condition"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+const (
+	// Container image fall-back defaults
+	ContainerImageAccount = "quay.io/podified-antelope-centos9/openstack-swift-account:current-podified"
+	ContainerImageContainer = "quay.io/podified-antelope-centos9/openstack-swift-container:current-podified"
+	ContainerImageObject = "quay.io/podified-antelope-centos9/openstack-swift-object:current-podified"
+	ContainerImageProxy = "quay.io/podified-antelope-centos9/openstack-swift-proxy-server:current-podified"
+	ContainerImageMemcached = "quay.io/podified-antelope-centos9/openstack-memcached:current-podified"
+)
 
 // SwiftSpec defines the desired state of Swift
 type SwiftSpec struct {
@@ -89,4 +96,18 @@ func (instance Swift) RbacNamespace() string {
 // RbacResourceName - return the name to be used for rbac objects (serviceaccount, role, rolebinding)
 func (instance Swift) RbacResourceName() string {
 	return "swift-" + instance.Name
+}
+
+// SetupDefaults - initializes any CRD field defaults based on environment variables (the defaulting mechanism itself is implemented via webhooks)
+func SetupDefaults() {
+	// Acquire environmental defaults and initialize Swift defaults with them
+	swiftDefaults := SwiftDefaults{
+		AccountContainerImageURL:	util.GetEnvVar("SWIFT_ACCOUNT_IMAGE_URL_DEFAULT", ContainerImageAccount),
+		ContainerContainerImageURL:	util.GetEnvVar("SWIFT_CONTAINER_IMAGE_URL_DEFAULT", ContainerImageContainer),
+		ObjectContainerImageURL:	util.GetEnvVar("SWIFT_OBJECT_IMAGE_URL_DEFAULT", ContainerImageObject),
+		ProxyContainerImageURL:		util.GetEnvVar("SWIFT_PROXY_IMAGE_URL_DEFAULT", ContainerImageProxy),
+		MemcachedContainerImageURL:	util.GetEnvVar("SWIFT_MEMCACHED_IMAGE_URL_DEFAULT", ContainerImageMemcached),
+	}
+
+	SetupSwiftDefaults(swiftDefaults)
 }
