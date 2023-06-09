@@ -69,6 +69,11 @@ spec:
                 description: Name of ConfigMap containing Swift rings
                 type: string
             required:
+            - containerImageAccount
+            - containerImageContainer
+            - containerImageMemcached
+            - containerImageObject
+            - containerImageProxy
             - replicas
             type: object
           status:

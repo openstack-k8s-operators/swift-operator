@@ -45,7 +45,7 @@ type SwiftRingSpec struct {
 
 	// +kubebuilder:validation:Required
 	// Image URL for Swift proxy service
-	ContainerImage string `json:"containerImage,omitempty"`
+	ContainerImage string `json:"containerImage"`
 
 	// +kubebuilder:validation:Required
 	// Storage Pod prefix

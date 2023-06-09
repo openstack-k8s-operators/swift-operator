@@ -54,11 +54,11 @@ type SwiftProxySpec struct {
 
 	// +kubebuilder:validation:Required
 	// Swift Proxy Container Image URL
-	ContainerImageProxy string `json:"containerImageProxy,omitempty"`
+	ContainerImageProxy string `json:"containerImageProxy"`
 
 	// +kubebuilder:validation:Required
 	// Image URL for Memcache servicd
-	ContainerImageMemcached string `json:"containerImageMemcached,omitempty"`
+	ContainerImageMemcached string `json:"containerImageMemcached"`
 
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=swift

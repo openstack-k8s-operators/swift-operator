@@ -84,6 +84,9 @@ spec:
               swiftRingConfigMap:
                 description: Name of ConfigMap containing Swift rings
                 type: string
+            required:
+            - containerImageMemcached
+            - containerImageProxy
             type: object
           status:
             description: SwiftProxyStatus defines the observed state of SwiftProxy

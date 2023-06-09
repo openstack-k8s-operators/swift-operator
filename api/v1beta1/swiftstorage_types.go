@@ -41,23 +41,23 @@ type SwiftStorageSpec struct {
 
 	// +kubebuilder:validation:Required
 	// Image URL for Swift account service
-	ContainerImageAccount string `json:"containerImageAccount,omitempty"`
+	ContainerImageAccount string `json:"containerImageAccount"`
 
 	// +kubebuilder:validation:Required
 	// Image URL for Swift container service
-	ContainerImageContainer string `json:"containerImageContainer,omitempty"`
+	ContainerImageContainer string `json:"containerImageContainer"`
 
 	// +kubebuilder:validation:Required
 	// Image URL for Swift object service
-	ContainerImageObject string `json:"containerImageObject,omitempty"`
+	ContainerImageObject string `json:"containerImageObject"`
 
 	// +kubebuilder:validation:Required
 	// Image URL for Swift proxy service
-	ContainerImageProxy string `json:"containerImageProxy,omitempty"`
+	ContainerImageProxy string `json:"containerImageProxy"`
 
 	// +kubebuilder:validation:Required
 	// Image URL for Memcache servicd
-	ContainerImageMemcached string `json:"containerImageMemcached,omitempty"`
+	ContainerImageMemcached string `json:"containerImageMemcached"`
 }
 
 // SwiftStorageStatus defines the observed state of SwiftStorage

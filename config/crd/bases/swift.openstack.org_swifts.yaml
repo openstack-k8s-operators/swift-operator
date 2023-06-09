@@ -79,6 +79,9 @@ spec:
                   swiftRingConfigMap:
                     description: Name of ConfigMap containing Swift rings
                     type: string
+                required:
+                - containerImageMemcached
+                - containerImageProxy
                 type: object
               swiftRing:
                 description: SwiftRing - Spec definition for the Ring service of this
@@ -104,6 +107,8 @@ spec:
                   storageServiceName:
                     description: Storage Service name
                     type: string
+                required:
+                - containerImage
                 type: object
               swiftStorage:
                 description: SwiftStorage - Spec definition for the Storage service
@@ -134,6 +139,11 @@ spec:
                     description: Name of ConfigMap containing Swift rings
                     type: string
                 required:
+                - containerImageAccount
+                - containerImageContainer
+                - containerImageMemcached
+                - containerImageObject
+                - containerImageProxy
                 - replicas
                 type: object
             required:

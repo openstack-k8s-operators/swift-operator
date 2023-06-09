@@ -64,6 +64,8 @@ spec:
               storageServiceName:
                 description: Storage Service name
                 type: string
+            required:
+            - containerImage
             type: object
           status:
             description: SwiftRingStatus defines the observed state of SwiftRing
