@@ -136,9 +136,10 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&controllers.SwiftReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-		Log:    mgr.GetLogger(),
+		Client:  mgr.GetClient(),
+		Scheme:  mgr.GetScheme(),
+		Log:     mgr.GetLogger(),
+		Kclient: kclient,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Swift")
 		os.Exit(1)
