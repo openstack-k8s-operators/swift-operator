@@ -144,6 +144,10 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Swift")
 		os.Exit(1)
 	}
+
+	// Acquire environmental defaults and initialize operator defaults with them
+	swiftv1beta1.SetupDefaults()
+
 	if err = (&swiftv1beta1.Swift{}).SetupWebhookWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create webhook", "webhook", "Swift")
 		os.Exit(1)
