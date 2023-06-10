@@ -85,7 +85,13 @@ func (r *SwiftRingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	if instance.Status.Conditions == nil {
-		instance.Status.Conditions.Init(nil)
+		instance.Status.Conditions = condition.Conditions{}
+		cl := condition.CreateList(
+			condition.UnknownCondition(swiftv1beta1.SwiftRingReadyCondition, condition.InitReason, swiftv1beta1.SwiftRingReadyInitMessage),
+		)
+
+		instance.Status.Conditions.Init(&cl)
+
 		if err := r.Status().Update(ctx, instance); err != nil {
 			return ctrl.Result{}, err
 		}
@@ -155,7 +161,7 @@ func (r *SwiftRingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		r.Log.V(1).Info(fmt.Sprintf("Job %s hash added - %s", instance.Name, instance.Status.Hash[swiftv1beta1.RingCreateHash]))
 	}
 
-	instance.Status.Conditions.MarkTrue(condition.ReadyCondition, condition.ReadyMessage)
+	instance.Status.Conditions.MarkTrue(swiftv1beta1.SwiftRingReadyCondition, condition.DeploymentReadyMessage)
 	if err := r.Status().Update(ctx, instance); err != nil {
 		return ctrl.Result{}, err
 	}

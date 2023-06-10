@@ -130,9 +130,10 @@ func (r *SwiftReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	swiftRing, op, err := r.ringCreateOrUpdate(ctx, instance)
 	if err != nil {
 		instance.Status.Conditions.Set(condition.FalseCondition(
-			condition.ReadyCondition,
+			swiftv1beta1.SwiftRingReadyCondition,
 			condition.ErrorReason,
 			condition.SeverityWarning,
+			swiftv1beta1.SwiftRingReadyErrorMessage,
 			err.Error()))
 		return ctrl.Result{}, err
 	}
@@ -150,9 +151,10 @@ func (r *SwiftReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	swiftStorage, op, err := r.storageCreateOrUpdate(ctx, instance)
 	if err != nil {
 		instance.Status.Conditions.Set(condition.FalseCondition(
-			condition.ReadyCondition,
+			swiftv1beta1.SwiftStorageReadyCondition,
 			condition.ErrorReason,
 			condition.SeverityWarning,
+			swiftv1beta1.SwiftStorageReadyErrorMessage,
 			err.Error()))
 		return ctrl.Result{}, err
 	}
@@ -170,9 +172,10 @@ func (r *SwiftReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	swiftProxy, op, err := r.proxyCreateOrUpdate(ctx, instance)
 	if err != nil {
 		instance.Status.Conditions.Set(condition.FalseCondition(
-			condition.ReadyCondition,
+			swiftv1beta1.SwiftProxyReadyCondition,
 			condition.ErrorReason,
 			condition.SeverityWarning,
+			swiftv1beta1.SwiftProxyReadyErrorMessage,
 			err.Error()))
 		return ctrl.Result{}, err
 	}

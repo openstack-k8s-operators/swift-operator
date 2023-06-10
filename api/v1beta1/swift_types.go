@@ -98,6 +98,13 @@ func (instance Swift) RbacResourceName() string {
 	return "swift-" + instance.Name
 }
 
+// IsReady - returns true if all subresources Ready condition is true
+func (instance Swift) IsReady() bool {
+	return instance.Status.Conditions.IsTrue(SwiftRingReadyCondition) &&
+		instance.Status.Conditions.IsTrue(SwiftStorageReadyCondition) &&
+		instance.Status.Conditions.IsTrue(SwiftProxyReadyCondition)
+}
+
 // SetupDefaults - initializes any CRD field defaults based on environment variables (the defaulting mechanism itself is implemented via webhooks)
 func SetupDefaults() {
 	// Acquire environmental defaults and initialize Swift defaults with them

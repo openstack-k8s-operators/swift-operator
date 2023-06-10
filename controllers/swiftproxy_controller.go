@@ -93,7 +93,13 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	}
 
 	if instance.Status.Conditions == nil {
-		instance.Status.Conditions.Init(nil)
+		instance.Status.Conditions = condition.Conditions{}
+		cl := condition.CreateList(
+			condition.UnknownCondition(swiftv1beta1.SwiftProxyReadyCondition, condition.InitReason, swiftv1beta1.SwiftRingReadyInitMessage),
+		)
+
+		instance.Status.Conditions.Init(&cl)
+
 		if err := r.Status().Update(ctx, instance); err != nil {
 			return ctrl.Result{}, err
 		}
@@ -202,7 +208,7 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	}
 
 	if depl.GetDeployment().Status.ReadyReplicas > 0 {
-		instance.Status.Conditions.MarkTrue(condition.ReadyCondition, condition.ReadyMessage)
+		instance.Status.Conditions.MarkTrue(swiftv1beta1.SwiftProxyReadyCondition, condition.DeploymentReadyMessage)
 
 		if err := r.Status().Update(ctx, instance); err != nil {
 			return ctrl.Result{}, err

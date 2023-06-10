@@ -90,7 +90,13 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	}
 
 	if instance.Status.Conditions == nil {
-		instance.Status.Conditions.Init(nil)
+		instance.Status.Conditions = condition.Conditions{}
+		cl := condition.CreateList(
+			condition.UnknownCondition(swiftv1beta1.SwiftStorageReadyCondition, condition.InitReason, swiftv1beta1.SwiftStorageReadyInitMessage),
+		)
+
+		instance.Status.Conditions.Init(&cl)
+
 		if err := r.Status().Update(ctx, instance); err != nil {
 			return ctrl.Result{}, err
 		}
@@ -173,7 +179,7 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	}
 
 	if sset.GetStatefulSet().Status.ReadyReplicas > 0 {
-		instance.Status.Conditions.MarkTrue(condition.ReadyCondition, condition.ReadyMessage)
+		instance.Status.Conditions.MarkTrue(swiftv1beta1.SwiftStorageReadyCondition, condition.DeploymentReadyMessage)
 
 		if err := r.Status().Update(ctx, instance); err != nil {
 			return ctrl.Result{}, err
