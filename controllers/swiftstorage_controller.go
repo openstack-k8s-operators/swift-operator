@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"time"
 	"github.com/go-logr/logr"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -121,7 +122,7 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	}
 
 	// Check if there is a ConfigMap for the Swift rings
-	_, ctrlResult, err := configmap.GetConfigMap(ctx, helper, instance, instance.Spec.SwiftRingConfigMap, 5)
+	_, ctrlResult, err := configmap.GetConfigMap(ctx, helper, instance, instance.Spec.SwiftRingConfigMap, 5 * time.Second)
 	if err != nil {
 		return ctrlResult, err
 	} else if (ctrlResult != ctrl.Result{}) {
@@ -129,7 +130,7 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	}
 
 	// Headless Service
-	svc := service.NewService(getStorageService(instance), ls, 5)
+	svc := service.NewService(getStorageService(instance), ls, 5 * time.Second)
 	ctrlResult, err = svc.CreateOrPatch(ctx, helper)
 	if err != nil {
 		return ctrlResult, err
@@ -138,7 +139,7 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	}
 
 	// Limit internal storage traffic to Swift services
-	np := swift.NewNetworkPolicy(getStorageNetworkPolicy(instance), ls, 5)
+	np := swift.NewNetworkPolicy(getStorageNetworkPolicy(instance), ls, 5 * time.Second)
 	ctrlResult, err = np.CreateOrPatch(ctx, helper)
 	if err != nil {
 		return ctrlResult, err
@@ -163,7 +164,7 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	}
 
 	// Statefulset with all backend containers
-	sset := statefulset.NewStatefulSet(getStorageStatefulSet(instance, ls), 5)
+	sset := statefulset.NewStatefulSet(getStorageStatefulSet(instance, ls), 5 * time.Second)
 	ctrlResult, err = sset.CreateOrPatch(ctx, helper)
 	if err != nil {
 		return ctrlResult, err

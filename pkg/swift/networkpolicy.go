@@ -19,6 +19,7 @@ package swift
 import (
 	"context"
 	"fmt"
+	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -32,14 +33,14 @@ import (
 
 type NetworkPolicy struct {
 	networkPolicy *networkingv1.NetworkPolicy
-	timeout       int
+	timeout       time.Duration
 }
 
 // NewNetworkPolicy returns an initialized NetworkPolicy.
 func NewNetworkPolicy(
 	networkPolicy *networkingv1.NetworkPolicy,
 	labels map[string]string,
-	timeout int,
+	timeout time.Duration,
 ) *NetworkPolicy {
 	return &NetworkPolicy{
 		networkPolicy: networkPolicy,

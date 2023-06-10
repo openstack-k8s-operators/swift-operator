@@ -115,7 +115,7 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 
 	// Check if there is a ConfigMap for the Swift rings
 	_, ctrlResult, err := configmap.GetConfigMap(
-		ctx, helper, instance, instance.Spec.SwiftRingConfigMap, 5)
+		ctx, helper, instance, instance.Spec.SwiftRingConfigMap, 5 * time.Second)
 	if err != nil {
 		return ctrlResult, err
 	} else if (ctrlResult != ctrl.Result{}) {
@@ -193,7 +193,7 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	}
 
 	// Create Deployment
-	depl := deployment.NewDeployment(getProxyDeployment(instance, labels), 5)
+	depl := deployment.NewDeployment(getProxyDeployment(instance, labels), 5 * time.Second)
 	ctrlResult, err = depl.CreateOrPatch(ctx, helper)
 	if err != nil {
 		return ctrlResult, err
