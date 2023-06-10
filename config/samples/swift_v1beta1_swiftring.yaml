@@ -7,3 +7,4 @@ spec:
   devices: 3
   storagePodPrefix: swiftstorage-sample
   storageServiceName: swiftstorage-sample
+  containerImage: quay.io/podified-antelope-centos9/openstack-swift-proxy-server:current-podified

@@ -2,18 +2,23 @@ apiVersion: swift.openstack.org/v1beta1
 kind: Swift
 metadata:
   name: swift
-  namespace: openstack
 spec:
   swiftRing:
     replicas: 3
     devices: 3
     storagePodPrefix: swift-storage
     storageServiceName: swift-storage
+    containerImage: quay.io/podified-antelope-centos9/openstack-swift-proxy-server:current-podified
 
   swiftStorage:
     replicas: 3
     storageClassName: "local-storage"
     swiftRingConfigMap: swift-ring-ring-data
+    containerImageAccount: quay.io/podified-antelope-centos9/openstack-swift-account:current-podified
+    containerImageContainer: quay.io/podified-antelope-centos9/openstack-swift-container:current-podified
+    containerImageObject: quay.io/podified-antelope-centos9/openstack-swift-object:current-podified
+    containerImageProxy: quay.io/podified-antelope-centos9/openstack-swift-proxy-server:current-podified
+    containerImageMemcached: quay.io/podified-antelope-centos9/openstack-memcached:current-podified
 
   swiftProxy:
     replicas: 1
@@ -21,3 +26,5 @@ spec:
     serviceUser: swift
     secret: osp-secret
     swiftRingConfigMap: swift-ring-ring-data
+    containerImageProxy: quay.io/podified-antelope-centos9/openstack-swift-proxy-server:current-podified
+    containerImageMemcached: quay.io/podified-antelope-centos9/openstack-memcached:current-podified
