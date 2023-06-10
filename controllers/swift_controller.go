@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-logr/logr"
-	"time"
 
 	rbacv1 "k8s.io/api/rbac/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -135,7 +134,7 @@ func (r *SwiftReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 			condition.ErrorReason,
 			condition.SeverityWarning,
 			err.Error()))
-		return ctrl.Result{RequeueAfter: time.Second * 10}, err
+		return ctrl.Result{}, err
 	}
 	if op != controllerutil.OperationResultNone {
 		r.Log.Info(fmt.Sprintf("Deployment %s successfully reconciled - operation: %s", instance.Name, string(op)))
@@ -155,7 +154,7 @@ func (r *SwiftReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 			condition.ErrorReason,
 			condition.SeverityWarning,
 			err.Error()))
-		return ctrl.Result{RequeueAfter: time.Second * 10}, err
+		return ctrl.Result{}, err
 	}
 	if op != controllerutil.OperationResultNone {
 		r.Log.Info(fmt.Sprintf("Deployment %s successfully reconciled - operation: %s", instance.Name, string(op)))
@@ -175,7 +174,7 @@ func (r *SwiftReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 			condition.ErrorReason,
 			condition.SeverityWarning,
 			err.Error()))
-		return ctrl.Result{RequeueAfter: time.Second * 10}, err
+		return ctrl.Result{}, err
 	}
 	if op != controllerutil.OperationResultNone {
 		r.Log.Info(fmt.Sprintf("Deployment %s successfully reconciled - operation: %s", instance.Name, string(op)))
