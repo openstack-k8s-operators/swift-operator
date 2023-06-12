@@ -203,7 +203,7 @@ func (r *SwiftReconciler) ringCreateOrUpdate(ctx context.Context, instance *swif
 
 	swiftRingSpec := swiftv1beta1.SwiftRingSpec{
 		RingConfigMap:      instance.Spec.RingConfigMap,
-		Replicas:           instance.Spec.SwiftRing.Replicas,
+		RingReplicas:       instance.Spec.SwiftRing.RingReplicas,
 		Devices:            instance.Spec.SwiftRing.Devices,
 		ContainerImage:     instance.Spec.SwiftRing.ContainerImage,
 		StoragePodPrefix:   instance.Spec.SwiftRing.StoragePodPrefix,

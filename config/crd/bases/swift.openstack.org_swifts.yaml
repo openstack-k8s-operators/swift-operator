@@ -96,17 +96,17 @@ spec:
                   devices:
                     default: 1
                     description: Number of devices/pods/nodes. Must be same or larger
-                      than replicas
-                    format: int64
-                    type: integer
-                  replicas:
-                    default: 1
-                    description: Number of Swift object replicas (=copies)
+                      than ringReplicas
                     format: int64
                     type: integer
                   ringConfigMap:
                     description: Name of ConfigMap containing Swift rings
                     type: string
+                  ringReplicas:
+                    default: 1
+                    description: Number of Swift object replicas (=copies)
+                    format: int64
+                    type: integer
                   storagePodPrefix:
                     description: Storage Pod prefix
                     type: string
@@ -115,6 +115,8 @@ spec:
                     type: string
                 required:
                 - containerImage
+                - devices
+                - ringReplicas
                 type: object
               swiftStorage:
                 description: SwiftStorage - Spec definition for the Storage service
