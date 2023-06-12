@@ -62,11 +62,11 @@ spec:
               replicas:
                 format: int32
                 type: integer
+              ringConfigMap:
+                description: Name of ConfigMap containing Swift rings
+                type: string
               storageClassName:
                 description: Name of StorageClass to use for Swift PVs
-                type: string
-              swiftRingConfigMap:
-                description: Name of ConfigMap containing Swift rings
                 type: string
             required:
             - containerImageAccount

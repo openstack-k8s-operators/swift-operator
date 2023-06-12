@@ -128,7 +128,7 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	}
 
 	// Check if there is a ConfigMap for the Swift rings
-	_, ctrlResult, err := configmap.GetConfigMap(ctx, helper, instance, instance.Spec.SwiftRingConfigMap, 5*time.Second)
+	_, ctrlResult, err := configmap.GetConfigMap(ctx, helper, instance, instance.Spec.RingConfigMap, 5*time.Second)
 	if err != nil {
 		return ctrlResult, err
 	} else if (ctrlResult != ctrl.Result{}) {
@@ -227,7 +227,7 @@ func getStorageVolumes(instance *swiftv1beta1.SwiftStorage) []corev1.Volume {
 			VolumeSource: corev1.VolumeSource{
 				ConfigMap: &corev1.ConfigMapVolumeSource{
 					LocalObjectReference: corev1.LocalObjectReference{
-						Name: instance.Spec.SwiftRingConfigMap,
+						Name: instance.Spec.RingConfigMap,
 					},
 				},
 			},

@@ -58,6 +58,9 @@ spec:
                 description: Number of Swift object replicas (=copies)
                 format: int64
                 type: integer
+              ringConfigMap:
+                description: Name of ConfigMap containing Swift rings
+                type: string
               storagePodPrefix:
                 description: Storage Pod prefix
                 type: string

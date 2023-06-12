@@ -35,6 +35,9 @@ spec:
           spec:
             description: SwiftSpec defines the desired state of Swift
             properties:
+              ringConfigMap:
+                description: Name of ConfigMap containing Swift rings
+                type: string
               swiftProxy:
                 description: SwiftProxy - Spec definition for the Proxy service of
                   this Swift deployment
@@ -67,6 +70,9 @@ spec:
                     maximum: 32
                     minimum: 0
                     type: integer
+                  ringConfigMap:
+                    description: Name of ConfigMap containing Swift rings
+                    type: string
                   secret:
                     description: Secret containing OpenStack password information
                       for Swift service user password
@@ -75,9 +81,6 @@ spec:
                     default: swift
                     description: ServiceUser - optional username used for this service
                       to register in Swift
-                    type: string
-                  swiftRingConfigMap:
-                    description: Name of ConfigMap containing Swift rings
                     type: string
                 required:
                 - containerImageMemcached
@@ -101,6 +104,9 @@ spec:
                     description: Number of Swift object replicas (=copies)
                     format: int64
                     type: integer
+                  ringConfigMap:
+                    description: Name of ConfigMap containing Swift rings
+                    type: string
                   storagePodPrefix:
                     description: Storage Pod prefix
                     type: string
@@ -132,11 +138,11 @@ spec:
                   replicas:
                     format: int32
                     type: integer
+                  ringConfigMap:
+                    description: Name of ConfigMap containing Swift rings
+                    type: string
                   storageClassName:
                     description: Name of StorageClass to use for Swift PVs
-                    type: string
-                  swiftRingConfigMap:
-                    description: Name of ConfigMap containing Swift rings
                     type: string
                 required:
                 - containerImageAccount
@@ -147,6 +153,7 @@ spec:
                 - replicas
                 type: object
             required:
+            - ringConfigMap
             - swiftProxy
             - swiftRing
             - swiftStorage

@@ -37,6 +37,10 @@ type SwiftSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// +kubebuilder:validation:Required
+	// Name of ConfigMap containing Swift rings
+	RingConfigMap string `json:"ringConfigMap"`
+
+	// +kubebuilder:validation:Required
         // SwiftRing - Spec definition for the Ring service of this Swift deployment
         SwiftRing SwiftRingSpec `json:"swiftRing"`
 

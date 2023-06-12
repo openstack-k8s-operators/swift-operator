@@ -72,6 +72,9 @@ spec:
                 maximum: 32
                 minimum: 0
                 type: integer
+              ringConfigMap:
+                description: Name of ConfigMap containing Swift rings
+                type: string
               secret:
                 description: Secret containing OpenStack password information for
                   Swift service user password
@@ -80,9 +83,6 @@ spec:
                 default: swift
                 description: ServiceUser - optional username used for this service
                   to register in Swift
-                type: string
-              swiftRingConfigMap:
-                description: Name of ConfigMap containing Swift rings
                 type: string
             required:
             - containerImageMemcached

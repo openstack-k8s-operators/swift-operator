@@ -33,7 +33,7 @@ type SwiftStorageSpec struct {
 
 	// +kubebuilder:validation:Required
 	// Name of ConfigMap containing Swift rings
-	SwiftRingConfigMap string `json:"swiftRingConfigMap,omitempty"`
+	RingConfigMap string `json:"ringConfigMap,omitempty"`
 
 	// +kubebuilder:validation:Required
 	// Name of StorageClass to use for Swift PVs

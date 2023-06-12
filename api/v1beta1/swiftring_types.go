@@ -33,6 +33,10 @@ type SwiftRingSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
+	// +kubebuilder:validation:Required
+	// Name of ConfigMap containing Swift rings
+	RingConfigMap string `json:"ringConfigMap,omitempty"`
+
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default=1
 	// Number of Swift object replicas (=copies)

@@ -3,9 +3,9 @@ kind: SwiftStorage
 metadata:
   name: swiftstorage-sample
 spec:
-  swiftRingConfigMap: swiftring-sample-ring-data
   storageClassName: "local-storage"
   replicas: 3
+  ringConfigMap: swift-ring-data
   containerImageAccount: quay.io/podified-antelope-centos9/openstack-swift-account:current-podified
   containerImageContainer: quay.io/podified-antelope-centos9/openstack-swift-container:current-podified
   containerImageObject: quay.io/podified-antelope-centos9/openstack-swift-object:current-podified
