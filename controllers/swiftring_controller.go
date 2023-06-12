@@ -128,7 +128,7 @@ func (r *SwiftRingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 	ringCreateHash := instance.Status.Hash[swiftv1beta1.RingCreateHash]
 
-	ringCreateJob := job.NewJob(getRingJob(instance, ls), swiftv1beta1.RingCreateHash, false, 5 * time.Second, ringCreateHash)
+	ringCreateJob := job.NewJob(getRingJob(instance, ls), swiftv1beta1.RingCreateHash, false, 5*time.Second, ringCreateHash)
 	ctrlResult, err := ringCreateJob.DoJob(ctx, helper)
 	if (ctrlResult != ctrl.Result{}) {
 		instance.Status.Conditions.Set(condition.FalseCondition(
