@@ -196,6 +196,9 @@ func (r *SwiftReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 func (r *SwiftReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&swiftv1beta1.Swift{}).
+		Owns(&swiftv1beta1.SwiftRing{}).
+		Owns(&swiftv1beta1.SwiftStorage{}).
+		Owns(&swiftv1beta1.SwiftProxy{}).
 		Complete(r)
 }
 
