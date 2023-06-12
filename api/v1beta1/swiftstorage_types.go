@@ -58,6 +58,16 @@ type SwiftStorageSpec struct {
 	// +kubebuilder:validation:Required
 	// Image URL for Memcache servicd
 	ContainerImageMemcached string `json:"containerImageMemcached"`
+
+	// +kubebuilder:validation:Required
+	// +kubebuilder:default=changeme
+	// Secret containing OpenStack password information for Swift service user password
+	SwiftHashPathSuffix string `json:"swiftHashPathSuffix,omitempty"`
+
+	// +kubebuilder:validation:Required
+	// +kubebuilder:default=changeme
+	// Secret containing OpenStack password information for Swift service user password
+	SwiftHashPathPrefix string `json:"swiftHashPathPrefix,omitempty"`
 }
 
 // SwiftStorageStatus defines the observed state of SwiftStorage

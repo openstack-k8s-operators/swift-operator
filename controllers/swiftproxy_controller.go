@@ -246,6 +246,8 @@ func getProxyConfigMapTemplates(instance *swiftv1beta1.SwiftProxy, labels map[st
 	templateParameters["ServiceUser"] = instance.Spec.ServiceUser
 	templateParameters["ServicePassword"] = password
 	templateParameters["KeystonePublicURL"] = authURL
+	templateParameters["SwiftHashPathPrefix"] = instance.Spec.SwiftHashPathPrefix
+	templateParameters["SwiftHashPathSuffix"] = instance.Spec.SwiftHashPathSuffix
 
 	return []util.Template{
 		{

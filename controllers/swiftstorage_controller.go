@@ -191,13 +191,18 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 }
 
 func getStorageConfigMapTemplates(instance *swiftv1beta1.SwiftStorage, labels map[string]string) []util.Template {
+	templateParameters := make(map[string]interface{})
+	templateParameters["SwiftHashPathPrefix"] = instance.Spec.SwiftHashPathPrefix
+	templateParameters["SwiftHashPathSuffix"] = instance.Spec.SwiftHashPathSuffix
+
 	return []util.Template{
 		{
-			Name:         fmt.Sprintf("%s-config-data", instance.Name),
-			Namespace:    instance.Namespace,
-			Type:         util.TemplateTypeConfig,
-			InstanceType: instance.Kind,
-			Labels:       labels,
+			Name:          fmt.Sprintf("%s-config-data", instance.Name),
+			Namespace:     instance.Namespace,
+			Type:          util.TemplateTypeConfig,
+			InstanceType:  instance.Kind,
+			Labels:        labels,
+			ConfigOptions: templateParameters,
 		},
 	}
 }

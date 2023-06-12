@@ -33,6 +33,7 @@ import (
 	"github.com/openstack-k8s-operators/lib-common/modules/common/helper"
 	common_rbac "github.com/openstack-k8s-operators/lib-common/modules/common/rbac"
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
+	swift "github.com/openstack-k8s-operators/swift-operator/pkg/swift"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -126,6 +127,20 @@ func (r *SwiftReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return rbacResult, nil
 	}
 
+	// Create random values for SwiftHashPathPrefix/SwiftHashPathSuffix
+	if instance.Spec.SwiftHashPathPrefix == "" {
+		instance.Spec.SwiftHashPathPrefix = swift.RandomString(16)
+		if err := r.Update(ctx, instance); err != nil {
+			return ctrl.Result{}, err
+		}
+	}
+	if instance.Spec.SwiftHashPathSuffix == "" {
+		instance.Spec.SwiftHashPathSuffix = swift.RandomString(16)
+		if err := r.Update(ctx, instance); err != nil {
+			return ctrl.Result{}, err
+		}
+	}
+
 	// create or update Swift rings
 	swiftRing, op, err := r.ringCreateOrUpdate(ctx, instance)
 	if err != nil {
@@ -205,12 +220,14 @@ func (r *SwiftReconciler) SetupWithManager(mgr ctrl.Manager) error {
 func (r *SwiftReconciler) ringCreateOrUpdate(ctx context.Context, instance *swiftv1beta1.Swift) (*swiftv1beta1.SwiftRing, controllerutil.OperationResult, error) {
 
 	swiftRingSpec := swiftv1beta1.SwiftRingSpec{
-		RingConfigMap:      instance.Spec.RingConfigMap,
-		RingReplicas:       instance.Spec.SwiftRing.RingReplicas,
-		Devices:            instance.Spec.SwiftRing.Devices,
-		ContainerImage:     instance.Spec.SwiftRing.ContainerImage,
-		StoragePodPrefix:   instance.Spec.SwiftRing.StoragePodPrefix,
-		StorageServiceName: instance.Spec.SwiftRing.StorageServiceName,
+		RingConfigMap:       instance.Spec.RingConfigMap,
+		RingReplicas:        instance.Spec.SwiftRing.RingReplicas,
+		Devices:             instance.Spec.SwiftRing.Devices,
+		ContainerImage:      instance.Spec.SwiftRing.ContainerImage,
+		StoragePodPrefix:    instance.Spec.SwiftRing.StoragePodPrefix,
+		StorageServiceName:  instance.Spec.SwiftRing.StorageServiceName,
+		SwiftHashPathPrefix: instance.Spec.SwiftHashPathPrefix,
+		SwiftHashPathSuffix: instance.Spec.SwiftHashPathSuffix,
 	}
 
 	deployment := &swiftv1beta1.SwiftRing{
@@ -244,6 +261,8 @@ func (r *SwiftReconciler) storageCreateOrUpdate(ctx context.Context, instance *s
 		ContainerImageObject:    instance.Spec.SwiftStorage.ContainerImageObject,
 		ContainerImageProxy:     instance.Spec.SwiftStorage.ContainerImageProxy,
 		ContainerImageMemcached: instance.Spec.SwiftStorage.ContainerImageMemcached,
+		SwiftHashPathPrefix:     instance.Spec.SwiftHashPathPrefix,
+		SwiftHashPathSuffix:     instance.Spec.SwiftHashPathSuffix,
 	}
 
 	deployment := &swiftv1beta1.SwiftStorage{
@@ -276,6 +295,8 @@ func (r *SwiftReconciler) proxyCreateOrUpdate(ctx context.Context, instance *swi
 		Secret:                  instance.Spec.SwiftProxy.Secret,
 		ServiceUser:             instance.Spec.SwiftProxy.ServiceUser,
 		PasswordSelectors:       instance.Spec.SwiftProxy.PasswordSelectors,
+		SwiftHashPathPrefix:     instance.Spec.SwiftHashPathPrefix,
+		SwiftHashPathSuffix:     instance.Spec.SwiftHashPathSuffix,
 	}
 
 	deployment := &swiftv1beta1.SwiftProxy{

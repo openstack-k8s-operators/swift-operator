@@ -51,6 +51,14 @@ type SwiftSpec struct {
 	// +kubebuilder:validation:Required
         // SwiftProxy - Spec definition for the Proxy service of this Swift deployment
         SwiftProxy SwiftProxySpec `json:"swiftProxy"`
+
+	// +kubebuilder:validation:Required
+	// Secret containing OpenStack password information for Swift service user password
+	SwiftHashPathSuffix string `json:"swiftHashPathSuffix"`
+
+	// +kubebuilder:validation:Required
+	// Secret containing OpenStack password information for Swift service user password
+	SwiftHashPathPrefix string `json:"swiftHashPathPrefix"`
 }
 
 // SwiftStatus defines the observed state of Swift

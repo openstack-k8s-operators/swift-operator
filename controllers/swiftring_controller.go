@@ -259,13 +259,18 @@ func getRingVolumeMounts() []corev1.VolumeMount {
 }
 
 func getRingConfigMapTemplates(instance *swiftv1beta1.SwiftRing, labels map[string]string) []util.Template {
+	templateParameters := make(map[string]interface{})
+	templateParameters["SwiftHashPathPrefix"] = instance.Spec.SwiftHashPathPrefix
+	templateParameters["SwiftHashPathSuffix"] = instance.Spec.SwiftHashPathSuffix
+
 	return []util.Template{
 		{
-			Name:         fmt.Sprintf("%s-scripts", instance.Name),
-			Namespace:    instance.Namespace,
-			Type:         util.TemplateTypeScripts,
-			InstanceType: instance.Kind,
-			Labels:       labels,
+			Name:          fmt.Sprintf("%s-scripts", instance.Name),
+			Namespace:     instance.Namespace,
+			Type:          util.TemplateTypeScripts,
+			InstanceType:  instance.Kind,
+			ConfigOptions: templateParameters,
+			Labels:        labels,
 		},
 	}
 }

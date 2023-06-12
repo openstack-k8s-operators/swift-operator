@@ -72,6 +72,16 @@ type SwiftProxySpec struct {
 	// +kubebuilder:validation:Optional
 	// PasswordSelector - Selector to choose the Swift user password from the Secret
 	PasswordSelectors PasswordSelector `json:"passwordSelectors,omitempty"`
+
+	// +kubebuilder:validation:Required
+	// +kubebuilder:default=changeme
+	// Secret containing OpenStack password information for Swift service user password
+	SwiftHashPathSuffix string `json:"swiftHashPathSuffix,omitempty"`
+
+	// +kubebuilder:validation:Required
+	// +kubebuilder:default=changeme
+	// Secret containing OpenStack password information for Swift service user password
+	SwiftHashPathPrefix string `json:"swiftHashPathPrefix,omitempty"`
 }
 
 // SwiftProxyStatus defines the observed state of SwiftProxy

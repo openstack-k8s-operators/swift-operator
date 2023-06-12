@@ -58,6 +58,16 @@ type SwiftRingSpec struct {
 	// +kubebuilder:validation:Required
 	// Storage Service name
 	StorageServiceName string `json:"storageServiceName,omitempty"`
+
+	// +kubebuilder:validation:Required
+	// +kubebuilder:default=changeme
+	// Secret containing OpenStack password information for Swift service user password
+	SwiftHashPathSuffix string `json:"swiftHashPathSuffix,omitempty"`
+
+	// +kubebuilder:validation:Required
+	// +kubebuilder:default=changeme
+	// Secret containing OpenStack password information for Swift service user password
+	SwiftHashPathPrefix string `json:"swiftHashPathPrefix,omitempty"`
 }
 
 // SwiftRingStatus defines the observed state of SwiftRing

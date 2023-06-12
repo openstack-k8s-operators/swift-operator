@@ -17,6 +17,7 @@ package swift
 
 import (
 	corev1 "k8s.io/api/core/v1"
+	"math/rand"
 )
 
 func GetSecurityContext() corev1.SecurityContext {
@@ -46,4 +47,14 @@ func GetLabelsStorage() map[string]string {
 
 func GetLabelsRing() map[string]string {
 	return map[string]string{"app.kubernetes.io/name": "SwiftRing"}
+}
+
+func RandomString(length int) string {
+	sample := "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	str := make([]byte, length)
+
+	for i := 0; i < length; i++ {
+		str[i] = sample[rand.Intn(len(sample))]
+	}
+	return string(str)
 }
