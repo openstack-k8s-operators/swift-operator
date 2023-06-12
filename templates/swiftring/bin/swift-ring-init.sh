@@ -1,9 +1,6 @@
 #!/bin/sh
 cd /etc/swift
 
-# Dummy, otherwise swift-ring-builder fails if not set
-crudini --set /etc/swift/swift.conf swift-hash swift_hash_path_suffix dummy
-
 swift-ring-builder account.builder create 8 ${SWIFT_REPLICAS} 1
 swift-ring-builder container.builder create 8 ${SWIFT_REPLICAS} 1
 swift-ring-builder object.builder create 8 ${SWIFT_REPLICAS} 1

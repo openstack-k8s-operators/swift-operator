@@ -41,6 +41,7 @@ import (
 	"github.com/openstack-k8s-operators/lib-common/modules/common/endpoint"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/env"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/helper"
+	"github.com/openstack-k8s-operators/lib-common/modules/common/secret"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/util"
 
 	keystonev1 "github.com/openstack-k8s-operators/keystone-operator/api/v1beta1"
@@ -190,9 +191,16 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return ctrlResult, err
 	}
 
+	// Get the service password
+	secret, _, err := secret.GetSecret(ctx, helper, instance.Spec.Secret, instance.Namespace)
+	if err != nil {
+		return ctrlResult, err
+	}
+	password := string(secret.Data[instance.Spec.PasswordSelectors.Service])
+
 	// Create a ConfigMap populated with content from templates/
 	envVars := make(map[string]env.Setter)
-	tpl := getProxyConfigMapTemplates(instance, labels, authURL)
+	tpl := getProxyConfigMapTemplates(instance, labels, authURL, password)
 	err = configmap.EnsureConfigMaps(ctx, helper, instance, tpl, &envVars)
 	if err != nil {
 		return ctrl.Result{}, err
@@ -233,11 +241,11 @@ func (r *SwiftProxyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func getProxyConfigMapTemplates(instance *swiftv1beta1.SwiftProxy, labels map[string]string, authURL string) []util.Template {
+func getProxyConfigMapTemplates(instance *swiftv1beta1.SwiftProxy, labels map[string]string, authURL string, password string) []util.Template {
 	templateParameters := make(map[string]interface{})
 	templateParameters["ServiceUser"] = instance.Spec.ServiceUser
+	templateParameters["ServicePassword"] = password
 	templateParameters["KeystonePublicURL"] = authURL
-	//instance.Status.APIEndpoints[keystone.ServiceName][string(endpoint.EndpointPublic)]
 
 	return []util.Template{
 		{
@@ -304,19 +312,6 @@ func getProxyVolumeMounts() []corev1.VolumeMount {
 }
 
 func getInitContainers(swiftproxy *swiftv1beta1.SwiftProxy) []corev1.Container {
-	envs := []corev1.EnvVar{
-		{
-			Name: "SwiftPassword",
-			ValueFrom: &corev1.EnvVarSource{
-				SecretKeyRef: &corev1.SecretKeySelector{
-					LocalObjectReference: corev1.LocalObjectReference{
-						Name: swiftproxy.Spec.Secret,
-					},
-					Key: swiftproxy.Spec.PasswordSelectors.Service,
-				},
-			},
-		},
-	}
 	securityContext := swift.GetSecurityContext()
 	return []corev1.Container{
 		{
@@ -325,8 +320,7 @@ func getInitContainers(swiftproxy *swiftv1beta1.SwiftProxy) []corev1.Container {
 			ImagePullPolicy: corev1.PullIfNotPresent,
 			SecurityContext: &securityContext,
 			VolumeMounts:    getProxyVolumeMounts(),
-			Env:             envs,
-			Command:         []string{"/bin/sh", "-c", "cp -t /etc/swift/ /var/lib/config-data/default/* /var/lib/config-data/rings/* ; crudini --set /etc/swift/proxy-server.conf 'filter:authtoken' password $SwiftPassword"},
+			Command:         []string{"/bin/sh", "-c", "cp -t /etc/swift/ /var/lib/config-data/default/* /var/lib/config-data/rings/*"},
 		},
 	}
 }
