@@ -33,7 +33,6 @@ import (
 	"github.com/openstack-k8s-operators/lib-common/modules/common/helper"
 	common_rbac "github.com/openstack-k8s-operators/lib-common/modules/common/rbac"
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
-	swift "github.com/openstack-k8s-operators/swift-operator/pkg/swift"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -125,20 +124,6 @@ func (r *SwiftReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return rbacResult, err
 	} else if (rbacResult != ctrl.Result{}) {
 		return rbacResult, nil
-	}
-
-	// Create random values for SwiftHashPathPrefix/SwiftHashPathSuffix
-	if instance.Spec.SwiftHashPathPrefix == "" {
-		instance.Spec.SwiftHashPathPrefix = swift.RandomString(16)
-		if err := r.Update(ctx, instance); err != nil {
-			return ctrl.Result{}, err
-		}
-	}
-	if instance.Spec.SwiftHashPathSuffix == "" {
-		instance.Spec.SwiftHashPathSuffix = swift.RandomString(16)
-		if err := r.Update(ctx, instance); err != nil {
-			return ctrl.Result{}, err
-		}
 	}
 
 	// create or update Swift rings
