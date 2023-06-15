@@ -40,6 +40,11 @@ type SwiftStorageSpec struct {
 	StorageClassName string `json:"storageClassName,omitempty"`
 
 	// +kubebuilder:validation:Required
+	// +kubebuilder:default="10G"
+	// Minimum size for Swift PVs
+	StorageRequest string `json:"storageRequest"`
+
+	// +kubebuilder:validation:Required
 	// Image URL for Swift account service
 	ContainerImageAccount string `json:"containerImageAccount"`
 

@@ -155,6 +155,10 @@ spec:
                   storageClassName:
                     description: Name of StorageClass to use for Swift PVs
                     type: string
+                  storageRequest:
+                    default: 10G
+                    description: Minimum size for Swift PVs
+                    type: string
                   swiftConfSecret:
                     description: Name of Secret containing swift.conf
                     type: string
@@ -165,6 +169,7 @@ spec:
                 - containerImageObject
                 - containerImageProxy
                 - replicas
+                - storageRequest
                 type: object
             required:
             - ringConfigMap

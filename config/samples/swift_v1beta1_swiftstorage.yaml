@@ -4,6 +4,7 @@ metadata:
   name: swiftstorage-sample
 spec:
   storageClassName: "local-storage"
+  storageRequest: 10G
   replicas: 3
   ringConfigMap: swift-ring-data
   swiftConfSecret: swiftconf
