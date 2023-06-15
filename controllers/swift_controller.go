@@ -247,8 +247,8 @@ func (r *SwiftReconciler) ringCreateOrUpdate(ctx context.Context, instance *swif
 		RingReplicas:       instance.Spec.SwiftRing.RingReplicas,
 		Devices:            instance.Spec.SwiftRing.Devices,
 		ContainerImage:     instance.Spec.SwiftRing.ContainerImage,
-		StoragePodPrefix:   instance.Spec.SwiftRing.StoragePodPrefix,
-		StorageServiceName: instance.Spec.SwiftRing.StorageServiceName,
+		StoragePodPrefix:   fmt.Sprintf("%s-storage", instance.Name),
+		StorageServiceName: fmt.Sprintf("%s-storage", instance.Name),
 		SwiftConfSecret:    instance.Spec.SwiftConfSecret,
 	}
 

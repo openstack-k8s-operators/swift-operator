@@ -1,7 +1,7 @@
 apiVersion: swift.openstack.org/v1beta1
 kind: SwiftProxy
 metadata:
-  name: swiftproxy-sample
+  name: swift-proxy
 spec:
   replicas: 1
   ringConfigMap: swift-ring-data

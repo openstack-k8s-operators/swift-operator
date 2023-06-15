@@ -1,12 +1,12 @@
 apiVersion: swift.openstack.org/v1beta1
 kind: SwiftRing
 metadata:
-  name: swiftring-sample
+  name: swift-ring
 spec:
   replicas: 3
   devices: 3
   ringConfigMap: swift-ring-data
   swiftConfSecret: swiftconf
-  storagePodPrefix: swiftstorage-sample
-  storageServiceName: swiftstorage-sample
+  storagePodPrefix: swift-storage
+  storageServiceName: swift-storage
   containerImage: quay.io/podified-antelope-centos9/openstack-swift-proxy-server:current-podified
