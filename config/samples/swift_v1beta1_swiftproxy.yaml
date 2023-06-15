@@ -4,8 +4,8 @@ metadata:
   name: swift-proxy
 spec:
   replicas: 1
-  ringConfigMap: swift-ring-data
-  swiftConfSecret: swiftconf
+  ringConfigMap: swift-ring
+  swiftConfSecret: swift-conf
   secret: osp-secret
   serviceUser: swift
   passwordSelector: SwiftPassword
