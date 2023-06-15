@@ -15,7 +15,7 @@ spec:
     path: /mnt/pv-data/pv0010
   persistentVolumeReclaimPolicy: Retain
   volumeMode: Filesystem
-  storageClassName: swift-storage
+  storageClass: swift-storage
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -41,7 +41,7 @@ spec:
     path: /mnt/pv-data/pv0011
   persistentVolumeReclaimPolicy: Retain
   volumeMode: Filesystem
-  storageClassName: swift-storage
+  storageClass: swift-storage
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -67,7 +67,7 @@ spec:
     path: /mnt/pv-data/pv0012
   persistentVolumeReclaimPolicy: Retain
   volumeMode: Filesystem
-  storageClassName: swift-storage
+  storageClass: swift-storage
   nodeAffinity:
     required:
       nodeSelectorTerms:

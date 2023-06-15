@@ -277,7 +277,7 @@ func (r *SwiftReconciler) storageCreateOrUpdate(ctx context.Context, instance *s
 	swiftStorageSpec := swiftv1beta1.SwiftStorageSpec{
 		Replicas:                instance.Spec.SwiftStorage.Replicas,
 		RingConfigMap:           instance.Spec.RingConfigMap,
-		StorageClassName:        instance.Spec.SwiftStorage.StorageClassName,
+		StorageClass:            instance.Spec.SwiftStorage.StorageClass,
 		ContainerImageAccount:   instance.Spec.SwiftStorage.ContainerImageAccount,
 		ContainerImageContainer: instance.Spec.SwiftStorage.ContainerImageContainer,
 		ContainerImageObject:    instance.Spec.SwiftStorage.ContainerImageObject,

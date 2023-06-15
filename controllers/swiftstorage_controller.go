@@ -536,7 +536,7 @@ func getStorageStatefulSet(
 					Name: "srv",
 				},
 				Spec: corev1.PersistentVolumeClaimSpec{
-					StorageClassName: &swiftstorage.Spec.StorageClassName,
+					StorageClassName: &swiftstorage.Spec.StorageClass,
 					AccessModes: []corev1.PersistentVolumeAccessMode{
 						corev1.ReadWriteOnce,
 					},

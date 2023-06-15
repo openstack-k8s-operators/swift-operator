@@ -37,7 +37,7 @@ type SwiftStorageSpec struct {
 
 	// +kubebuilder:validation:Required
 	// Name of StorageClass to use for Swift PVs
-	StorageClassName string `json:"storageClassName,omitempty"`
+	StorageClass string `json:"storageClass,omitempty"`
 
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default="10G"
