@@ -36,9 +36,11 @@ spec:
             description: SwiftSpec defines the desired state of Swift
             properties:
               ringConfigMap:
+                default: swift-ring
                 description: Name of ConfigMap containing Swift rings
                 type: string
               swiftConfSecret:
+                default: swift-conf
                 description: Name of Secret containing swift.conf
                 type: string
               swiftProxy:
