@@ -30,9 +30,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	"github.com/openstack-k8s-operators/lib-common/modules/common/condition"
+	"github.com/openstack-k8s-operators/lib-common/modules/common/env"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/helper"
 	common_rbac "github.com/openstack-k8s-operators/lib-common/modules/common/rbac"
+	"github.com/openstack-k8s-operators/lib-common/modules/common/secret"
+	"github.com/openstack-k8s-operators/lib-common/modules/common/util"
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
+	swift "github.com/openstack-k8s-operators/swift-operator/pkg/swift"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -126,6 +130,23 @@ func (r *SwiftReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return rbacResult, nil
 	}
 
+	labels := swift.GetLabelsSwift()
+
+	// Create a Secret populated with content from templates/
+	_, _, err = secret.GetSecret(ctx, helper, instance.Spec.SwiftConfSecret, instance.Namespace)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			envVars := make(map[string]env.Setter)
+			tpl := getSwiftSecretTemplates(instance, labels)
+			err = secret.EnsureSecrets(ctx, helper, instance, tpl, &envVars)
+			if err != nil {
+				return ctrl.Result{}, err
+			}
+		} else {
+			return ctrl.Result{}, err
+		}
+	}
+
 	// create or update Swift rings
 	swiftRing, op, err := r.ringCreateOrUpdate(ctx, instance)
 	if err != nil {
@@ -192,6 +213,23 @@ func (r *SwiftReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	return ctrl.Result{}, nil
 }
 
+func getSwiftSecretTemplates(instance *swiftv1beta1.Swift, labels map[string]string) []util.Template {
+	templateParameters := make(map[string]interface{})
+	templateParameters["SwiftHashPathPrefix"] = swift.RandomString(16)
+	templateParameters["SwiftHashPathSuffix"] = swift.RandomString(16)
+
+	return []util.Template{
+		{
+			Name:          instance.Spec.SwiftConfSecret,
+			Namespace:     instance.Namespace,
+			Type:          util.TemplateTypeConfig,
+			InstanceType:  instance.Kind,
+			ConfigOptions: templateParameters,
+			Labels:        labels,
+		},
+	}
+}
+
 // SetupWithManager sets up the controller with the Manager.
 func (r *SwiftReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
@@ -205,14 +243,13 @@ func (r *SwiftReconciler) SetupWithManager(mgr ctrl.Manager) error {
 func (r *SwiftReconciler) ringCreateOrUpdate(ctx context.Context, instance *swiftv1beta1.Swift) (*swiftv1beta1.SwiftRing, controllerutil.OperationResult, error) {
 
 	swiftRingSpec := swiftv1beta1.SwiftRingSpec{
-		RingConfigMap:       instance.Spec.RingConfigMap,
-		RingReplicas:        instance.Spec.SwiftRing.RingReplicas,
-		Devices:             instance.Spec.SwiftRing.Devices,
-		ContainerImage:      instance.Spec.SwiftRing.ContainerImage,
-		StoragePodPrefix:    instance.Spec.SwiftRing.StoragePodPrefix,
-		StorageServiceName:  instance.Spec.SwiftRing.StorageServiceName,
-		SwiftHashPathPrefix: instance.Spec.SwiftHashPathPrefix,
-		SwiftHashPathSuffix: instance.Spec.SwiftHashPathSuffix,
+		RingConfigMap:      instance.Spec.RingConfigMap,
+		RingReplicas:       instance.Spec.SwiftRing.RingReplicas,
+		Devices:            instance.Spec.SwiftRing.Devices,
+		ContainerImage:     instance.Spec.SwiftRing.ContainerImage,
+		StoragePodPrefix:   instance.Spec.SwiftRing.StoragePodPrefix,
+		StorageServiceName: instance.Spec.SwiftRing.StorageServiceName,
+		SwiftConfSecret:    instance.Spec.SwiftConfSecret,
 	}
 
 	deployment := &swiftv1beta1.SwiftRing{
@@ -246,8 +283,7 @@ func (r *SwiftReconciler) storageCreateOrUpdate(ctx context.Context, instance *s
 		ContainerImageObject:    instance.Spec.SwiftStorage.ContainerImageObject,
 		ContainerImageProxy:     instance.Spec.SwiftStorage.ContainerImageProxy,
 		ContainerImageMemcached: instance.Spec.SwiftStorage.ContainerImageMemcached,
-		SwiftHashPathPrefix:     instance.Spec.SwiftHashPathPrefix,
-		SwiftHashPathSuffix:     instance.Spec.SwiftHashPathSuffix,
+		SwiftConfSecret:         instance.Spec.SwiftConfSecret,
 	}
 
 	deployment := &swiftv1beta1.SwiftStorage{
@@ -280,8 +316,7 @@ func (r *SwiftReconciler) proxyCreateOrUpdate(ctx context.Context, instance *swi
 		Secret:                  instance.Spec.SwiftProxy.Secret,
 		ServiceUser:             instance.Spec.SwiftProxy.ServiceUser,
 		PasswordSelectors:       instance.Spec.SwiftProxy.PasswordSelectors,
-		SwiftHashPathPrefix:     instance.Spec.SwiftHashPathPrefix,
-		SwiftHashPathSuffix:     instance.Spec.SwiftHashPathSuffix,
+		SwiftConfSecret:         instance.Spec.SwiftConfSecret,
 	}
 
 	deployment := &swiftv1beta1.SwiftProxy{

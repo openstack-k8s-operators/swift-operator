@@ -67,13 +67,8 @@ spec:
               storageServiceName:
                 description: Storage Service name
                 type: string
-              swiftHashPathPrefix:
-                description: Secret containing OpenStack password information for
-                  Swift service user password
-                type: string
-              swiftHashPathSuffix:
-                description: Secret containing OpenStack password information for
-                  Swift service user password
+              swiftConfSecret:
+                description: Name of Secret containing swift.conf
                 type: string
             required:
             - containerImage

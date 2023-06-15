@@ -84,13 +84,8 @@ spec:
                 description: ServiceUser - optional username used for this service
                   to register in Swift
                 type: string
-              swiftHashPathPrefix:
-                description: Secret containing OpenStack password information for
-                  Swift service user password
-                type: string
-              swiftHashPathSuffix:
-                description: Secret containing OpenStack password information for
-                  Swift service user password
+              swiftConfSecret:
+                description: Name of Secret containing swift.conf
                 type: string
             required:
             - containerImageMemcached

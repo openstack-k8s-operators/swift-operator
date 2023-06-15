@@ -5,6 +5,7 @@ metadata:
 spec:
   replicas: 1
   ringConfigMap: swift-ring-data
+  swiftConfSecret: swiftconf
   secret: osp-secret
   serviceUser: swift
   passwordSelector: SwiftPassword

@@ -38,13 +38,8 @@ spec:
               ringConfigMap:
                 description: Name of ConfigMap containing Swift rings
                 type: string
-              swiftHashPathPrefix:
-                description: Secret containing OpenStack password information for
-                  Swift service user password
-                type: string
-              swiftHashPathSuffix:
-                description: Secret containing OpenStack password information for
-                  Swift service user password
+              swiftConfSecret:
+                description: Name of Secret containing swift.conf
                 type: string
               swiftProxy:
                 description: SwiftProxy - Spec definition for the Proxy service of
@@ -90,13 +85,8 @@ spec:
                     description: ServiceUser - optional username used for this service
                       to register in Swift
                     type: string
-                  swiftHashPathPrefix:
-                    description: Secret containing OpenStack password information
-                      for Swift service user password
-                    type: string
-                  swiftHashPathSuffix:
-                    description: Secret containing OpenStack password information
-                      for Swift service user password
+                  swiftConfSecret:
+                    description: Name of Secret containing swift.conf
                     type: string
                 required:
                 - containerImageMemcached
@@ -129,13 +119,8 @@ spec:
                   storageServiceName:
                     description: Storage Service name
                     type: string
-                  swiftHashPathPrefix:
-                    description: Secret containing OpenStack password information
-                      for Swift service user password
-                    type: string
-                  swiftHashPathSuffix:
-                    description: Secret containing OpenStack password information
-                      for Swift service user password
+                  swiftConfSecret:
+                    description: Name of Secret containing swift.conf
                     type: string
                 required:
                 - containerImage
@@ -170,13 +155,8 @@ spec:
                   storageClassName:
                     description: Name of StorageClass to use for Swift PVs
                     type: string
-                  swiftHashPathPrefix:
-                    description: Secret containing OpenStack password information
-                      for Swift service user password
-                    type: string
-                  swiftHashPathSuffix:
-                    description: Secret containing OpenStack password information
-                      for Swift service user password
+                  swiftConfSecret:
+                    description: Name of Secret containing swift.conf
                     type: string
                 required:
                 - containerImageAccount
@@ -188,8 +168,6 @@ spec:
                 type: object
             required:
             - ringConfigMap
-            - swiftHashPathPrefix
-            - swiftHashPathSuffix
             - swiftProxy
             - swiftRing
             - swiftStorage

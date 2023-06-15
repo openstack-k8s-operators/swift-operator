@@ -192,8 +192,6 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 
 func getStorageConfigMapTemplates(instance *swiftv1beta1.SwiftStorage, labels map[string]string) []util.Template {
 	templateParameters := make(map[string]interface{})
-	templateParameters["SwiftHashPathPrefix"] = instance.Spec.SwiftHashPathPrefix
-	templateParameters["SwiftHashPathSuffix"] = instance.Spec.SwiftHashPathSuffix
 
 	return []util.Template{
 		{
@@ -224,6 +222,14 @@ func getStorageVolumes(instance *swiftv1beta1.SwiftStorage) []corev1.Volume {
 					LocalObjectReference: corev1.LocalObjectReference{
 						Name: instance.Name + "-config-data",
 					},
+				},
+			},
+		},
+		{
+			Name: "swiftconf",
+			VolumeSource: corev1.VolumeSource{
+				Secret: &corev1.SecretVolumeSource{
+					SecretName: instance.Spec.SwiftConfSecret,
 				},
 			},
 		},
@@ -266,6 +272,11 @@ func getStorageVolumeMounts() []corev1.VolumeMount {
 			ReadOnly:  true,
 		},
 		{
+			Name:      "swiftconf",
+			MountPath: "/var/lib/config-data/swiftconf",
+			ReadOnly:  true,
+		},
+		{
 			Name:      "ring-data",
 			MountPath: "/var/lib/config-data/rings",
 			ReadOnly:  true,
@@ -302,7 +313,7 @@ func getStorageInitContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.
 			ImagePullPolicy: corev1.PullIfNotPresent,
 			SecurityContext: &securityContext,
 			VolumeMounts:    getStorageVolumeMounts(),
-			Command:         []string{"/bin/sh", "-c", "cp -t /etc/swift/ /var/lib/config-data/default/* /var/lib/config-data/rings/*"},
+			Command:         []string{"/bin/sh", "-c", "cp -t /etc/swift/ /var/lib/config-data/default/* /var/lib/config-data/swiftconf/* /var/lib/config-data/rings/*"},
 		},
 	}
 }

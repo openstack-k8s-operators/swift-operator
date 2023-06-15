@@ -26,10 +26,10 @@ import (
 	"time"
 
 	"github.com/openstack-k8s-operators/lib-common/modules/common/condition"
-	"github.com/openstack-k8s-operators/lib-common/modules/common/configmap"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/env"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/helper"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/job"
+	"github.com/openstack-k8s-operators/lib-common/modules/common/secret"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/util"
 
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
@@ -114,10 +114,10 @@ func (r *SwiftRingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 	ls := swift.GetLabelsRing()
 
-	// Create a ConfigMap populated with content from templates/
+	// Create a Secret populated with content from templates/
 	envVars := make(map[string]env.Setter)
-	tpl := getRingConfigMapTemplates(instance, ls)
-	err = configmap.EnsureConfigMaps(ctx, helper, instance, tpl, &envVars)
+	tpl := getRingSecretTemplates(instance, ls)
+	err = secret.EnsureSecrets(ctx, helper, instance, tpl, &envVars)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -202,6 +202,7 @@ func getRingJob(instance *swiftv1beta1.SwiftRing, labels map[string]string) *bat
 							Type: corev1.SeccompProfileTypeRuntimeDefault,
 						},
 					},
+					InitContainers: getRingInitContainers(instance),
 					Containers: []corev1.Container{
 						{
 							Name:            instance.Name + "-ring-init",
@@ -212,24 +213,44 @@ func getRingJob(instance *swiftv1beta1.SwiftRing, labels map[string]string) *bat
 							Env:             env.MergeEnvs([]corev1.EnvVar{}, envVars),
 						},
 					},
-					Volumes: getRingVolumes(instance.Name),
+					Volumes: getRingVolumes(instance),
 				},
 			},
 		},
 	}
 }
 
-func getRingVolumes(name string) []corev1.Volume {
+func getRingInitContainers(instance *swiftv1beta1.SwiftRing) []corev1.Container {
+	securityContext := swift.GetSecurityContext()
+	return []corev1.Container{
+		{
+			Name:            instance.Name + "-init",
+			Image:           instance.Spec.ContainerImage,
+			ImagePullPolicy: corev1.PullIfNotPresent,
+			SecurityContext: &securityContext,
+			VolumeMounts:    getRingVolumeMounts(),
+			Command:         []string{"/bin/sh", "-c", "cp -t /etc/swift/ /var/lib/config-data/swiftconf/*"},
+		},
+	}
+}
+
+func getRingVolumes(instance *swiftv1beta1.SwiftRing) []corev1.Volume {
 	var scriptsVolumeDefaultMode int32 = 0755
 	return []corev1.Volume{
 		{
 			Name: "scripts",
 			VolumeSource: corev1.VolumeSource{
-				ConfigMap: &corev1.ConfigMapVolumeSource{
+				Secret: &corev1.SecretVolumeSource{
 					DefaultMode: &scriptsVolumeDefaultMode,
-					LocalObjectReference: corev1.LocalObjectReference{
-						Name: name + "-scripts",
-					},
+					SecretName:  instance.Name + "-scripts",
+				},
+			},
+		},
+		{
+			Name: "swiftconf",
+			VolumeSource: corev1.VolumeSource{
+				Secret: &corev1.SecretVolumeSource{
+					SecretName: instance.Spec.SwiftConfSecret,
 				},
 			},
 		},
@@ -251,6 +272,11 @@ func getRingVolumeMounts() []corev1.VolumeMount {
 			ReadOnly:  true,
 		},
 		{
+			Name:      "swiftconf",
+			MountPath: "/var/lib/config-data/swiftconf",
+			ReadOnly:  true,
+		},
+		{
 			Name:      "etc-swift",
 			MountPath: "/etc/swift",
 			ReadOnly:  false,
@@ -258,19 +284,14 @@ func getRingVolumeMounts() []corev1.VolumeMount {
 	}
 }
 
-func getRingConfigMapTemplates(instance *swiftv1beta1.SwiftRing, labels map[string]string) []util.Template {
-	templateParameters := make(map[string]interface{})
-	templateParameters["SwiftHashPathPrefix"] = instance.Spec.SwiftHashPathPrefix
-	templateParameters["SwiftHashPathSuffix"] = instance.Spec.SwiftHashPathSuffix
-
+func getRingSecretTemplates(instance *swiftv1beta1.SwiftRing, labels map[string]string) []util.Template {
 	return []util.Template{
 		{
-			Name:          fmt.Sprintf("%s-scripts", instance.Name),
-			Namespace:     instance.Namespace,
-			Type:          util.TemplateTypeScripts,
-			InstanceType:  instance.Kind,
-			ConfigOptions: templateParameters,
-			Labels:        labels,
+			Name:         fmt.Sprintf("%s-scripts", instance.Name),
+			Namespace:    instance.Namespace,
+			Type:         util.TemplateTypeScripts,
+			InstanceType: instance.Kind,
+			Labels:       labels,
 		},
 	}
 }

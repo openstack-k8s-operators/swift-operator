@@ -192,16 +192,16 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	}
 
 	// Get the service password
-	secret, _, err := secret.GetSecret(ctx, helper, instance.Spec.Secret, instance.Namespace)
+	sps, _, err := secret.GetSecret(ctx, helper, instance.Spec.Secret, instance.Namespace)
 	if err != nil {
 		return ctrlResult, err
 	}
-	password := string(secret.Data[instance.Spec.PasswordSelectors.Service])
+	password := string(sps.Data[instance.Spec.PasswordSelectors.Service])
 
-	// Create a ConfigMap populated with content from templates/
+	// Create a Secret populated with content from templates/
 	envVars := make(map[string]env.Setter)
-	tpl := getProxyConfigMapTemplates(instance, labels, authURL, password)
-	err = configmap.EnsureConfigMaps(ctx, helper, instance, tpl, &envVars)
+	tpl := getProxySecretTemplates(instance, labels, authURL, password)
+	err = secret.EnsureSecrets(ctx, helper, instance, tpl, &envVars)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -241,13 +241,11 @@ func (r *SwiftProxyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func getProxyConfigMapTemplates(instance *swiftv1beta1.SwiftProxy, labels map[string]string, authURL string, password string) []util.Template {
+func getProxySecretTemplates(instance *swiftv1beta1.SwiftProxy, labels map[string]string, authURL string, password string) []util.Template {
 	templateParameters := make(map[string]interface{})
 	templateParameters["ServiceUser"] = instance.Spec.ServiceUser
 	templateParameters["ServicePassword"] = password
 	templateParameters["KeystonePublicURL"] = authURL
-	templateParameters["SwiftHashPathPrefix"] = instance.Spec.SwiftHashPathPrefix
-	templateParameters["SwiftHashPathSuffix"] = instance.Spec.SwiftHashPathSuffix
 
 	return []util.Template{
 		{
@@ -266,10 +264,16 @@ func getProxyVolumes(instance *swiftv1beta1.SwiftProxy) []corev1.Volume {
 		{
 			Name: "config-data",
 			VolumeSource: corev1.VolumeSource{
-				ConfigMap: &corev1.ConfigMapVolumeSource{
-					LocalObjectReference: corev1.LocalObjectReference{
-						Name: instance.Name + "-config-data",
-					},
+				Secret: &corev1.SecretVolumeSource{
+					SecretName: instance.Name + "-config-data",
+				},
+			},
+		},
+		{
+			Name: "swiftconf",
+			VolumeSource: corev1.VolumeSource{
+				Secret: &corev1.SecretVolumeSource{
+					SecretName: instance.Spec.SwiftConfSecret,
 				},
 			},
 		},
@@ -301,6 +305,11 @@ func getProxyVolumeMounts() []corev1.VolumeMount {
 			ReadOnly:  true,
 		},
 		{
+			Name:      "swiftconf",
+			MountPath: "/var/lib/config-data/swiftconf",
+			ReadOnly:  true,
+		},
+		{
 			Name:      "ring-data",
 			MountPath: "/var/lib/config-data/rings",
 			ReadOnly:  true,
@@ -322,7 +331,7 @@ func getInitContainers(swiftproxy *swiftv1beta1.SwiftProxy) []corev1.Container {
 			ImagePullPolicy: corev1.PullIfNotPresent,
 			SecurityContext: &securityContext,
 			VolumeMounts:    getProxyVolumeMounts(),
-			Command:         []string{"/bin/sh", "-c", "cp -t /etc/swift/ /var/lib/config-data/default/* /var/lib/config-data/rings/*"},
+			Command:         []string{"/bin/sh", "-c", "cp -t /etc/swift/ /var/lib/config-data/default/* /var/lib/config-data/swiftconf/* /var/lib/config-data/rings/*"},
 		},
 	}
 }

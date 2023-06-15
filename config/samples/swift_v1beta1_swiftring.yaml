@@ -6,6 +6,7 @@ spec:
   replicas: 3
   devices: 3
   ringConfigMap: swift-ring-data
+  swiftConfSecret: swiftconf
   storagePodPrefix: swiftstorage-sample
   storageServiceName: swiftstorage-sample
   containerImage: quay.io/podified-antelope-centos9/openstack-swift-proxy-server:current-podified

@@ -68,13 +68,8 @@ spec:
               storageClassName:
                 description: Name of StorageClass to use for Swift PVs
                 type: string
-              swiftHashPathPrefix:
-                description: Secret containing OpenStack password information for
-                  Swift service user password
-                type: string
-              swiftHashPathSuffix:
-                description: Secret containing OpenStack password information for
-                  Swift service user password
+              swiftConfSecret:
+                description: Name of Secret containing swift.conf
                 type: string
             required:
             - containerImageAccount

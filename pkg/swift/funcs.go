@@ -49,6 +49,10 @@ func GetLabelsRing() map[string]string {
 	return map[string]string{"app.kubernetes.io/name": "SwiftRing"}
 }
 
+func GetLabelsSwift() map[string]string {
+	return map[string]string{"app.kubernetes.io/name": "Swift"}
+}
+
 func RandomString(length int) string {
 	sample := "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	str := make([]byte, length)

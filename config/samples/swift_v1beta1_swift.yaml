@@ -4,8 +4,7 @@ metadata:
   name: swift
 spec:
   ringConfigMap: swift-ring-data
-  swiftHashPathPrefix: foo
-  swiftHashPathSuffix: bar
+  swiftConfSecret: swiftconf
   swiftRing:
     replicas: 3
     devices: 3
