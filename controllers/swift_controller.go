@@ -278,6 +278,7 @@ func (r *SwiftReconciler) storageCreateOrUpdate(ctx context.Context, instance *s
 		Replicas:                instance.Spec.SwiftStorage.Replicas,
 		RingConfigMap:           instance.Spec.RingConfigMap,
 		StorageClass:            instance.Spec.SwiftStorage.StorageClass,
+		StorageRequest:          instance.Spec.SwiftStorage.StorageRequest,
 		ContainerImageAccount:   instance.Spec.SwiftStorage.ContainerImageAccount,
 		ContainerImageContainer: instance.Spec.SwiftStorage.ContainerImageContainer,
 		ContainerImageObject:    instance.Spec.SwiftStorage.ContainerImageObject,
