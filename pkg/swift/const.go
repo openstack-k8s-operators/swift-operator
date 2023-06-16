@@ -29,4 +29,6 @@ const (
 	ServiceType        = "object-store"
 	ServiceAccount     = "swift-swift"
 	ServiceDescription = "Swift Object Storage"
+
+	ClaimName = "srv"
 )

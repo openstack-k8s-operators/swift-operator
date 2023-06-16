@@ -208,10 +208,10 @@ func getStorageConfigMapTemplates(instance *swiftv1beta1.SwiftStorage, labels ma
 func getStorageVolumes(instance *swiftv1beta1.SwiftStorage) []corev1.Volume {
 	return []corev1.Volume{
 		{
-			Name: "srv",
+			Name: swift.ClaimName,
 			VolumeSource: corev1.VolumeSource{
 				PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
-					ClaimName: "srv",
+					ClaimName: swift.ClaimName,
 				},
 			},
 		},
@@ -262,7 +262,7 @@ func getStorageVolumes(instance *swiftv1beta1.SwiftStorage) []corev1.Volume {
 func getStorageVolumeMounts() []corev1.VolumeMount {
 	return []corev1.VolumeMount{
 		{
-			Name:      "srv",
+			Name:      swift.ClaimName,
 			MountPath: "/srv/node/d1",
 			ReadOnly:  false,
 		},
@@ -533,7 +533,7 @@ func getStorageStatefulSet(
 			},
 			VolumeClaimTemplates: []corev1.PersistentVolumeClaim{{
 				ObjectMeta: metav1.ObjectMeta{
-					Name: "srv",
+					Name: swift.ClaimName,
 				},
 				Spec: corev1.PersistentVolumeClaimSpec{
 					StorageClassName: &swiftstorage.Spec.StorageClass,
