@@ -54,6 +54,7 @@ spec:
                 format: int64
                 type: integer
               ringConfigMap:
+                default: swift-ring
                 description: Name of ConfigMap containing Swift rings
                 type: string
               ringReplicas:
@@ -68,6 +69,7 @@ spec:
                 description: Storage Service name
                 type: string
               swiftConfSecret:
+                default: swift-conf
                 description: Name of Secret containing swift.conf
                 type: string
             required:

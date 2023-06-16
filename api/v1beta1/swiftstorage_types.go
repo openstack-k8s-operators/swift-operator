@@ -32,15 +32,17 @@ type SwiftStorageSpec struct {
 	Replicas int32 `json:"replicas"`
 
 	// +kubebuilder:validation:Required
+	// +kubebuilder:default=swift-ring
 	// Name of ConfigMap containing Swift rings
 	RingConfigMap string `json:"ringConfigMap,omitempty"`
 
 	// +kubebuilder:validation:Required
+	// +kubebuilder:default=local-storage
 	// Name of StorageClass to use for Swift PVs
 	StorageClass string `json:"storageClass,omitempty"`
 
 	// +kubebuilder:validation:Required
-	// +kubebuilder:default="10G"
+	// +kubebuilder:default="10Gi"
 	// Minimum size for Swift PVs
 	StorageRequest string `json:"storageRequest"`
 
@@ -65,6 +67,7 @@ type SwiftStorageSpec struct {
 	ContainerImageMemcached string `json:"containerImageMemcached"`
 
 	// +kubebuilder:validation:Required
+	// +kubebuilder:default=swift-conf
 	// Name of Secret containing swift.conf
 	SwiftConfSecret string `json:"swiftConfSecret,omitempty"`
 }

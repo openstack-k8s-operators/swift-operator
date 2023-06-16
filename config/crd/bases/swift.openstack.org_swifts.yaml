@@ -72,13 +72,13 @@ spec:
                     default: 1
                     description: Replicas of Swift Proxy
                     format: int32
-                    maximum: 32
-                    minimum: 0
                     type: integer
                   ringConfigMap:
+                    default: swift-ring
                     description: Name of ConfigMap containing Swift rings
                     type: string
                   secret:
+                    default: osp-secret
                     description: Secret containing OpenStack password information
                       for Swift service user password
                     type: string
@@ -88,11 +88,14 @@ spec:
                       to register in Swift
                     type: string
                   swiftConfSecret:
+                    default: swift-conf
                     description: Name of Secret containing swift.conf
                     type: string
                 required:
                 - containerImageMemcached
                 - containerImageProxy
+                - replicas
+                - serviceUser
                 type: object
               swiftRing:
                 description: SwiftRing - Spec definition for the Ring service of this
@@ -108,6 +111,7 @@ spec:
                     format: int64
                     type: integer
                   ringConfigMap:
+                    default: swift-ring
                     description: Name of ConfigMap containing Swift rings
                     type: string
                   ringReplicas:
@@ -122,6 +126,7 @@ spec:
                     description: Storage Service name
                     type: string
                   swiftConfSecret:
+                    default: swift-conf
                     description: Name of Secret containing swift.conf
                     type: string
                 required:
@@ -152,16 +157,19 @@ spec:
                     format: int32
                     type: integer
                   ringConfigMap:
+                    default: swift-ring
                     description: Name of ConfigMap containing Swift rings
                     type: string
                   storageClass:
+                    default: local-storage
                     description: Name of StorageClass to use for Swift PVs
                     type: string
                   storageRequest:
-                    default: 10G
+                    default: 10Gi
                     description: Minimum size for Swift PVs
                     type: string
                   swiftConfSecret:
+                    default: swift-conf
                     description: Name of Secret containing swift.conf
                     type: string
                 required:

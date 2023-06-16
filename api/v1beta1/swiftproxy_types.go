@@ -38,42 +38,40 @@ type PasswordSelector struct {
 
 // SwiftProxySpec defines the desired state of SwiftProxy
 type SwiftProxySpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
-	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:required
 	// +kubebuilder:default=1
-	// +kubebuilder:validation:Maximum=32
-	// +kubebuilder:validation:Minimum=0
 	// Replicas of Swift Proxy
 	Replicas int32 `json:"replicas"`
 
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:required
+	// +kubebuilder:default=swift-ring
 	// Name of ConfigMap containing Swift rings
 	RingConfigMap string `json:"ringConfigMap,omitempty"`
 
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:required
 	// Swift Proxy Container Image URL
 	ContainerImageProxy string `json:"containerImageProxy"`
 
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:required
 	// Image URL for Memcache servicd
 	ContainerImageMemcached string `json:"containerImageMemcached"`
 
-	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:required
 	// +kubebuilder:default=swift
 	// ServiceUser - optional username used for this service to register in Swift
 	ServiceUser string `json:"serviceUser"`
 
-	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:required
+	// +kubebuilder:default=osp-secret
 	// Secret containing OpenStack password information for Swift service user password
 	Secret string `json:"secret,omitempty"`
 
-	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:required
 	// PasswordSelector - Selector to choose the Swift user password from the Secret
 	PasswordSelectors PasswordSelector `json:"passwordSelectors,omitempty"`
 
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:required
+	// +kubebuilder:default=swift-conf
 	// Name of Secret containing swift.conf
 	SwiftConfSecret string `json:"swiftConfSecret,omitempty"`
 }

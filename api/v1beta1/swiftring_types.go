@@ -34,6 +34,7 @@ type SwiftRingSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// +kubebuilder:validation:Required
+	// +kubebuilder:default=swift-ring
 	// Name of ConfigMap containing Swift rings
 	RingConfigMap string `json:"ringConfigMap,omitempty"`
 
@@ -60,6 +61,7 @@ type SwiftRingSpec struct {
 	StorageServiceName string `json:"storageServiceName,omitempty"`
 
 	// +kubebuilder:validation:Required
+	// +kubebuilder:default=swift-conf
 	// Name of Secret containing swift.conf
 	SwiftConfSecret string `json:"swiftConfSecret,omitempty"`
 }

@@ -3,26 +3,10 @@ kind: Swift
 metadata:
   name: swift
 spec:
-  ringConfigMap: swift-ring
-  swiftConfSecret: swift-conf
   swiftRing:
     ringReplicas: 3
     devices: 3
-    containerImage: quay.io/podified-antelope-centos9/openstack-swift-proxy-server:current-podified
-
   swiftStorage:
     replicas: 3
-    storageClass: local-storage
-    containerImageAccount: quay.io/podified-antelope-centos9/openstack-swift-account:current-podified
-    containerImageContainer: quay.io/podified-antelope-centos9/openstack-swift-container:current-podified
-    containerImageObject: quay.io/podified-antelope-centos9/openstack-swift-object:current-podified
-    containerImageProxy: quay.io/podified-antelope-centos9/openstack-swift-proxy-server:current-podified
-    containerImageMemcached: quay.io/podified-antelope-centos9/openstack-memcached:current-podified
-
   swiftProxy:
     replicas: 1
-    passwordSelector: SwiftPassword
-    serviceUser: swift
-    secret: osp-secret
-    containerImageProxy: quay.io/podified-antelope-centos9/openstack-swift-proxy-server:current-podified
-    containerImageMemcached: quay.io/podified-antelope-centos9/openstack-memcached:current-podified
