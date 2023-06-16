@@ -433,7 +433,7 @@ func getKeystoneServiceHelper(
 		PasswordSelector:   instance.Spec.PasswordSelectors.Service,
 	}
 
-	return keystonev1.NewKeystoneService(spec, instance.Namespace, labels, 10)
+	return keystonev1.NewKeystoneService(spec, instance.Namespace, labels, 10*time.Second)
 }
 
 func getKeystoneEndpointHelper(
