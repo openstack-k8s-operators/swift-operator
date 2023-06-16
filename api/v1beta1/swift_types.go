@@ -17,41 +17,38 @@ limitations under the License.
 package v1beta1
 
 import (
-	"github.com/openstack-k8s-operators/lib-common/modules/common/util"
 	condition "github.com/openstack-k8s-operators/lib-common/modules/common/condition"
+	"github.com/openstack-k8s-operators/lib-common/modules/common/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
 	// Container image fall-back defaults
-	ContainerImageAccount = "quay.io/podified-antelope-centos9/openstack-swift-account:current-podified"
+	ContainerImageAccount   = "quay.io/podified-antelope-centos9/openstack-swift-account:current-podified"
 	ContainerImageContainer = "quay.io/podified-antelope-centos9/openstack-swift-container:current-podified"
-	ContainerImageObject = "quay.io/podified-antelope-centos9/openstack-swift-object:current-podified"
-	ContainerImageProxy = "quay.io/podified-antelope-centos9/openstack-swift-proxy-server:current-podified"
+	ContainerImageObject    = "quay.io/podified-antelope-centos9/openstack-swift-object:current-podified"
+	ContainerImageProxy     = "quay.io/podified-antelope-centos9/openstack-swift-proxy-server:current-podified"
 	ContainerImageMemcached = "quay.io/podified-antelope-centos9/openstack-memcached:current-podified"
 )
 
 // SwiftSpec defines the desired state of Swift
 type SwiftSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default=swift-ring
 	// Name of ConfigMap containing Swift rings
 	RingConfigMap string `json:"ringConfigMap"`
 
 	// +kubebuilder:validation:Required
-        // SwiftRing - Spec definition for the Ring service of this Swift deployment
-        SwiftRing SwiftRingSpec `json:"swiftRing"`
+	// SwiftRing - Spec definition for the Ring service of this Swift deployment
+	SwiftRing SwiftRingSpec `json:"swiftRing"`
 
 	// +kubebuilder:validation:Required
-        // SwiftStorage - Spec definition for the Storage service of this Swift deployment
-        SwiftStorage SwiftStorageSpec `json:"swiftStorage"`
+	// SwiftStorage - Spec definition for the Storage service of this Swift deployment
+	SwiftStorage SwiftStorageSpec `json:"swiftStorage"`
 
 	// +kubebuilder:validation:Required
-        // SwiftProxy - Spec definition for the Proxy service of this Swift deployment
-        SwiftProxy SwiftProxySpec `json:"swiftProxy"`
+	// SwiftProxy - Spec definition for the Proxy service of this Swift deployment
+	SwiftProxy SwiftProxySpec `json:"swiftProxy"`
 
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default=swift-conf
@@ -61,9 +58,6 @@ type SwiftSpec struct {
 
 // SwiftStatus defines the observed state of Swift
 type SwiftStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
 	// Conditions
 	Conditions condition.Conditions `json:"conditions,omitempty" optional:"true"`
 }
@@ -119,11 +113,11 @@ func (instance Swift) IsReady() bool {
 func SetupDefaults() {
 	// Acquire environmental defaults and initialize Swift defaults with them
 	swiftDefaults := SwiftDefaults{
-		AccountContainerImageURL:	util.GetEnvVar("SWIFT_ACCOUNT_IMAGE_URL_DEFAULT", ContainerImageAccount),
-		ContainerContainerImageURL:	util.GetEnvVar("SWIFT_CONTAINER_IMAGE_URL_DEFAULT", ContainerImageContainer),
-		ObjectContainerImageURL:	util.GetEnvVar("SWIFT_OBJECT_IMAGE_URL_DEFAULT", ContainerImageObject),
-		ProxyContainerImageURL:		util.GetEnvVar("SWIFT_PROXY_IMAGE_URL_DEFAULT", ContainerImageProxy),
-		MemcachedContainerImageURL:	util.GetEnvVar("SWIFT_MEMCACHED_IMAGE_URL_DEFAULT", ContainerImageMemcached),
+		AccountContainerImageURL:   util.GetEnvVar("SWIFT_ACCOUNT_IMAGE_URL_DEFAULT", ContainerImageAccount),
+		ContainerContainerImageURL: util.GetEnvVar("SWIFT_CONTAINER_IMAGE_URL_DEFAULT", ContainerImageContainer),
+		ObjectContainerImageURL:    util.GetEnvVar("SWIFT_OBJECT_IMAGE_URL_DEFAULT", ContainerImageObject),
+		ProxyContainerImageURL:     util.GetEnvVar("SWIFT_PROXY_IMAGE_URL_DEFAULT", ContainerImageProxy),
+		MemcachedContainerImageURL: util.GetEnvVar("SWIFT_MEMCACHED_IMAGE_URL_DEFAULT", ContainerImageMemcached),
 	}
 
 	SetupSwiftDefaults(swiftDefaults)
