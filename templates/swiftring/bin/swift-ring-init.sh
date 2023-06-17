@@ -1,6 +1,8 @@
 #!/bin/sh
 cd /etc/swift
 
+cp -t /etc/swift/ /var/lib/config-data/swiftconf/*
+
 swift-ring-builder account.builder create 8 ${SWIFT_REPLICAS} 1
 swift-ring-builder container.builder create 8 ${SWIFT_REPLICAS} 1
 swift-ring-builder object.builder create 8 ${SWIFT_REPLICAS} 1

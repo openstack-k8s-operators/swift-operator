@@ -202,7 +202,6 @@ func getRingJob(instance *swiftv1beta1.SwiftRing, labels map[string]string) *bat
 							Type: corev1.SeccompProfileTypeRuntimeDefault,
 						},
 					},
-					InitContainers: getRingInitContainers(instance),
 					Containers: []corev1.Container{
 						{
 							Name:            instance.Name + "-ring-init",
@@ -216,20 +215,6 @@ func getRingJob(instance *swiftv1beta1.SwiftRing, labels map[string]string) *bat
 					Volumes: getRingVolumes(instance),
 				},
 			},
-		},
-	}
-}
-
-func getRingInitContainers(instance *swiftv1beta1.SwiftRing) []corev1.Container {
-	securityContext := swift.GetSecurityContext()
-	return []corev1.Container{
-		{
-			Name:            instance.Name + "-init",
-			Image:           instance.Spec.ContainerImage,
-			ImagePullPolicy: corev1.PullIfNotPresent,
-			SecurityContext: &securityContext,
-			VolumeMounts:    getRingVolumeMounts(),
-			Command:         []string{"/bin/sh", "-c", "cp -t /etc/swift/ /var/lib/config-data/swiftconf/*"},
 		},
 	}
 }
