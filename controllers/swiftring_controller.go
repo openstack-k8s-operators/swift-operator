@@ -188,7 +188,7 @@ func getRingJob(instance *swiftv1beta1.SwiftRing, labels map[string]string) *bat
 
 	return &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      instance.Name + "-ring-init",
+			Name:      instance.Name + "-rebalance",
 			Namespace: instance.Namespace,
 			Labels:    labels,
 		},
@@ -204,8 +204,8 @@ func getRingJob(instance *swiftv1beta1.SwiftRing, labels map[string]string) *bat
 					},
 					Containers: []corev1.Container{
 						{
-							Name:            instance.Name + "-ring-init",
-							Command:         []string{"/usr/local/bin/container-scripts/swift-ring-init.sh"},
+							Name:            instance.Name + "-rebalance",
+							Command:         []string{"/usr/local/bin/container-scripts/swift-ring-rebalance.sh"},
 							Image:           instance.Spec.ContainerImage,
 							SecurityContext: &securityContext,
 							VolumeMounts:    getRingVolumeMounts(),
