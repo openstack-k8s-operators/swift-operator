@@ -7,10 +7,14 @@ swift-ring-builder account.builder create 8 ${SWIFT_REPLICAS} 1
 swift-ring-builder container.builder create 8 ${SWIFT_REPLICAS} 1
 swift-ring-builder object.builder create 8 ${SWIFT_REPLICAS} 1
 
-for POD_REPLICA in `seq 0 $((SWIFT_DEVICES - 1))`; do
-	swift-ring-builder account.builder add --region 1 --zone 1 --ip ${STORAGE_POD_PREFIX}-${POD_REPLICA}.${STORAGE_SVC_NAME}.${NAMESPACE}.svc.cluster.local --port 6202 --device d1 --weight 100
-	swift-ring-builder container.builder add --region 1 --zone 1 --ip ${STORAGE_POD_PREFIX}-${POD_REPLICA}.${STORAGE_SVC_NAME}.${NAMESPACE}.svc.cluster.local --port 6201 --device d1 --weight 100
-	swift-ring-builder object.builder add --region 1 --zone 1 --ip ${STORAGE_POD_PREFIX}-${POD_REPLICA}.${STORAGE_SVC_NAME}.${NAMESPACE}.svc.cluster.local --port 6200 --device d1 --weight 100
+for DEV in $(cat /var/lib/config-data/ring-devices/devices.csv); do
+	HOST=$(echo $DEV | cut -f1 -d,)
+	DEVICE_NAME=$(echo $DEV | cut -f2 -d,)
+	WEIGHT=$(echo $DEV | cut -f3 -d,)
+
+	swift-ring-builder account.builder add --region 1 --zone 1 --ip $HOST --port 6202 --device $DEVICE_NAME --weight $WEIGHT
+	swift-ring-builder container.builder add --region 1 --zone 1 --ip $HOST --port 6201 --device $DEVICE_NAME --weight $WEIGHT
+	swift-ring-builder object.builder add --region 1 --zone 1 --ip $HOST --port 6200 --device $DEVICE_NAME --weight $WEIGHT
 done
 
 swift-ring-builder account.builder rebalance

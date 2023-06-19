@@ -4,9 +4,6 @@ metadata:
   name: swift-ring
 spec:
   ringReplicas: 3
-  devices: 3
   ringConfigMap: swift-ring
   swiftConfSecret: swift-conf
-  storagePodPrefix: swift-storage
-  storageServiceName: swift-storage
   containerImage: quay.io/podified-antelope-centos9/openstack-swift-proxy-server:current-podified

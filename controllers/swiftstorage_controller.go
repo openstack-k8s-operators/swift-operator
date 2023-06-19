@@ -20,10 +20,12 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-logr/logr"
+	"strings"
 	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -178,9 +180,18 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		return ctrlResult, nil
 	}
 
-	if sset.GetStatefulSet().Status.ReadyReplicas > 0 {
+	if sset.GetStatefulSet().Status.ReadyReplicas == instance.Spec.Replicas {
+		envVars := make(map[string]env.Setter)
+		devices, err := getDeviceList(ctx, helper, instance)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+		tpl = getDeviceConfigMapTemplates(instance, devices)
+		err = configmap.EnsureConfigMaps(ctx, helper, instance, tpl, &envVars)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
 		instance.Status.Conditions.MarkTrue(swiftv1beta1.SwiftStorageReadyCondition, condition.DeploymentReadyMessage)
-
 		if err := r.Status().Update(ctx, instance); err != nil {
 			return ctrl.Result{}, err
 		}
@@ -642,6 +653,41 @@ func getStorageNetworkPolicy(
 					},
 				},
 			},
+		},
+	}
+}
+
+func getDeviceList(ctx context.Context, h *helper.Helper, instance *swiftv1beta1.SwiftStorage) (string, error) {
+	var devices strings.Builder
+
+	foundClaim := &corev1.PersistentVolumeClaim{}
+	for replica := 0; replica < int(instance.Spec.Replicas); replica++ {
+		cn := fmt.Sprintf("%s-%s-%d", swift.ClaimName, instance.Name, replica)
+		err := h.GetClient().Get(ctx, types.NamespacedName{Name: cn, Namespace: instance.Namespace}, foundClaim)
+		if err == nil {
+			fsc := foundClaim.Status.Capacity["storage"]
+			c, _ := (&fsc).AsInt64()
+			c = c / (1000 * 1000 * 1000)
+			host := fmt.Sprintf("%s-%d.%s", instance.Name, replica, instance.Name)
+			devices.WriteString(fmt.Sprintf("%s,%s,%d\n", host, "d1", c))
+		} else {
+			return "", err
+		}
+	}
+	return devices.String(), nil
+}
+
+func getDeviceConfigMapTemplates(instance *swiftv1beta1.SwiftStorage, devices string) []util.Template {
+	data := make(map[string]string)
+	data["devices.csv"] = devices
+
+	return []util.Template{
+		{
+			Name:         fmt.Sprintf("%s-devices", instance.Spec.RingConfigMap),
+			Namespace:    instance.Namespace,
+			Type:         util.TemplateTypeNone,
+			InstanceType: instance.Kind,
+			CustomData:   data,
 		},
 	}
 }

@@ -47,12 +47,6 @@ spec:
               containerImage:
                 description: Image URL for Swift proxy service
                 type: string
-              devices:
-                default: 1
-                description: Number of devices/pods/nodes. Must be same or larger
-                  than ringReplicas
-                format: int64
-                type: integer
               ringConfigMap:
                 default: swift-ring
                 description: Name of ConfigMap containing Swift rings
@@ -62,19 +56,12 @@ spec:
                 description: Number of Swift object replicas (=copies)
                 format: int64
                 type: integer
-              storagePodPrefix:
-                description: Storage Pod prefix
-                type: string
-              storageServiceName:
-                description: Storage Service name
-                type: string
               swiftConfSecret:
                 default: swift-conf
                 description: Name of Secret containing swift.conf
                 type: string
             required:
             - containerImage
-            - devices
             - ringReplicas
             type: object
           status:

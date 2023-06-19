@@ -243,13 +243,10 @@ func (r *SwiftReconciler) SetupWithManager(mgr ctrl.Manager) error {
 func (r *SwiftReconciler) ringCreateOrUpdate(ctx context.Context, instance *swiftv1beta1.Swift) (*swiftv1beta1.SwiftRing, controllerutil.OperationResult, error) {
 
 	swiftRingSpec := swiftv1beta1.SwiftRingSpec{
-		RingConfigMap:      instance.Spec.RingConfigMap,
-		RingReplicas:       instance.Spec.SwiftRing.RingReplicas,
-		Devices:            instance.Spec.SwiftRing.Devices,
-		ContainerImage:     instance.Spec.SwiftRing.ContainerImage,
-		StoragePodPrefix:   fmt.Sprintf("%s-storage", instance.Name),
-		StorageServiceName: fmt.Sprintf("%s-storage", instance.Name),
-		SwiftConfSecret:    instance.Spec.SwiftConfSecret,
+		RingConfigMap:   instance.Spec.RingConfigMap,
+		RingReplicas:    instance.Spec.SwiftRing.RingReplicas,
+		ContainerImage:  instance.Spec.SwiftRing.ContainerImage,
+		SwiftConfSecret: instance.Spec.SwiftConfSecret,
 	}
 
 	deployment := &swiftv1beta1.SwiftRing{

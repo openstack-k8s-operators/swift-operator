@@ -5,7 +5,6 @@ metadata:
 spec:
   swiftRing:
     ringReplicas: 3
-    devices: 3
     containerImage: quay.io/podified-antelope-centos9/openstack-swift-proxy-server:current-podified
   swiftStorage:
     replicas: 3

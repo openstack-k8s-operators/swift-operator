@@ -44,21 +44,8 @@ type SwiftRingSpec struct {
 	RingReplicas int64 `json:"ringReplicas"`
 
 	// +kubebuilder:validation:Required
-	// +kubebuilder:default=1
-	// Number of devices/pods/nodes. Must be same or larger than ringReplicas
-	Devices int64 `json:"devices"`
-
-	// +kubebuilder:validation:Required
 	// Image URL for Swift proxy service
 	ContainerImage string `json:"containerImage"`
-
-	// +kubebuilder:validation:Required
-	// Storage Pod prefix
-	StoragePodPrefix string `json:"storagePodPrefix,omitempty"`
-
-	// +kubebuilder:validation:Required
-	// Storage Service name
-	StorageServiceName string `json:"storageServiceName,omitempty"`
 
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default=swift-conf

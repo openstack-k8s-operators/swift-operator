@@ -185,10 +185,7 @@ func getRingJob(instance *swiftv1beta1.SwiftRing, labels map[string]string) *bat
 	envVars := map[string]env.Setter{}
 	envVars["CM_NAME"] = env.SetValue(instance.Spec.RingConfigMap)
 	envVars["NAMESPACE"] = env.SetValue(instance.Namespace)
-	envVars["STORAGE_POD_PREFIX"] = env.SetValue(instance.Spec.StoragePodPrefix)
-	envVars["STORAGE_SVC_NAME"] = env.SetValue(instance.Spec.StorageServiceName)
 	envVars["SWIFT_REPLICAS"] = env.SetValue(fmt.Sprint(instance.Spec.RingReplicas))
-	envVars["SWIFT_DEVICES"] = env.SetValue(fmt.Sprint(instance.Spec.Devices))
 	envVars["OWNER_APIVERSION"] = env.SetValue(instance.APIVersion)
 	envVars["OWNER_KIND"] = env.SetValue(instance.Kind)
 	envVars["OWNER_UID"] = env.SetValue(string(instance.ObjectMeta.UID))
@@ -253,8 +250,17 @@ func getRingVolumes(instance *swiftv1beta1.SwiftRing) []corev1.Volume {
 				EmptyDir: &corev1.EmptyDirVolumeSource{Medium: ""},
 			},
 		},
+		{
+			Name: "ring-data-devices",
+			VolumeSource: corev1.VolumeSource{
+				ConfigMap: &corev1.ConfigMapVolumeSource{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: fmt.Sprintf("%s-devices", instance.Spec.RingConfigMap),
+					},
+				},
+			},
+		},
 	}
-
 }
 
 func getRingVolumeMounts() []corev1.VolumeMount {
@@ -273,6 +279,11 @@ func getRingVolumeMounts() []corev1.VolumeMount {
 			Name:      "etc-swift",
 			MountPath: "/etc/swift",
 			ReadOnly:  false,
+		},
+		{
+			Name:      "ring-data-devices",
+			MountPath: "/var/lib/config-data/ring-devices",
+			ReadOnly:  true,
 		},
 	}
 }
