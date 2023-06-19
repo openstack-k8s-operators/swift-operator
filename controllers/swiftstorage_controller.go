@@ -202,10 +202,19 @@ func getStorageConfigMapTemplates(instance *swiftv1beta1.SwiftStorage, labels ma
 			Labels:        labels,
 			ConfigOptions: templateParameters,
 		},
+		{
+			Name:               fmt.Sprintf("%s-scripts", instance.Name),
+			Namespace:          instance.Namespace,
+			Type:               util.TemplateTypeScripts,
+			InstanceType:       instance.Kind,
+			Labels:             labels,
+			AdditionalTemplate: map[string]string{"swift-init.sh": "/common/swift-init.sh"},
+		},
 	}
 }
 
 func getStorageVolumes(instance *swiftv1beta1.SwiftStorage) []corev1.Volume {
+	var scriptsVolumeDefaultMode int32 = 0755
 	return []corev1.Volume{
 		{
 			Name: swift.ClaimName,
@@ -255,8 +264,18 @@ func getStorageVolumes(instance *swiftv1beta1.SwiftStorage) []corev1.Volume {
 				EmptyDir: &corev1.EmptyDirVolumeSource{Medium: ""},
 			},
 		},
+		{
+			Name: "scripts",
+			VolumeSource: corev1.VolumeSource{
+				ConfigMap: &corev1.ConfigMapVolumeSource{
+					DefaultMode: &scriptsVolumeDefaultMode,
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: instance.Name + "-scripts",
+					},
+				},
+			},
+		},
 	}
-
 }
 
 func getStorageVolumeMounts() []corev1.VolumeMount {
@@ -291,6 +310,11 @@ func getStorageVolumeMounts() []corev1.VolumeMount {
 			MountPath: "/var/cache/swift",
 			ReadOnly:  false,
 		},
+		{
+			Name:      "scripts",
+			MountPath: "/usr/local/bin/container-scripts",
+			ReadOnly:  true,
+		},
 	}
 }
 
@@ -313,7 +337,7 @@ func getStorageInitContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.
 			ImagePullPolicy: corev1.PullIfNotPresent,
 			SecurityContext: &securityContext,
 			VolumeMounts:    getStorageVolumeMounts(),
-			Command:         []string{"/bin/sh", "-c", "cp -t /etc/swift/ /var/lib/config-data/default/* /var/lib/config-data/swiftconf/* /var/lib/config-data/rings/*"},
+			Command:         []string{"/usr/local/bin/container-scripts/swift-init.sh"},
 		},
 	}
 }

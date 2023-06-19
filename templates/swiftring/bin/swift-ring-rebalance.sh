@@ -53,9 +53,9 @@ CONFIGMAP_JSON='{
 export CURL_CA_BUNDLE=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
 TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
 
-# https://kubernetes.io/docs/reference/kubernetes-api/config-and-storage-resources/config-map-v1/#create-create-a-configmap
+# https://kubernetes.io/docs/reference/kubernetes-api/config-and-storage-resources/config-map-v1/#update-replace-the-specified-configmap
 /usr/bin/curl \
 	-H "Authorization: Bearer $TOKEN" \
 	--data-binary "${CONFIGMAP_JSON}" \
 	-H 'Content-Type: application/json' \
-	-X POST "https://kubernetes.default.svc/api/v1/namespaces/${NAMESPACE}/configmaps"
+	-X PUT "https://kubernetes.default.svc/api/v1/namespaces/${NAMESPACE}/configmaps/${CM_NAME}"

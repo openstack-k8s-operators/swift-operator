@@ -256,10 +256,19 @@ func getProxySecretTemplates(instance *swiftv1beta1.SwiftProxy, labels map[strin
 			ConfigOptions: templateParameters,
 			Labels:        labels,
 		},
+		{
+			Name:               fmt.Sprintf("%s-scripts", instance.Name),
+			Namespace:          instance.Namespace,
+			Type:               util.TemplateTypeScripts,
+			AdditionalTemplate: map[string]string{"swift-init.sh": "/common/swift-init.sh"},
+			InstanceType:       instance.Kind,
+			Labels:             labels,
+		},
 	}
 }
 
 func getProxyVolumes(instance *swiftv1beta1.SwiftProxy) []corev1.Volume {
+	var scriptsVolumeDefaultMode int32 = 0755
 	return []corev1.Volume{
 		{
 			Name: "config-data",
@@ -293,8 +302,16 @@ func getProxyVolumes(instance *swiftv1beta1.SwiftProxy) []corev1.Volume {
 				EmptyDir: &corev1.EmptyDirVolumeSource{Medium: ""},
 			},
 		},
+		{
+			Name: "scripts",
+			VolumeSource: corev1.VolumeSource{
+				Secret: &corev1.SecretVolumeSource{
+					DefaultMode: &scriptsVolumeDefaultMode,
+					SecretName:  instance.Name + "-scripts",
+				},
+			},
+		},
 	}
-
 }
 
 func getProxyVolumeMounts() []corev1.VolumeMount {
@@ -319,6 +336,11 @@ func getProxyVolumeMounts() []corev1.VolumeMount {
 			MountPath: "/etc/swift",
 			ReadOnly:  false,
 		},
+		{
+			Name:      "scripts",
+			MountPath: "/usr/local/bin/container-scripts",
+			ReadOnly:  true,
+		},
 	}
 }
 
@@ -331,7 +353,7 @@ func getInitContainers(swiftproxy *swiftv1beta1.SwiftProxy) []corev1.Container {
 			ImagePullPolicy: corev1.PullIfNotPresent,
 			SecurityContext: &securityContext,
 			VolumeMounts:    getProxyVolumeMounts(),
-			Command:         []string{"/bin/sh", "-c", "cp -t /etc/swift/ /var/lib/config-data/default/* /var/lib/config-data/swiftconf/* /var/lib/config-data/rings/*"},
+			Command:         []string{"/usr/local/bin/container-scripts/swift-init.sh"},
 		},
 	}
 }

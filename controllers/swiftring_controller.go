@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/openstack-k8s-operators/lib-common/modules/common/condition"
+	"github.com/openstack-k8s-operators/lib-common/modules/common/configmap"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/env"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/helper"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/job"
@@ -118,6 +119,13 @@ func (r *SwiftRingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	envVars := make(map[string]env.Setter)
 	tpl := getRingSecretTemplates(instance, ls)
 	err = secret.EnsureSecrets(ctx, helper, instance, tpl, &envVars)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	// Create a ConfigMap for the Swift rings
+	tpl = getRingTemplates(instance, ls)
+	err = configmap.EnsureConfigMaps(ctx, helper, instance, tpl, &envVars)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -277,6 +285,17 @@ func getRingSecretTemplates(instance *swiftv1beta1.SwiftRing, labels map[string]
 			Type:         util.TemplateTypeScripts,
 			InstanceType: instance.Kind,
 			Labels:       labels,
+		},
+	}
+}
+
+func getRingTemplates(instance *swiftv1beta1.SwiftRing, labels map[string]string) []util.Template {
+	return []util.Template{
+		{
+			Name:         instance.Spec.RingConfigMap,
+			Namespace:    instance.Namespace,
+			Type:         util.TemplateTypeNone,
+			InstanceType: instance.Kind,
 		},
 	}
 }
