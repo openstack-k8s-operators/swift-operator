@@ -2,10 +2,11 @@
 cd /etc/swift
 
 cp -t /etc/swift/ /var/lib/config-data/swiftconf/*
+tar -xvzf /var/lib/config-data/rings/swiftrings.tar.gz -C /etc/swift/
 
-swift-ring-builder account.builder create 8 ${SWIFT_REPLICAS} 1
-swift-ring-builder container.builder create 8 ${SWIFT_REPLICAS} 1
-swift-ring-builder object.builder create 8 ${SWIFT_REPLICAS} 1
+for f in account.builder container.builder object.builder; do
+	[ ! -e $f ] && swift-ring-builder $f create 8 ${SWIFT_REPLICAS} 1
+done
 
 for DEV in $(cat /var/lib/config-data/ring-devices/devices.csv); do
 	HOST=$(echo $DEV | cut -f1 -d,)
@@ -17,16 +18,11 @@ for DEV in $(cat /var/lib/config-data/ring-devices/devices.csv); do
 	swift-ring-builder object.builder add --region 1 --zone 1 --ip $HOST --port 6200 --device $DEVICE_NAME --weight $WEIGHT
 done
 
-swift-ring-builder account.builder rebalance
-swift-ring-builder container.builder rebalance
-swift-ring-builder object.builder rebalance
+for f in *.builder; do
+	swift-ring-builder $f rebalance
+done
 
-ACC_BUILDER=`/usr/bin/base64 -w 0 account.builder`
-CNT_BUILDER=`/usr/bin/base64 -w 0 container.builder`
-OBJ_BUILDER=`/usr/bin/base64 -w 0 object.builder`
-ACC_RING=`/usr/bin/base64 -w 0 account.ring.gz`
-CNT_RING=`/usr/bin/base64 -w 0 container.ring.gz`
-OBJ_RING=`/usr/bin/base64 -w 0 object.ring.gz`
+TARFILE=`tar cvz *.builder *.ring.gz backups/*.builder | /usr/bin/base64 -w 0`
 
 CONFIGMAP_JSON='{
 	"apiVersion":"v1",
@@ -44,12 +40,7 @@ CONFIGMAP_JSON='{
 		]
 	},
 	"binaryData":{
-		"account.builder": "'${ACC_BUILDER}'",
-		"container.builder": "'${CNT_BUILDER}'",
-		"object.builder": "'${OBJ_BUILDER}'",
-		"account.ring.gz": "'${ACC_RING}'",
-		"container.ring.gz": "'${CNT_RING}'",
-		"object.ring.gz": "'${OBJ_RING}'"
+		"swiftrings.tar.gz": "'${TARFILE}'"
 	}
 }'
 

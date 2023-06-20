@@ -121,12 +121,19 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	}
 
 	// Check if there is a ConfigMap for the Swift rings
-	_, ctrlResult, err := configmap.GetConfigMap(
+	cm, ctrlResult, err := configmap.GetConfigMap(
 		ctx, helper, instance, instance.Spec.RingConfigMap, 5*time.Second)
 	if err != nil {
 		return ctrlResult, err
 	} else if (ctrlResult != ctrl.Result{}) {
 		return ctrlResult, nil
+	}
+
+	// This will only exist after SwiftStorage instances are up and rings
+	// are set up properly
+	_, ok := cm.BinaryData["swiftrings.tar.gz"]
+	if !ok {
+		return ctrl.Result{RequeueAfter: time.Duration(10) * time.Second}, nil
 	}
 
 	labels := swift.GetLabelsProxy()
