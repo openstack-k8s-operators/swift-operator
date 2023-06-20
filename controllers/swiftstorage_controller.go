@@ -667,7 +667,7 @@ func getStorageNetworkPolicy(
 	}
 }
 
-//+kubebuilder:rbac:groups=core,resources=persistentvolumeclaims,verbs=get;list
+//+kubebuilder:rbac:groups=core,resources=persistentvolumeclaims,verbs=get;list;watch
 
 func getDeviceList(ctx context.Context, h *helper.Helper, instance *swiftv1beta1.SwiftStorage) (string, error) {
 	var devices strings.Builder
