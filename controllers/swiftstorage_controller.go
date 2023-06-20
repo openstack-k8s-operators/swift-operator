@@ -219,7 +219,7 @@ func getStorageConfigMapTemplates(instance *swiftv1beta1.SwiftStorage, labels ma
 			Type:               util.TemplateTypeScripts,
 			InstanceType:       instance.Kind,
 			Labels:             labels,
-			AdditionalTemplate: map[string]string{"swift-init.sh": "/common/swift-init.sh"},
+			AdditionalTemplate: map[string]string{"swift-init.sh": "/common/swift-init.sh", "ring-sync.sh": "/common/ring-sync.sh"},
 		},
 	}
 }
@@ -480,6 +480,14 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.Cont
 			SecurityContext: &securityContext,
 			Ports:           getPorts(swift.MemcachedPort, "memcached"),
 			Command:         []string{"/usr/bin/memcached", "-p", "11211", "-u", "memcached"},
+		},
+		{
+			Name:            "ring-sync",
+			Image:           swiftstorage.Spec.ContainerImageProxy,
+			ImagePullPolicy: corev1.PullIfNotPresent,
+			SecurityContext: &securityContext,
+			VolumeMounts:    getStorageVolumeMounts(),
+			Command:         []string{"/usr/local/bin/container-scripts/ring-sync.sh"},
 		},
 	}
 }
