@@ -87,7 +87,13 @@ func (r *SwiftReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	}
 
 	if instance.Status.Conditions == nil {
-		instance.Status.Conditions.Init(nil)
+		instance.Status.Conditions = condition.Conditions{}
+		cl := condition.CreateList(
+			condition.UnknownCondition(condition.ReadyCondition, condition.InitReason, condition.ReadyInitMessage),
+		)
+
+		instance.Status.Conditions.Init(&cl)
+
 		if err := r.Status().Update(ctx, instance); err != nil {
 			return ctrl.Result{}, err
 		}
@@ -168,7 +174,7 @@ func (r *SwiftReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	}
 
 	// Mirror SwiftRing's condition status
-	c := swiftRing.Status.Conditions.Mirror(condition.ReadyCondition)
+	c := swiftRing.Status.Conditions.Mirror(swiftv1beta1.SwiftRingReadyCondition)
 	if c != nil {
 		instance.Status.Conditions.Set(c)
 	}
@@ -189,7 +195,7 @@ func (r *SwiftReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	}
 
 	// Mirror SwiftStorage's condition status
-	c = swiftStorage.Status.Conditions.Mirror(condition.ReadyCondition)
+	c = swiftStorage.Status.Conditions.Mirror(swiftv1beta1.SwiftStorageReadyCondition)
 	if c != nil {
 		instance.Status.Conditions.Set(c)
 	}
@@ -210,9 +216,18 @@ func (r *SwiftReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	}
 
 	// Mirror SwiftProxy's condition status
-	c = swiftProxy.Status.Conditions.Mirror(condition.ReadyCondition)
+	c = swiftProxy.Status.Conditions.Mirror(swiftv1beta1.SwiftProxyReadyCondition)
 	if c != nil {
 		instance.Status.Conditions.Set(c)
+	}
+
+	if instance.IsReady() {
+		instance.Status.Conditions.MarkTrue(condition.ReadyCondition, condition.ReadyMessage)
+		if err := r.Status().Update(ctx, instance); err != nil {
+			return ctrl.Result{}, err
+		}
+
+		r.Log.Info(fmt.Sprintf("Deployment %s successfully reconciled", instance.Name))
 	}
 
 	return ctrl.Result{}, nil
