@@ -8,6 +8,18 @@
 You’ll need a Kubernetes cluster to run against. You can use [KIND](https://sigs.k8s.io/kind) to get a local cluster for testing, or run against a remote cluster.
 **Note:** Your controller will automatically use the current context in your kubeconfig file (i.e. whatever cluster `kubectl cluster-info` shows).
 
+You also need a running Keystone instance. Easiest way is to deploy MariaDB and Keystone and creating required PVs using [install_yamls](https://github.com/openstack-k8s-operators/install_yamls):
+
+```sh
+git clone https://github.com/openstack-k8s-operators/install_yamls && cd install_yamls
+make crc_storage
+make mariadb
+make keystone
+make mariadb_deploy
+make keystone_deploy
+cd ..
+```
+
 ### Running on the cluster
 1. Install Instances of Custom Resources:
 
@@ -63,6 +75,12 @@ make install
 make run
 ```
 
+3. Deploy an instance:
+
+```sh
+oc apply -f config/samples/swift_v1beta1_swift.yaml
+```
+
 **NOTE:** You can also run this in one step by running: `make install run`
 
 ### Modifying the API definitions
@@ -75,6 +93,17 @@ make manifests
 **NOTE:** Run `make --help` for more information on all potential `make` targets
 
 More information can be found via the [Kubebuilder Documentation](https://book.kubebuilder.io/introduction.html)
+
+## TODO
+
+[] Fix hashes and status conditions
+[] Add node/pod affinity to ensure storage pods are running on different nodes
+[] Use more than one PV per storage pod
+[] Refactor conf file copying, Secret and ConfigMap usage
+[] Use Kolla
+[] Support Network isolation
+[] Use memcached if available within cluster
+
 
 ## License
 
