@@ -419,12 +419,12 @@ func getProxyDeployment(
 					Containers: []corev1.Container{
 						{
 							Image:           instance.Spec.ContainerImageProxy,
-							Name:            "instance",
+							Name:            "proxy-server",
 							ImagePullPolicy: corev1.PullIfNotPresent,
 							SecurityContext: &securityContext,
 							Ports: []corev1.ContainerPort{{
 								ContainerPort: swift.ProxyPort,
-								Name:          "instance",
+								Name:          "proxy-server",
 							}},
 							ReadinessProbe: readinessProbe,
 							LivenessProbe:  livenessProbe,
