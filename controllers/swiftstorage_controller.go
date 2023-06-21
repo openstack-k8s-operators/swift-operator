@@ -161,9 +161,9 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	if err != nil && !apierrors.IsNotFound(err) {
 		return ctrlResult, err
 	} else if err == nil {
-		if *found.Spec.Replicas != instance.Spec.Replicas {
+		if *found.Spec.Replicas > instance.Spec.Replicas {
 			r.Log.Info(fmt.Sprintf(
-				"Resizing (%d -> %d) number of replicas not yet supported",
+				"Downsizing (%d -> %d) number of replicas not supported",
 				*found.Spec.Replicas, instance.Spec.Replicas))
 			instance.Spec.Replicas = *found.Spec.Replicas
 			if err := r.Client.Update(ctx, instance); err != nil {

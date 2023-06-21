@@ -23,6 +23,9 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 	"time"
 
 	"github.com/openstack-k8s-operators/lib-common/modules/common/condition"
@@ -137,6 +140,24 @@ func (r *SwiftRingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 	ringCreateHash := instance.Status.Hash[swiftv1beta1.RingCreateHash]
 
+	// Check if the device list ConfigMap did change and if so, delete the
+	// rebalance Job. This will result in a new Job that rebalances with
+	// the updated device list
+	_, deviceListHash, err := configmap.GetConfigMapAndHashWithName(ctx, helper, swiftv1beta1.DeviceConfigMapName, instance.Namespace)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+	if instance.Status.Hash[swiftv1beta1.DeviceListHash] != deviceListHash {
+		if err := job.DeleteJob(ctx, helper, instance.Name+"-rebalance", instance.Namespace); err != nil {
+			return ctrl.Result{}, err
+		}
+		instance.Status.Hash[swiftv1beta1.RingCreateHash] = ""
+		instance.Status.Hash[swiftv1beta1.DeviceListHash] = deviceListHash
+		if err := r.Status().Update(ctx, instance); err != nil {
+			return ctrl.Result{}, err
+		}
+	}
+
 	ringCreateJob := job.NewJob(getRingJob(instance, ls), swiftv1beta1.RingCreateHash, false, 5*time.Second, ringCreateHash)
 	ctrlResult, err := ringCreateJob.DoJob(ctx, helper)
 	if (ctrlResult != ctrl.Result{}) {
@@ -164,6 +185,7 @@ func (r *SwiftRingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 	if ringCreateJob.HasChanged() {
 		instance.Status.Hash[swiftv1beta1.RingCreateHash] = ringCreateJob.GetHash()
+		instance.Status.Hash[swiftv1beta1.DeviceListHash] = deviceListHash
 		if err := r.Status().Update(ctx, instance); err != nil {
 			return ctrl.Result{}, err
 		}
@@ -329,11 +351,33 @@ func getRingTemplates(instance *swiftv1beta1.SwiftRing, labels map[string]string
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *SwiftRingReconciler) SetupWithManager(mgr ctrl.Manager) error {
+
+	deviceConfigMapFilter := func(o client.Object) []reconcile.Request {
+		result := []reconcile.Request{}
+		if o.GetName() == swiftv1beta1.DeviceConfigMapName {
+			// There should be only one SwiftRing instance within
+			// the Namespace - that needs to be reconciled
+			swiftRings := &swiftv1beta1.SwiftRingList{}
+			listOpts := []client.ListOption{client.InNamespace(o.GetNamespace())}
+			r.Client.List(context.Background(), swiftRings, listOpts...)
+
+			for _, cr := range swiftRings.Items {
+				name := client.ObjectKey{
+					Namespace: o.GetNamespace(),
+					Name:      cr.Name,
+				}
+				result = append(result, reconcile.Request{NamespacedName: name})
+			}
+		}
+		return result
+	}
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&swiftv1beta1.SwiftRing{}).
 		Owns(&batchv1.Job{}).
 		Owns(&corev1.ConfigMap{}).
 		Owns(&rbacv1.ClusterRole{}).
 		Owns(&rbacv1.ClusterRoleBinding{}).
+		Watches(&source.Kind{Type: &corev1.ConfigMap{}}, handler.EnqueueRequestsFromMapFunc(deviceConfigMapFilter)).
 		Complete(r)
 }

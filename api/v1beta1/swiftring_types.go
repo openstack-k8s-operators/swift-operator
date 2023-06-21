@@ -23,6 +23,7 @@ import (
 
 const (
 	RingCreateHash = "ringcreate"
+	DeviceListHash = "devicelist"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
