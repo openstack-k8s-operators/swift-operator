@@ -70,10 +70,6 @@ spec:
                 description: Replicas of Swift Proxy
                 format: int32
                 type: integer
-              ringConfigMap:
-                default: swift-ring
-                description: Name of ConfigMap containing Swift rings
-                type: string
               secret:
                 default: osp-secret
                 description: Secret containing OpenStack password information for

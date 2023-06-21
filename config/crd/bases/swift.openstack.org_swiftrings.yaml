@@ -47,10 +47,6 @@ spec:
               containerImage:
                 description: Image URL for Swift proxy service
                 type: string
-              ringConfigMap:
-                default: swift-ring
-                description: Name of ConfigMap containing Swift rings
-                type: string
               ringReplicas:
                 default: 1
                 description: Number of Swift object replicas (=copies)

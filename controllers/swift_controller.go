@@ -263,7 +263,6 @@ func (r *SwiftReconciler) SetupWithManager(mgr ctrl.Manager) error {
 func (r *SwiftReconciler) ringCreateOrUpdate(ctx context.Context, instance *swiftv1beta1.Swift) (*swiftv1beta1.SwiftRing, controllerutil.OperationResult, error) {
 
 	swiftRingSpec := swiftv1beta1.SwiftRingSpec{
-		RingConfigMap:   instance.Spec.RingConfigMap,
 		RingReplicas:    instance.Spec.SwiftRing.RingReplicas,
 		ContainerImage:  instance.Spec.SwiftRing.ContainerImage,
 		SwiftConfSecret: instance.Spec.SwiftConfSecret,
@@ -293,7 +292,6 @@ func (r *SwiftReconciler) storageCreateOrUpdate(ctx context.Context, instance *s
 
 	swiftStorageSpec := swiftv1beta1.SwiftStorageSpec{
 		Replicas:                instance.Spec.SwiftStorage.Replicas,
-		RingConfigMap:           instance.Spec.RingConfigMap,
 		StorageClass:            instance.Spec.SwiftStorage.StorageClass,
 		StorageRequest:          instance.Spec.SwiftStorage.StorageRequest,
 		ContainerImageAccount:   instance.Spec.SwiftStorage.ContainerImageAccount,
@@ -328,7 +326,6 @@ func (r *SwiftReconciler) proxyCreateOrUpdate(ctx context.Context, instance *swi
 
 	swiftProxySpec := swiftv1beta1.SwiftProxySpec{
 		Replicas:                instance.Spec.SwiftProxy.Replicas,
-		RingConfigMap:           instance.Spec.RingConfigMap,
 		ContainerImageProxy:     instance.Spec.SwiftProxy.ContainerImageProxy,
 		ContainerImageMemcached: instance.Spec.SwiftProxy.ContainerImageMemcached,
 		Secret:                  instance.Spec.SwiftProxy.Secret,

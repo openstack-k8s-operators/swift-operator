@@ -4,7 +4,6 @@ metadata:
   name: swift-proxy
 spec:
   replicas: 1
-  ringConfigMap: swift-ring
   swiftConfSecret: swift-conf
   secret: osp-secret
   serviceUser: swift

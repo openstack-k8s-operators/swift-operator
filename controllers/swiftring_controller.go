@@ -184,7 +184,7 @@ func getRingJob(instance *swiftv1beta1.SwiftRing, labels map[string]string) *bat
 	securityContext := swift.GetSecurityContext()
 
 	envVars := map[string]env.Setter{}
-	envVars["CM_NAME"] = env.SetValue(instance.Spec.RingConfigMap)
+	envVars["CM_NAME"] = env.SetValue(swiftv1beta1.RingConfigMapName)
 	envVars["NAMESPACE"] = env.SetValue(instance.Namespace)
 	envVars["SWIFT_REPLICAS"] = env.SetValue(fmt.Sprint(instance.Spec.RingReplicas))
 	envVars["OWNER_APIVERSION"] = env.SetValue(instance.APIVersion)
@@ -256,7 +256,7 @@ func getRingVolumes(instance *swiftv1beta1.SwiftRing) []corev1.Volume {
 			VolumeSource: corev1.VolumeSource{
 				ConfigMap: &corev1.ConfigMapVolumeSource{
 					LocalObjectReference: corev1.LocalObjectReference{
-						Name: fmt.Sprintf("%s-devices", instance.Spec.RingConfigMap),
+						Name: swiftv1beta1.DeviceConfigMapName,
 					},
 				},
 			},
@@ -266,7 +266,7 @@ func getRingVolumes(instance *swiftv1beta1.SwiftRing) []corev1.Volume {
 			VolumeSource: corev1.VolumeSource{
 				ConfigMap: &corev1.ConfigMapVolumeSource{
 					LocalObjectReference: corev1.LocalObjectReference{
-						Name: instance.Spec.RingConfigMap,
+						Name: swiftv1beta1.RingConfigMapName,
 					},
 				},
 			},
@@ -319,7 +319,7 @@ func getRingSecretTemplates(instance *swiftv1beta1.SwiftRing, labels map[string]
 func getRingTemplates(instance *swiftv1beta1.SwiftRing, labels map[string]string) []util.Template {
 	return []util.Template{
 		{
-			Name:         instance.Spec.RingConfigMap,
+			Name:         swiftv1beta1.RingConfigMapName,
 			Namespace:    instance.Namespace,
 			Type:         util.TemplateTypeNone,
 			InstanceType: instance.Kind,

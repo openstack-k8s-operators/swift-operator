@@ -32,11 +32,6 @@ type SwiftStorageSpec struct {
 	Replicas int32 `json:"replicas"`
 
 	// +kubebuilder:validation:Required
-	// +kubebuilder:default=swift-ring
-	// Name of ConfigMap containing Swift rings
-	RingConfigMap string `json:"ringConfigMap,omitempty"`
-
-	// +kubebuilder:validation:Required
 	// +kubebuilder:default=local-storage
 	// Name of StorageClass to use for Swift PVs
 	StorageClass string `json:"storageClass,omitempty"`

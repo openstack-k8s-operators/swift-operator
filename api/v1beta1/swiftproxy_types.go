@@ -44,11 +44,6 @@ type SwiftProxySpec struct {
 	Replicas int32 `json:"replicas"`
 
 	// +kubebuilder:validation:required
-	// +kubebuilder:default=swift-ring
-	// Name of ConfigMap containing Swift rings
-	RingConfigMap string `json:"ringConfigMap,omitempty"`
-
-	// +kubebuilder:validation:required
 	// Swift Proxy Container Image URL
 	ContainerImageProxy string `json:"containerImageProxy"`
 

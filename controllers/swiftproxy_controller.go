@@ -123,7 +123,7 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 
 	// Check if there is a ConfigMap for the Swift rings
 	cm, ctrlResult, err := configmap.GetConfigMap(
-		ctx, helper, instance, instance.Spec.RingConfigMap, 5*time.Second)
+		ctx, helper, instance, swiftv1beta1.RingConfigMapName, 5*time.Second)
 	if err != nil {
 		return ctrlResult, err
 	} else if (ctrlResult != ctrl.Result{}) {
@@ -299,7 +299,7 @@ func getProxyVolumes(instance *swiftv1beta1.SwiftProxy) []corev1.Volume {
 			VolumeSource: corev1.VolumeSource{
 				ConfigMap: &corev1.ConfigMapVolumeSource{
 					LocalObjectReference: corev1.LocalObjectReference{
-						Name: instance.Spec.RingConfigMap,
+						Name: swiftv1beta1.RingConfigMapName,
 					},
 				},
 			},

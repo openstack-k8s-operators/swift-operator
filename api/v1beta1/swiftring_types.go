@@ -34,11 +34,6 @@ type SwiftRingSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// +kubebuilder:validation:Required
-	// +kubebuilder:default=swift-ring
-	// Name of ConfigMap containing Swift rings
-	RingConfigMap string `json:"ringConfigMap,omitempty"`
-
-	// +kubebuilder:validation:Required
 	// +kubebuilder:default=1
 	// Number of Swift object replicas (=copies)
 	RingReplicas int64 `json:"ringReplicas"`
