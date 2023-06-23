@@ -34,15 +34,14 @@ import (
 	"github.com/openstack-k8s-operators/lib-common/modules/common/helper"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/job"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/secret"
-	"github.com/openstack-k8s-operators/lib-common/modules/common/util"
 
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
-	swift "github.com/openstack-k8s-operators/swift-operator/pkg/swift"
+	"github.com/openstack-k8s-operators/swift-operator/pkg/swift"
+	"github.com/openstack-k8s-operators/swift-operator/pkg/swiftring"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -121,14 +120,14 @@ func (r *SwiftRingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 	// Create a Secret populated with content from templates/
 	envVars := make(map[string]env.Setter)
-	tpl := getRingSecretTemplates(instance, ls)
+	tpl := swiftring.SecretTemplates(instance, ls)
 	err = secret.EnsureSecrets(ctx, helper, instance, tpl, &envVars)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
 
 	// Create a ConfigMap for the Swift rings
-	tpl = getRingTemplates(instance, ls)
+	tpl = swiftring.ConfigMapTemplates(instance, ls)
 	err = configmap.EnsureConfigMaps(ctx, helper, instance, tpl, &envVars)
 	if err != nil {
 		return ctrl.Result{}, err
@@ -158,7 +157,7 @@ func (r *SwiftRingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		}
 	}
 
-	ringCreateJob := job.NewJob(getRingJob(instance, ls), swiftv1beta1.RingCreateHash, false, 5*time.Second, ringCreateHash)
+	ringCreateJob := job.NewJob(swiftring.GetRingJob(instance, ls), swiftv1beta1.RingCreateHash, false, 5*time.Second, ringCreateHash)
 	ctrlResult, err := ringCreateJob.DoJob(ctx, helper)
 	if (ctrlResult != ctrl.Result{}) {
 		instance.Status.Conditions.Set(condition.FalseCondition(
@@ -200,153 +199,6 @@ func (r *SwiftRingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 	r.Log.Info(fmt.Sprintf("Reconciled SwiftRing '%s' successfully", instance.Name))
 	return ctrl.Result{}, nil
-}
-
-func getRingJob(instance *swiftv1beta1.SwiftRing, labels map[string]string) *batchv1.Job {
-	securityContext := swift.GetSecurityContext()
-
-	envVars := map[string]env.Setter{}
-	envVars["CM_NAME"] = env.SetValue(swiftv1beta1.RingConfigMapName)
-	envVars["NAMESPACE"] = env.SetValue(instance.Namespace)
-	envVars["SWIFT_REPLICAS"] = env.SetValue(fmt.Sprint(instance.Spec.RingReplicas))
-	envVars["OWNER_APIVERSION"] = env.SetValue(instance.APIVersion)
-	envVars["OWNER_KIND"] = env.SetValue(instance.Kind)
-	envVars["OWNER_UID"] = env.SetValue(string(instance.ObjectMeta.UID))
-	envVars["OWNER_NAME"] = env.SetValue(instance.ObjectMeta.Name)
-
-	return &batchv1.Job{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      instance.Name + "-rebalance",
-			Namespace: instance.Namespace,
-			Labels:    labels,
-		},
-		Spec: batchv1.JobSpec{
-			Template: corev1.PodTemplateSpec{
-				Spec: corev1.PodSpec{
-					RestartPolicy:      "OnFailure",
-					ServiceAccountName: swift.ServiceAccount,
-					SecurityContext: &corev1.PodSecurityContext{
-						SeccompProfile: &corev1.SeccompProfile{
-							Type: corev1.SeccompProfileTypeRuntimeDefault,
-						},
-					},
-					Containers: []corev1.Container{
-						{
-							Name:            instance.Name + "-rebalance",
-							Command:         []string{"/usr/local/bin/container-scripts/swift-ring-rebalance.sh"},
-							Image:           instance.Spec.ContainerImage,
-							SecurityContext: &securityContext,
-							VolumeMounts:    getRingVolumeMounts(),
-							Env:             env.MergeEnvs([]corev1.EnvVar{}, envVars),
-						},
-					},
-					Volumes: getRingVolumes(instance),
-				},
-			},
-		},
-	}
-}
-
-func getRingVolumes(instance *swiftv1beta1.SwiftRing) []corev1.Volume {
-	var scriptsVolumeDefaultMode int32 = 0755
-	return []corev1.Volume{
-		{
-			Name: "scripts",
-			VolumeSource: corev1.VolumeSource{
-				Secret: &corev1.SecretVolumeSource{
-					DefaultMode: &scriptsVolumeDefaultMode,
-					SecretName:  instance.Name + "-scripts",
-				},
-			},
-		},
-		{
-			Name: "swiftconf",
-			VolumeSource: corev1.VolumeSource{
-				Secret: &corev1.SecretVolumeSource{
-					SecretName: instance.Spec.SwiftConfSecret,
-				},
-			},
-		},
-		{
-			Name: "etc-swift",
-			VolumeSource: corev1.VolumeSource{
-				EmptyDir: &corev1.EmptyDirVolumeSource{Medium: ""},
-			},
-		},
-		{
-			Name: "ring-data-devices",
-			VolumeSource: corev1.VolumeSource{
-				ConfigMap: &corev1.ConfigMapVolumeSource{
-					LocalObjectReference: corev1.LocalObjectReference{
-						Name: swiftv1beta1.DeviceConfigMapName,
-					},
-				},
-			},
-		},
-		{
-			Name: "ring-data",
-			VolumeSource: corev1.VolumeSource{
-				ConfigMap: &corev1.ConfigMapVolumeSource{
-					LocalObjectReference: corev1.LocalObjectReference{
-						Name: swiftv1beta1.RingConfigMapName,
-					},
-				},
-			},
-		},
-	}
-}
-
-func getRingVolumeMounts() []corev1.VolumeMount {
-	return []corev1.VolumeMount{
-		{
-			Name:      "scripts",
-			MountPath: "/usr/local/bin/container-scripts",
-			ReadOnly:  true,
-		},
-		{
-			Name:      "swiftconf",
-			MountPath: "/var/lib/config-data/swiftconf",
-			ReadOnly:  true,
-		},
-		{
-			Name:      "etc-swift",
-			MountPath: "/etc/swift",
-			ReadOnly:  false,
-		},
-		{
-			Name:      "ring-data-devices",
-			MountPath: "/var/lib/config-data/ring-devices",
-			ReadOnly:  true,
-		},
-		{
-			Name:      "ring-data",
-			MountPath: "/var/lib/config-data/rings",
-			ReadOnly:  true,
-		},
-	}
-}
-
-func getRingSecretTemplates(instance *swiftv1beta1.SwiftRing, labels map[string]string) []util.Template {
-	return []util.Template{
-		{
-			Name:         fmt.Sprintf("%s-scripts", instance.Name),
-			Namespace:    instance.Namespace,
-			Type:         util.TemplateTypeScripts,
-			InstanceType: instance.Kind,
-			Labels:       labels,
-		},
-	}
-}
-
-func getRingTemplates(instance *swiftv1beta1.SwiftRing, labels map[string]string) []util.Template {
-	return []util.Template{
-		{
-			Name:         swiftv1beta1.RingConfigMapName,
-			Namespace:    instance.Namespace,
-			Type:         util.TemplateTypeNone,
-			InstanceType: instance.Kind,
-		},
-	}
 }
 
 // SetupWithManager sets up the controller with the Manager.

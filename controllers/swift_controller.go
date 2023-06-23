@@ -34,7 +34,6 @@ import (
 	"github.com/openstack-k8s-operators/lib-common/modules/common/helper"
 	common_rbac "github.com/openstack-k8s-operators/lib-common/modules/common/rbac"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/secret"
-	"github.com/openstack-k8s-operators/lib-common/modules/common/util"
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
 	swift "github.com/openstack-k8s-operators/swift-operator/pkg/swift"
 	"k8s.io/client-go/kubernetes"
@@ -143,12 +142,14 @@ func (r *SwiftReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 
 	labels := swift.GetLabelsSwift()
 
-	// Create a Secret populated with content from templates/
+	// Create a Secret populated with content from templates/, but only if
+	// it does not exist yet. Human operators might create a Secret in
+	// advance if migrating from an existing deployment
 	_, _, err = secret.GetSecret(ctx, helper, instance.Spec.SwiftConfSecret, instance.Namespace)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			envVars := make(map[string]env.Setter)
-			tpl := getSwiftSecretTemplates(instance, labels)
+			tpl := swift.SecretTemplates(instance, serviceLabels)
 			err = secret.EnsureSecrets(ctx, helper, instance, tpl, &envVars)
 			if err != nil {
 				return ctrl.Result{}, err
@@ -231,23 +232,6 @@ func (r *SwiftReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	}
 
 	return ctrl.Result{}, nil
-}
-
-func getSwiftSecretTemplates(instance *swiftv1beta1.Swift, labels map[string]string) []util.Template {
-	templateParameters := make(map[string]interface{})
-	templateParameters["SwiftHashPathPrefix"] = swift.RandomString(16)
-	templateParameters["SwiftHashPathSuffix"] = swift.RandomString(16)
-
-	return []util.Template{
-		{
-			Name:          instance.Spec.SwiftConfSecret,
-			Namespace:     instance.Namespace,
-			Type:          util.TemplateTypeConfig,
-			InstanceType:  instance.Kind,
-			ConfigOptions: templateParameters,
-			Labels:        labels,
-		},
-	}
 }
 
 // SetupWithManager sets up the controller with the Manager.
