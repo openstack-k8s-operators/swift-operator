@@ -1,109 +1,103 @@
 # swift-operator
-// TODO(user): Add simple overview of use/purpose
-
-## Description
-// TODO(user): An in-depth paragraph about your project and overview of use
+The swift-operator is an OpenShift Operator built using the
+[Operator Framework for Go](https://github.com/operator-framework) and provides
+an easy way to install and manage an OpenStack Swift installation on OpenShift.
 
 ## Getting Started
-You’ll need a Kubernetes cluster to run against. You can use [KIND](https://sigs.k8s.io/kind) to get a local cluster for testing, or run against a remote cluster.
-**Note:** Your controller will automatically use the current context in your kubeconfig file (i.e. whatever cluster `kubectl cluster-info` shows).
+You’ll need an OpenShift cluster to run against, for example [Red Hat CodeReady Containers](https://access.redhat.com/documentation/en-us/red_hat_codeready_containers/2.0/html/getting_started_guide/index).
 
-You also need a running Keystone instance. Easiest way is to deploy MariaDB and Keystone and creating required PVs using [install_yamls](https://github.com/openstack-k8s-operators/install_yamls):
+You also need a running Keystone instance and a few PersistentVolumes. There
+are two simple ways to test this, both are using [install_yamls](https://github.com/openstack-k8s-operators/install_yamls).
 
+### Setup CRC
 ```sh
-git clone https://github.com/openstack-k8s-operators/install_yamls && cd install_yamls
-make crc_storage
-make mariadb
-make keystone
-make mariadb_deploy
-make keystone_deploy
-cd ..
+git clone https://github.com/openstack-k8s-operators/install_yamls
+pushd install_yaml/devsetup
+CPUS=12 MEMORY=25600 DISK=100 make crc
+eval $(crc oc-env)
+make crc_attach_default_interface
+popd
 ```
 
-### Running on the cluster
-1. Install Instances of Custom Resources:
+### Deploy Swift
+There are multiple ways to deploy Swift, one running only Keystone, MariaDB and
+Swift and another one running a full OpenStack deployment using the
+openstack-operator.
 
+#### Deploy without using the openstack-operator
 ```sh
-kubectl apply -f config/samples/
+pushd install_yaml
+# Setup PVs and deploy the operators
+make crc_storage mariadb keystone swift
+# Once operators are ready, deploy services
+make mariadb_deploy keystone_deploy swift_deploy
+popd
 ```
 
-2. Build and push your image to the location specified by `IMG`:
-	
+Once everything is ready a couple of pods should run including Swift:
 ```sh
-make docker-build docker-push IMG=<some-registry>/swift-operator:tag
-```
-	
-3. Deploy the controller to the cluster with the image specified by `IMG`:
-
-```sh
-make deploy IMG=<some-registry>/swift-operator:tag
-```
-
-### Uninstall CRDs
-To delete the CRDs from the cluster:
-
-```sh
-make uninstall
+$ oc get pods
+NAME                           READY   STATUS      RESTARTS   AGE
+keystone-6c76bbbd67-ctk6p      1/1     Running     0          69s
+keystone-bootstrap-5x7r2       0/1     Completed   0          78s
+keystone-db-create-lk5zv       0/1     Completed   0          99s
+keystone-db-sync-ncntj         0/1     Completed   0          89s
+mariadb-openstack              1/1     Running     0          100s
+openstack-db-init-z8vgs        0/1     Completed   0          2m
+swift-proxy-749fffd9f9-zjf57   3/3     Running     0          77s
+swift-ring-rebalance-46vnr     0/1     Completed   0          93s
+swift-storage-0                16/16   Running     0          2m2s
 ```
 
-### Undeploy controller
-UnDeploy the controller to the cluster:
-
+#### Deploy using the openstack-operator
 ```sh
-make undeploy
+pushd install_yaml
+# Setup PVs and deploy the operators
+make crc_storage input openstack
+# Once operators are ready, deploy services
+make openstack_deploy
+popd
 ```
 
-## Contributing
-// TODO(user): Add detailed information on how you would like others to contribute to this project
-
-### How it works
-This project aims to follow the Kubernetes [Operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/)
-
-It uses [Controllers](https://kubernetes.io/docs/concepts/architecture/controller/) 
-which provides a reconcile function responsible for synchronizing resources untile the desired state is reached on the cluster 
-
-### Test It Out
-1. Install the CRDs into the cluster:
+### Run swiftclient inside the cluster
+If you want to use the `swift` CLI inside the cluster, deploy another pod:
 
 ```sh
-make install
+oc apply -f https://raw.githubusercontent.com/openstack-k8s-operators/swift-operator/main/config/samples/swiftclient.yaml
 ```
 
-2. Run your controller (this will run in the foreground, so switch to a new terminal if you want to leave it running):
+Now you can run regular `swift` CLI commands within the cluster:
 
 ```sh
-make run
+$ oc rsh openstackclient swift stat -v
+            StorageURL: http://swift-public-openstack.apps-crc.testing/v1/AUTH_ebc5...
+            Auth Token: gAAAAABklVH8utLpwDdfR_2_vDd-aYasUFzjoca7yo_YME8RUbiwyqhK6qp...
+               Account: AUTH_ebc5787630474735905073de1fcd675f
+            Containers: 0
+               Objects: 0
+                 Bytes: 0
+          Content-Type: text/plain; charset=utf-8
+           X-Timestamp: 1687507453.27883
+       X-Put-Timestamp: 1687507453.27883
+                  Vary: Accept
+            X-Trans-Id: txbb13222da0d94527a7101-00649551fc
+X-Openstack-Request-Id: txbb13222da0d94527a7101-00649551fc
+            Set-Cookie: 8555ec7bc3b761f9a531b621867c3563=e9a23689a3c471db8c6babe532...
+         Cache-Control: private
 ```
 
-3. Deploy an instance:
-
-```sh
-oc apply -f config/samples/swift_v1beta1_swift.yaml
-```
-
-**NOTE:** You can also run this in one step by running: `make install run`
-
-### Modifying the API definitions
-If you are editing the API definitions, generate the manifests such as CRs or CRDs using:
-
-```sh
-make manifests
-```
-
-**NOTE:** Run `make --help` for more information on all potential `make` targets
-
-More information can be found via the [Kubebuilder Documentation](https://book.kubebuilder.io/introduction.html)
 
 ## TODO
 
-[] Fix hashes and status conditions
-[] Add node/pod affinity to ensure storage pods are running on different nodes
-[] Use more than one PV per storage pod
-[] Refactor conf file copying, Secret and ConfigMap usage
-[] Use Kolla
-[] Support Network isolation
-[] Use memcached if available within cluster
-
+- [ ] Improve reconciliation
+- [ ] Fix hashes and status conditions
+- [ ] Add node/pod affinity to ensure storage pods are running on different nodes
+- [ ] Use more than one PV per storage pod
+- [ ] Replace simple rebalance script with a smarter Python-based tool
+- [ ] Refactor conf file copying, Secret and ConfigMap usage
+- [ ] Use Kolla
+- [ ] Support Network isolation
+- [ ] Use memcached if available within cluster
 
 ## License
 
@@ -120,4 +114,3 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
