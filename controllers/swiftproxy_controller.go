@@ -136,7 +136,7 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return ctrl.Result{RequeueAfter: time.Duration(10) * time.Second}, nil
 	}
 
-	labels := swift.GetLabelsProxy()
+	serviceLabels := swiftproxy.Labels()
 
 	// Create a Service and endpoints for the proxy
 	var swiftPorts = map[endpoint.Endpoint]endpoint.Data{
@@ -158,7 +158,7 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		ctx,
 		helper,
 		swift.ServiceName,
-		labels,
+		serviceLabels,
 		swiftPorts,
 		time.Duration(5)*time.Second,
 	)
@@ -184,7 +184,7 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		Secret:             instance.Spec.Secret,
 		PasswordSelector:   instance.Spec.PasswordSelectors.Service,
 	}
-	keystoneService := keystonev1.NewKeystoneService(serviceSpec, instance.Namespace, labels, 10*time.Second)
+	keystoneService := keystonev1.NewKeystoneService(serviceSpec, instance.Namespace, serviceLabels, 10*time.Second)
 	ctrlResult, err = keystoneService.CreateOrPatch(ctx, helper)
 	if err != nil {
 		return ctrlResult, err
@@ -199,7 +199,7 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		swift.ServiceName,
 		instance.Namespace,
 		endpointSpec,
-		labels,
+		serviceLabels,
 		10)
 	ctrlResult, err = keystoneEndpoint.CreateOrPatch(ctx, helper)
 	if err != nil {
@@ -225,14 +225,14 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 
 	// Create a Secret populated with content from templates/
 	envVars := make(map[string]env.Setter)
-	tpl := swiftproxy.SecretTemplates(instance, labels, authURL, password)
+	tpl := swiftproxy.SecretTemplates(instance, serviceLabels, authURL, password)
 	err = secret.EnsureSecrets(ctx, helper, instance, tpl, &envVars)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
 
 	// Create Deployment
-	depl := deployment.NewDeployment(swiftproxy.Deployment(instance, labels), 5*time.Second)
+	depl := deployment.NewDeployment(swiftproxy.Deployment(instance, serviceLabels), 5*time.Second)
 	ctrlResult, err = depl.CreateOrPatch(ctx, helper)
 	if err != nil {
 		return ctrlResult, err

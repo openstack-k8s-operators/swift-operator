@@ -63,7 +63,7 @@ import (
 func Service(
 	instance *swiftv1beta1.SwiftStorage) *corev1.Service {
 
-	storageLabels := swift.GetLabelsStorage()
+	storageLabels := Labels()
 
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{

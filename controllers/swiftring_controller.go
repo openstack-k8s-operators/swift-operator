@@ -36,7 +36,6 @@ import (
 	"github.com/openstack-k8s-operators/lib-common/modules/common/secret"
 
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
-	"github.com/openstack-k8s-operators/swift-operator/pkg/swift"
 	"github.com/openstack-k8s-operators/swift-operator/pkg/swiftring"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -116,18 +115,18 @@ func (r *SwiftRingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, nil
 	}
 
-	ls := swift.GetLabelsRing()
+	serviceLabels := swiftring.Labels()
 
 	// Create a Secret populated with content from templates/
 	envVars := make(map[string]env.Setter)
-	tpl := swiftring.SecretTemplates(instance, ls)
+	tpl := swiftring.SecretTemplates(instance, serviceLabels)
 	err = secret.EnsureSecrets(ctx, helper, instance, tpl, &envVars)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
 
 	// Create a ConfigMap for the Swift rings
-	tpl = swiftring.ConfigMapTemplates(instance, ls)
+	tpl = swiftring.ConfigMapTemplates(instance, serviceLabels)
 	err = configmap.EnsureConfigMaps(ctx, helper, instance, tpl, &envVars)
 	if err != nil {
 		return ctrl.Result{}, err
@@ -157,7 +156,7 @@ func (r *SwiftRingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		}
 	}
 
-	ringCreateJob := job.NewJob(swiftring.GetRingJob(instance, ls), swiftv1beta1.RingCreateHash, false, 5*time.Second, ringCreateHash)
+	ringCreateJob := job.NewJob(swiftring.GetRingJob(instance, serviceLabels), swiftv1beta1.RingCreateHash, false, 5*time.Second, ringCreateHash)
 	ctrlResult, err := ringCreateJob.DoJob(ctx, helper)
 	if (ctrlResult != ctrl.Result{}) {
 		instance.Status.Conditions.Set(condition.FalseCondition(

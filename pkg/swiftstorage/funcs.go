@@ -51,3 +51,7 @@ func DeviceList(ctx context.Context, h *helper.Helper, instance *swiftv1beta1.Sw
 	}
 	return devices.String(), nil
 }
+
+func Labels() map[string]string {
+	return map[string]string{"app.kubernetes.io/name": "SwiftStorage"}
+}

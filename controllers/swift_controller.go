@@ -140,7 +140,7 @@ func (r *SwiftReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return rbacResult, nil
 	}
 
-	labels := swift.GetLabelsSwift()
+	serviceLabels := swift.Labels()
 
 	// Create a Secret populated with content from templates/, but only if
 	// it does not exist yet. Human operators might create a Secret in

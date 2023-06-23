@@ -37,19 +37,7 @@ func GetSecurityContext() corev1.SecurityContext {
 	}
 }
 
-func GetLabelsProxy() map[string]string {
-	return map[string]string{"app.kubernetes.io/name": "SwiftProxy"}
-}
-
-func GetLabelsStorage() map[string]string {
-	return map[string]string{"app.kubernetes.io/name": "SwiftStorage"}
-}
-
-func GetLabelsRing() map[string]string {
-	return map[string]string{"app.kubernetes.io/name": "SwiftRing"}
-}
-
-func GetLabelsSwift() map[string]string {
+func Labels() map[string]string {
 	return map[string]string{"app.kubernetes.io/name": "Swift"}
 }
 

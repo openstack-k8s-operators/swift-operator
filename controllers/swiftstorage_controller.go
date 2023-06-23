@@ -114,11 +114,11 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		return ctrl.Result{}, err
 	}
 
-	ls := swift.GetLabelsStorage()
+	serviceLabels := swiftstorage.Labels()
 
 	// Create a ConfigMap populated with content from templates/
 	envVars := make(map[string]env.Setter)
-	tpl := swiftstorage.ConfigMapTemplates(instance, ls)
+	tpl := swiftstorage.ConfigMapTemplates(instance, serviceLabels)
 	err = configmap.EnsureConfigMaps(ctx, helper, instance, tpl, &envVars)
 	if err != nil {
 		return ctrl.Result{}, err
@@ -133,7 +133,7 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	}
 
 	// Headless Service
-	svc := service.NewService(swiftstorage.Service(instance), ls, 5*time.Second)
+	svc := service.NewService(swiftstorage.Service(instance), serviceLabels, 5*time.Second)
 	ctrlResult, err = svc.CreateOrPatch(ctx, helper)
 	if err != nil {
 		return ctrlResult, err
@@ -167,7 +167,7 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	}
 
 	// Statefulset with all backend containers
-	sset := statefulset.NewStatefulSet(swiftstorage.StatefulSet(instance, ls), 5*time.Second)
+	sset := statefulset.NewStatefulSet(swiftstorage.StatefulSet(instance, serviceLabels), 5*time.Second)
 	ctrlResult, err = sset.CreateOrPatch(ctx, helper)
 	if err != nil {
 		return ctrlResult, err

@@ -44,8 +44,8 @@ func NetworkPolicy(
 	portObjectServer := intstr.FromInt(int(swift.ObjectServerPort))
 	portRsync := intstr.FromInt(int(swift.RsyncPort))
 
-	storageLabels := swift.GetLabelsStorage()
-	proxyLabels := swift.GetLabelsProxy()
+	storageLabels := Labels()
+	proxyLabels := swiftproxy.Labels()
 
 	return &networkingv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
