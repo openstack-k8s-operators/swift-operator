@@ -46,7 +46,7 @@ type SwiftRingSpec struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default=swift-conf
 	// Name of Secret containing swift.conf
-	SwiftConfSecret string `json:"swiftConfSecret,omitempty"`
+	SwiftConfSecret string `json:"swiftConfSecret"`
 }
 
 // SwiftRingStatus defines the observed state of SwiftRing

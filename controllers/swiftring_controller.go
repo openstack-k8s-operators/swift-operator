@@ -19,6 +19,8 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -26,7 +28,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
-	"time"
 
 	"github.com/openstack-k8s-operators/lib-common/modules/common/condition"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/configmap"
@@ -210,8 +211,10 @@ func (r *SwiftRingReconciler) SetupWithManager(mgr ctrl.Manager) error {
 			// the Namespace - that needs to be reconciled
 			swiftRings := &swiftv1beta1.SwiftRingList{}
 			listOpts := []client.ListOption{client.InNamespace(o.GetNamespace())}
-			r.Client.List(context.Background(), swiftRings, listOpts...)
-
+			err := r.Client.List(context.Background(), swiftRings, listOpts...)
+			if err != nil {
+				return nil
+			}
 			for _, cr := range swiftRings.Items {
 				name := client.ObjectKey{
 					Namespace: o.GetNamespace(),

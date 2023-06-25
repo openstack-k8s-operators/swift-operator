@@ -48,7 +48,13 @@ type SwiftSpec struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default=swift-conf
 	// Name of Secret containing swift.conf
-	SwiftConfSecret string `json:"swiftConfSecret,omitempty"`
+	SwiftConfSecret string `json:"swiftConfSecret"`
+
+	// Storage class. This is passed to SwiftStorage unless
+	// storageClass is explicitly set for the SwiftStorage.
+	// +kubebuilder:validation:Required
+	// +kubebuilder:default=local-storage
+	StorageClass string `json:"storageClass"`
 }
 
 // SwiftStatus defines the observed state of Swift

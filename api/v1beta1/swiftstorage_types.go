@@ -34,7 +34,7 @@ type SwiftStorageSpec struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default=local-storage
 	// Name of StorageClass to use for Swift PVs
-	StorageClass string `json:"storageClass,omitempty"`
+	StorageClass string `json:"storageClass"`
 
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default="10Gi"
@@ -64,7 +64,7 @@ type SwiftStorageSpec struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default=swift-conf
 	// Name of Secret containing swift.conf
-	SwiftConfSecret string `json:"swiftConfSecret,omitempty"`
+	SwiftConfSecret string `json:"swiftConfSecret"`
 }
 
 // SwiftStorageStatus defines the observed state of SwiftStorage

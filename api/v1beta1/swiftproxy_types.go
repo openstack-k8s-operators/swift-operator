@@ -29,11 +29,11 @@ type PasswordSelector struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="SwiftPassword"
 	// Database - Selector to get the Swift service password from the Secret
-	Service string `json:"admin,omitempty"`
+	Service string `json:"admin"`
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default="TransportURL"
 	// Database - Selector to get the Swift service password from the Secret
-	TransportURL string `json:"transportUrl,omitempty"`
+	TransportURL string `json:"transportUrl"`
 }
 
 // SwiftProxySpec defines the desired state of SwiftProxy

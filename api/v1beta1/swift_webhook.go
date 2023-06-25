@@ -25,16 +25,14 @@ import (
 
 // SwiftDefaults -
 type SwiftDefaults struct {
-	AccountContainerImageURL	string
-	ContainerContainerImageURL	string
-	ObjectContainerImageURL		string
-	ProxyContainerImageURL		string
-	MemcachedContainerImageURL	string
+	AccountContainerImageURL   string
+	ContainerContainerImageURL string
+	ObjectContainerImageURL    string
+	ProxyContainerImageURL     string
+	MemcachedContainerImageURL string
 }
 
 var swiftDefaults SwiftDefaults
-
-
 
 // log is for logging in this package.
 var swiftlog = logf.Log.WithName("swift-resource")
@@ -56,7 +54,6 @@ func (r *Swift) SetupWebhookWithManager(mgr ctrl.Manager) error {
 
 var _ webhook.Defaulter = &Swift{}
 
-
 // Default implements webhook.Defaulter so a webhook will be registered for the type
 func (r *Swift) Default() {
 	swiftlog.Info("default", "name", r.Name)
@@ -69,6 +66,10 @@ func (spec *SwiftSpec) Default() {
 	// ring
 	if spec.SwiftRing.ContainerImage == "" {
 		spec.SwiftRing.ContainerImage = swiftDefaults.ProxyContainerImageURL
+	}
+	// StorageClass
+	if spec.SwiftStorage.StorageClass == "" {
+		spec.SwiftStorage.StorageClass = spec.StorageClass
 	}
 
 	// storage
@@ -83,7 +84,6 @@ func (spec *SwiftSpec) Default() {
 	if spec.SwiftStorage.ContainerImageObject == "" {
 		spec.SwiftStorage.ContainerImageObject = swiftDefaults.ObjectContainerImageURL
 	}
-
 
 	if spec.SwiftStorage.ContainerImageProxy == "" {
 		spec.SwiftStorage.ContainerImageProxy = swiftDefaults.ProxyContainerImageURL
