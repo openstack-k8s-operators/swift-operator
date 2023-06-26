@@ -3,11 +3,15 @@ The swift-operator is an OpenShift Operator built using the
 [Operator Framework for Go](https://github.com/operator-framework) and provides
 an easy way to install and manage an OpenStack Swift installation on OpenShift.
 
+Some useful information about the implementation might be found in the [Design
+Decisisons](docs/design-decisions.md).
+
 ## Getting Started
 You’ll need an OpenShift cluster to run against, for example [Red Hat CodeReady Containers](https://access.redhat.com/documentation/en-us/red_hat_codeready_containers/2.0/html/getting_started_guide/index).
 
 You also need a running Keystone instance and a few PersistentVolumes. There
 are two simple ways to test this, both are using [install_yamls](https://github.com/openstack-k8s-operators/install_yamls).
+
 
 ### Setup CRC
 ```sh
