@@ -67,15 +67,10 @@ spec:
                     description: PasswordSelector - Selector to choose the Swift user
                       password from the Secret
                     properties:
-                      admin:
+                      service:
                         default: SwiftPassword
-                        description: Database - Selector to get the Swift service
-                          password from the Secret
-                        type: string
-                      transportUrl:
-                        default: TransportURL
-                        description: Database - Selector to get the Swift service
-                          password from the Secret
+                        description: Service - Selector to get the Swift service password
+                          from the Secret
                         type: string
                     type: object
                   replicas:

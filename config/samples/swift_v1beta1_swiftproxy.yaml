@@ -7,6 +7,7 @@ spec:
   swiftConfSecret: swift-conf
   secret: osp-secret
   serviceUser: swift
-  passwordSelector: SwiftPassword
+  passwordSelectors:
+    service: SwiftPassword
   containerImageProxy: quay.io/podified-antelope-centos9/openstack-swift-proxy-server:current-podified
   containerImageMemcached: quay.io/podified-antelope-centos9/openstack-memcached:current-podified
