@@ -41,7 +41,7 @@ func SecretTemplates(instance *swiftv1beta1.SwiftProxy, labels map[string]string
 			Name:               fmt.Sprintf("%s-scripts", instance.Name),
 			Namespace:          instance.Namespace,
 			Type:               util.TemplateTypeScripts,
-			AdditionalTemplate: map[string]string{"swift-init.sh": "/common/swift-init.sh", "ring-sync.sh": "/common/ring-sync.sh"},
+			AdditionalTemplate: map[string]string{"ring-sync.sh": "/common/ring-sync.sh"},
 			InstanceType:       instance.Kind,
 			Labels:             labels,
 		},

@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/openstack-k8s-operators/lib-common/modules/common/helper"
@@ -32,24 +33,29 @@ import (
 
 //+kubebuilder:rbac:groups=core,resources=persistentvolumeclaims,verbs=get;list;watch
 
-func DeviceList(ctx context.Context, h *helper.Helper, instance *swiftv1beta1.SwiftStorage) (string, error) {
+func DeviceList(ctx context.Context, h *helper.Helper, instance *swiftv1beta1.SwiftStorage) string {
+	// Creates a CSV list of devices. If PVCs do not exist yet (because not
+	// all StatefulSets are up yet), it will just use the request capacity
+	// as value.
 	var devices strings.Builder
 
 	foundClaim := &corev1.PersistentVolumeClaim{}
 	for replica := 0; replica < int(instance.Spec.Replicas); replica++ {
 		cn := fmt.Sprintf("%s-%s-%d", swift.ClaimName, instance.Name, replica)
 		err := h.GetClient().Get(ctx, types.NamespacedName{Name: cn, Namespace: instance.Namespace}, foundClaim)
+		capacity := resource.MustParse(instance.Spec.StorageRequest)
+		weight, _ := capacity.AsInt64()
 		if err == nil {
-			fsc := foundClaim.Status.Capacity["storage"]
-			c, _ := (&fsc).AsInt64()
-			c = c / (1000 * 1000 * 1000)
-			host := fmt.Sprintf("%s-%d.%s", instance.Name, replica, instance.Name)
-			devices.WriteString(fmt.Sprintf("%s,%s,%d\n", host, "d1", c))
+			capacity := foundClaim.Status.Capacity["storage"]
+			weight, _ = capacity.AsInt64()
 		} else {
-			return "", err
+			h.GetLogger().Info(fmt.Sprintf("Did not find PVC %s, assuming %s as capacity", cn, instance.Spec.StorageRequest))
 		}
+		weight = weight / (1000 * 1000 * 1000) // 10GiB gets a weight of 10 etc.
+		// CSV: region,zone,hostname,devicename,weight
+		devices.WriteString(fmt.Sprintf("1,1,%s-%d.%s,%s,%d\n", instance.Name, replica, instance.Name, "d1", weight))
 	}
-	return devices.String(), nil
+	return devices.String()
 }
 
 func Labels() map[string]string {

@@ -126,13 +126,6 @@ func (r *SwiftRingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, err
 	}
 
-	// Create a ConfigMap for the Swift rings
-	tpl = swiftring.ConfigMapTemplates(instance, serviceLabels)
-	err = configmap.EnsureConfigMaps(ctx, helper, instance, tpl, &envVars)
-	if err != nil {
-		return ctrl.Result{}, err
-	}
-
 	// Swift ring init job - start
 	if instance.Status.Hash == nil {
 		instance.Status.Hash = map[string]string{}

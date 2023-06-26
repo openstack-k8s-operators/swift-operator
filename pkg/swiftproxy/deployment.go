@@ -27,20 +27,6 @@ import (
 	swift "github.com/openstack-k8s-operators/swift-operator/pkg/swift"
 )
 
-func getInitContainers(swiftproxy *swiftv1beta1.SwiftProxy) []corev1.Container {
-	securityContext := swift.GetSecurityContext()
-	return []corev1.Container{
-		{
-			Name:            "swift-init",
-			Image:           swiftproxy.Spec.ContainerImageProxy,
-			ImagePullPolicy: corev1.PullIfNotPresent,
-			SecurityContext: &securityContext,
-			VolumeMounts:    getProxyVolumeMounts(),
-			Command:         []string{"/usr/local/bin/container-scripts/swift-init.sh"},
-		},
-	}
-}
-
 func Deployment(
 	instance *swiftv1beta1.SwiftProxy, labels map[string]string) *appsv1.Deployment {
 
@@ -89,9 +75,18 @@ func Deployment(
 							Type: corev1.SeccompProfileTypeRuntimeDefault,
 						},
 					},
-					Volumes:        getProxyVolumes(instance),
-					InitContainers: getInitContainers(instance),
+					Volumes: getProxyVolumes(instance),
 					Containers: []corev1.Container{
+						{
+							Name:            "ring-sync",
+							Image:           instance.Spec.ContainerImageProxy,
+							ImagePullPolicy: corev1.PullIfNotPresent,
+							SecurityContext: &securityContext,
+							ReadinessProbe:  readinessProbe,
+							LivenessProbe:   livenessProbe,
+							VolumeMounts:    getProxyVolumeMounts(),
+							Command:         []string{"/usr/local/bin/container-scripts/ring-sync.sh"},
+						},
 						{
 							Image:           instance.Spec.ContainerImageProxy,
 							Name:            "proxy-server",
@@ -117,16 +112,6 @@ func Deployment(
 							}},
 							VolumeMounts: getProxyVolumeMounts(),
 							Command:      []string{"/usr/bin/memcached", "-p", "11211", "-u", "memcached"},
-						},
-						{
-							Name:            "ring-sync",
-							Image:           instance.Spec.ContainerImageProxy,
-							ImagePullPolicy: corev1.PullIfNotPresent,
-							SecurityContext: &securityContext,
-							ReadinessProbe:  readinessProbe,
-							LivenessProbe:   livenessProbe,
-							VolumeMounts:    getProxyVolumeMounts(),
-							Command:         []string{"/usr/local/bin/container-scripts/ring-sync.sh"},
 						},
 					},
 				},
