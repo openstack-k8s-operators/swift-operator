@@ -32,8 +32,8 @@ type SwiftStorageSpec struct {
 	Replicas int32 `json:"replicas"`
 
 	// +kubebuilder:validation:Required
-	// +kubebuilder:default=local-storage
 	// Name of StorageClass to use for Swift PVs
+	// +kubebuilder:default=""
 	StorageClass string `json:"storageClass"`
 
 	// +kubebuilder:validation:Required

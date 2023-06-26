@@ -45,7 +45,7 @@ spec:
             description: SwiftSpec defines the desired state of Swift
             properties:
               storageClass:
-                default: local-storage
+                default: ""
                 description: Storage class. This is passed to SwiftStorage unless
                   storageClass is explicitly set for the SwiftStorage.
                 type: string
@@ -147,7 +147,7 @@ spec:
                     format: int32
                     type: integer
                   storageClass:
-                    default: local-storage
+                    default: ""
                     description: Name of StorageClass to use for Swift PVs
                     type: string
                   storageRequest:

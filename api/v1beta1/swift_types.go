@@ -53,7 +53,7 @@ type SwiftSpec struct {
 	// Storage class. This is passed to SwiftStorage unless
 	// storageClass is explicitly set for the SwiftStorage.
 	// +kubebuilder:validation:Required
-	// +kubebuilder:default=local-storage
+	// +kubebuilder:default=""
 	StorageClass string `json:"storageClass"`
 }
 
