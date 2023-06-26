@@ -57,16 +57,6 @@ func getRingVolumes(instance *swiftv1beta1.SwiftRing) []corev1.Volume {
 				},
 			},
 		},
-		{
-			Name: "ring-data",
-			VolumeSource: corev1.VolumeSource{
-				ConfigMap: &corev1.ConfigMapVolumeSource{
-					LocalObjectReference: corev1.LocalObjectReference{
-						Name: swiftv1beta1.RingConfigMapName,
-					},
-				},
-			},
-		},
 	}
 }
 
@@ -90,11 +80,6 @@ func getRingVolumeMounts() []corev1.VolumeMount {
 		{
 			Name:      "ring-data-devices",
 			MountPath: "/var/lib/config-data/ring-devices",
-			ReadOnly:  true,
-		},
-		{
-			Name:      "ring-data",
-			MountPath: "/var/lib/config-data/rings",
 			ReadOnly:  true,
 		},
 	}
