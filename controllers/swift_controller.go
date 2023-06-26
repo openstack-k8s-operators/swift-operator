@@ -125,7 +125,7 @@ func (r *SwiftReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		{
 			APIGroups: []string{""},
 			Resources: []string{"configmaps"},
-			Verbs:     []string{"create", "update", "delete"},
+			Verbs:     []string{"create", "get", "update", "delete"},
 		},
 		{
 			APIGroups: []string{""},
