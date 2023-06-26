@@ -63,7 +63,7 @@ spec:
                 format: int32
                 type: integer
               storageClass:
-                default: local-storage
+                default: ""
                 description: Name of StorageClass to use for Swift PVs
                 type: string
               storageRequest:
