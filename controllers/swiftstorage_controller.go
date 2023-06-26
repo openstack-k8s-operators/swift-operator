@@ -115,9 +115,25 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	}
 
 	serviceLabels := swiftstorage.Labels()
+	envVars := make(map[string]env.Setter)
+
+	// Check if there is already an existing ConfigMap and device list. If
+	// not, create an initial device list to bootstrap the cluster with The
+	// weights are simply set to the requested size, this will be changed
+	// once all StatefulSets are running
+	_, ctrlResult, err := configmap.GetConfigMap(ctx, helper, instance, swiftv1beta1.DeviceConfigMapName, 5*time.Second)
+	if err != nil {
+		return ctrlResult, err
+	} else if (ctrlResult != ctrl.Result{}) {
+		devices := swiftstorage.DeviceList(ctx, helper, instance)
+		tpl := swiftstorage.DeviceConfigMapTemplates(instance, devices)
+		err = configmap.EnsureConfigMaps(ctx, helper, instance, tpl, &envVars)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+	}
 
 	// Create a ConfigMap populated with content from templates/
-	envVars := make(map[string]env.Setter)
 	tpl := swiftstorage.ConfigMapTemplates(instance, serviceLabels)
 	err = configmap.EnsureConfigMaps(ctx, helper, instance, tpl, &envVars)
 	if err != nil {
@@ -125,7 +141,7 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	}
 
 	// Check if there is a ConfigMap for the Swift rings
-	_, ctrlResult, err := configmap.GetConfigMap(ctx, helper, instance, swiftv1beta1.RingConfigMapName, 5*time.Second)
+	_, ctrlResult, err = configmap.GetConfigMap(ctx, helper, instance, swiftv1beta1.RingConfigMapName, 5*time.Second)
 	if err != nil {
 		return ctrlResult, err
 	} else if (ctrlResult != ctrl.Result{}) {
