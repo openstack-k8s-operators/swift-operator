@@ -159,27 +159,6 @@ func (r *SwiftReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		}
 	}
 
-	// create or update Swift rings
-	swiftRing, op, err := r.ringCreateOrUpdate(ctx, instance)
-	if err != nil {
-		instance.Status.Conditions.Set(condition.FalseCondition(
-			swiftv1beta1.SwiftRingReadyCondition,
-			condition.ErrorReason,
-			condition.SeverityWarning,
-			swiftv1beta1.SwiftRingReadyErrorMessage,
-			err.Error()))
-		return ctrl.Result{}, err
-	}
-	if op != controllerutil.OperationResultNone {
-		r.Log.Info(fmt.Sprintf("Deployment %s successfully reconciled - operation: %s", instance.Name, string(op)))
-	}
-
-	// Mirror SwiftRing's condition status
-	c := swiftRing.Status.Conditions.Mirror(swiftv1beta1.SwiftRingReadyCondition)
-	if c != nil {
-		instance.Status.Conditions.Set(c)
-	}
-
 	// create or update Swift storage
 	swiftStorage, op, err := r.storageCreateOrUpdate(ctx, instance)
 	if err != nil {
@@ -196,7 +175,28 @@ func (r *SwiftReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	}
 
 	// Mirror SwiftStorage's condition status
-	c = swiftStorage.Status.Conditions.Mirror(swiftv1beta1.SwiftStorageReadyCondition)
+	c := swiftStorage.Status.Conditions.Mirror(swiftv1beta1.SwiftStorageReadyCondition)
+	if c != nil {
+		instance.Status.Conditions.Set(c)
+	}
+
+	// create or update Swift rings
+	swiftRing, op, err := r.ringCreateOrUpdate(ctx, instance)
+	if err != nil {
+		instance.Status.Conditions.Set(condition.FalseCondition(
+			swiftv1beta1.SwiftRingReadyCondition,
+			condition.ErrorReason,
+			condition.SeverityWarning,
+			swiftv1beta1.SwiftRingReadyErrorMessage,
+			err.Error()))
+		return ctrl.Result{}, err
+	}
+	if op != controllerutil.OperationResultNone {
+		r.Log.Info(fmt.Sprintf("Deployment %s successfully reconciled - operation: %s", instance.Name, string(op)))
+	}
+
+	// Mirror SwiftRing's condition status
+	c = swiftRing.Status.Conditions.Mirror(swiftv1beta1.SwiftRingReadyCondition)
 	if c != nil {
 		instance.Status.Conditions.Set(c)
 	}
