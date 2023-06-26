@@ -40,7 +40,7 @@ func ConfigMapTemplates(instance *swiftv1beta1.SwiftStorage, labels map[string]s
 			Type:               util.TemplateTypeScripts,
 			InstanceType:       instance.Kind,
 			Labels:             labels,
-			AdditionalTemplate: map[string]string{"swift-init.sh": "/common/swift-init.sh", "ring-sync.sh": "/common/ring-sync.sh"},
+			AdditionalTemplate: map[string]string{"ring-sync.sh": "/common/ring-sync.sh"},
 		},
 	}
 }

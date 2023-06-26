@@ -35,25 +35,18 @@ func getPorts(port int32, name string) []corev1.ContainerPort {
 	}
 }
 
-func getStorageInitContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.Container {
-	securityContext := swift.GetSecurityContext()
-
-	return []corev1.Container{
-		{
-			Name:            "swift-init",
-			Image:           swiftstorage.Spec.ContainerImageAccount,
-			ImagePullPolicy: corev1.PullIfNotPresent,
-			SecurityContext: &securityContext,
-			VolumeMounts:    getStorageVolumeMounts(),
-			Command:         []string{"/usr/local/bin/container-scripts/swift-init.sh"},
-		},
-	}
-}
-
 func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.Container {
 	securityContext := swift.GetSecurityContext()
 
 	return []corev1.Container{
+		{
+			Name:            "ring-sync",
+			Image:           swiftstorage.Spec.ContainerImageProxy,
+			ImagePullPolicy: corev1.PullIfNotPresent,
+			SecurityContext: &securityContext,
+			VolumeMounts:    getStorageVolumeMounts(),
+			Command:         []string{"/usr/local/bin/container-scripts/ring-sync.sh"},
+		},
 		{
 			Name:            "account-server",
 			Image:           swiftstorage.Spec.ContainerImageAccount,
@@ -178,14 +171,6 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.Cont
 			Ports:           getPorts(swift.MemcachedPort, "memcached"),
 			Command:         []string{"/usr/bin/memcached", "-p", "11211", "-u", "memcached"},
 		},
-		{
-			Name:            "ring-sync",
-			Image:           swiftstorage.Spec.ContainerImageProxy,
-			ImagePullPolicy: corev1.PullIfNotPresent,
-			SecurityContext: &securityContext,
-			VolumeMounts:    getStorageVolumeMounts(),
-			Command:         []string{"/usr/local/bin/container-scripts/ring-sync.sh"},
-		},
 	}
 }
 
@@ -226,9 +211,8 @@ func StatefulSet(
 							Type: corev1.SeccompProfileTypeRuntimeDefault,
 						},
 					},
-					Volumes:        getStorageVolumes(swiftstorage),
-					InitContainers: getStorageInitContainers(swiftstorage),
-					Containers:     getStorageContainers(swiftstorage),
+					Volumes:    getStorageVolumes(swiftstorage),
+					Containers: getStorageContainers(swiftstorage),
 				},
 			},
 			VolumeClaimTemplates: []corev1.PersistentVolumeClaim{{
