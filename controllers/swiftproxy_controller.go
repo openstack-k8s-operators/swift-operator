@@ -34,7 +34,6 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	"github.com/openstack-k8s-operators/lib-common/modules/common/condition"
-	"github.com/openstack-k8s-operators/lib-common/modules/common/configmap"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/deployment"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/endpoint"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/env"
@@ -118,22 +117,6 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 
 	if !instance.DeletionTimestamp.IsZero() {
 		return r.reconcileDelete(ctx, instance, helper)
-	}
-
-	// Check if there is a ConfigMap for the Swift rings
-	cm, ctrlResult, err := configmap.GetConfigMap(
-		ctx, helper, instance, swiftv1beta1.RingConfigMapName, 5*time.Second)
-	if err != nil {
-		return ctrlResult, err
-	} else if (ctrlResult != ctrl.Result{}) {
-		return ctrlResult, nil
-	}
-
-	// This will only exist after SwiftStorage instances are up and rings
-	// are set up properly
-	_, ok := cm.BinaryData["swiftrings.tar.gz"]
-	if !ok {
-		return ctrl.Result{RequeueAfter: time.Duration(10) * time.Second}, nil
 	}
 
 	serviceLabels := swiftproxy.Labels()

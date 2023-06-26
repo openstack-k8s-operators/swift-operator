@@ -140,14 +140,6 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		return ctrl.Result{}, err
 	}
 
-	// Check if there is a ConfigMap for the Swift rings
-	_, ctrlResult, err = configmap.GetConfigMap(ctx, helper, instance, swiftv1beta1.RingConfigMapName, 5*time.Second)
-	if err != nil {
-		return ctrlResult, err
-	} else if (ctrlResult != ctrl.Result{}) {
-		return ctrlResult, nil
-	}
-
 	// Headless Service
 	svc := service.NewService(swiftstorage.Service(instance), serviceLabels, 5*time.Second)
 	ctrlResult, err = svc.CreateOrPatch(ctx, helper)
