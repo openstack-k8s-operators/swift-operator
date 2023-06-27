@@ -57,9 +57,10 @@ type SwiftProxySpec struct {
 	// Secret containing OpenStack password information for Swift service user password
 	Secret string `json:"secret,omitempty"`
 
-	// +kubebuilder:validation:required
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default={service: SwiftPassword}
 	// PasswordSelector - Selector to choose the Swift user password from the Secret
-	PasswordSelectors PasswordSelector `json:"passwordSelectors,omitempty"`
+	PasswordSelectors PasswordSelector `json:"passwordSelectors"`
 
 	// +kubebuilder:validation:required
 	// +kubebuilder:default=swift-conf

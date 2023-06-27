@@ -64,6 +64,8 @@ spec:
                     description: Swift Proxy Container Image URL
                     type: string
                   passwordSelectors:
+                    default:
+                      service: SwiftPassword
                     description: PasswordSelector - Selector to choose the Swift user
                       password from the Secret
                     properties:
