@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+
 	"github.com/go-logr/logr"
 
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -34,7 +35,7 @@ import (
 	"github.com/openstack-k8s-operators/lib-common/modules/common/helper"
 	common_rbac "github.com/openstack-k8s-operators/lib-common/modules/common/rbac"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/secret"
-	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
+	swiftv1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
 	swift "github.com/openstack-k8s-operators/swift-operator/pkg/swift"
 	"k8s.io/client-go/kubernetes"
 )
@@ -68,10 +69,10 @@ type SwiftReconciler struct {
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.13.0/pkg/reconcile
-func (r *SwiftReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *SwiftReconciler) Reconcile(ctx context.Context, req ctrl.Request) (result ctrl.Result, _err error) {
 	_ = r.Log.WithValues("swift", req.NamespacedName)
 
-	instance := &swiftv1beta1.Swift{}
+	instance := &swiftv1.Swift{}
 	err := r.Get(ctx, req.NamespacedName, instance)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
@@ -85,19 +86,6 @@ func (r *SwiftReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{}, err
 	}
 
-	if instance.Status.Conditions == nil {
-		instance.Status.Conditions = condition.Conditions{}
-		cl := condition.CreateList(
-			condition.UnknownCondition(condition.ReadyCondition, condition.InitReason, condition.ReadyInitMessage),
-		)
-
-		instance.Status.Conditions.Init(&cl)
-
-		if err := r.Status().Update(ctx, instance); err != nil {
-			return ctrl.Result{}, err
-		}
-	}
-
 	helper, err := helper.NewHelper(
 		instance,
 		r.Client,
@@ -108,6 +96,66 @@ func (r *SwiftReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	if err != nil {
 		return ctrl.Result{}, err
 	}
+
+	// Always patch the instance status when exiting this function so we can persist any changes.
+	defer func() {
+		// update the Ready condition based on the sub conditions
+		if instance.Status.Conditions.AllSubConditionIsTrue() {
+			instance.Status.Conditions.MarkTrue(
+				condition.ReadyCondition, condition.ReadyMessage)
+		} else {
+			// something is not ready so reset the Ready condition
+			instance.Status.Conditions.MarkUnknown(
+				condition.ReadyCondition, condition.InitReason, condition.ReadyInitMessage)
+			// and recalculate it based on the state of the rest of the conditions
+			instance.Status.Conditions.Set(
+				instance.Status.Conditions.Mirror(condition.ReadyCondition))
+		}
+		err := helper.PatchInstance(ctx, instance)
+		if err != nil {
+			_err = err
+			return
+		}
+	}()
+
+	// If we're not deleting this and the service object doesn't have our finalizer, add it.
+	if instance.DeletionTimestamp.IsZero() && controllerutil.AddFinalizer(instance, helper.GetFinalizer()) {
+		return ctrl.Result{}, nil
+	}
+
+	// initialize status
+
+	if instance.Status.Conditions == nil {
+		instance.Status.Conditions = condition.Conditions{}
+		// initialize conditions used later as Status=Unknown
+		cl := condition.CreateList(
+			condition.UnknownCondition(condition.ServiceConfigReadyCondition, condition.InitReason, condition.ServiceConfigReadyInitMessage),
+			condition.UnknownCondition(swiftv1.SwiftProxyReadyCondition, condition.InitReason, swiftv1.SwiftProxyReadyInitMessage),
+			condition.UnknownCondition(swiftv1.SwiftRingReadyCondition, condition.InitReason, swiftv1.SwiftRingReadyInitMessage),
+			condition.UnknownCondition(swiftv1.SwiftStorageReadyCondition, condition.InitReason, swiftv1.SwiftStorageReadyInitMessage),
+			// service account, role, rolebinding conditions
+			condition.UnknownCondition(condition.ServiceAccountReadyCondition, condition.InitReason, condition.ServiceAccountReadyInitMessage),
+			condition.UnknownCondition(condition.RoleReadyCondition, condition.InitReason, condition.RoleReadyInitMessage),
+			condition.UnknownCondition(condition.RoleBindingReadyCondition, condition.InitReason, condition.RoleBindingReadyInitMessage),
+		)
+
+		instance.Status.Conditions.Init(&cl)
+
+		// Register overall status immediately to have an early feedback e.g. in the cli
+		return ctrl.Result{}, err
+	}
+
+	// Handle service delete
+	if !instance.DeletionTimestamp.IsZero() {
+		return r.reconcileDelete(ctx, instance, helper)
+	}
+
+	// Handle non-deleted clusters
+	return r.reconcileNormal(ctx, instance, helper)
+}
+
+func (r *SwiftReconciler) reconcileNormal(ctx context.Context, instance *swiftv1.Swift, helper *helper.Helper) (ctrl.Result, error) {
+	r.Log.Info(fmt.Sprintf("Reconciling Service '%s'", instance.Name))
 
 	// Service account, role, binding
 	rbacRules := []rbacv1.PolicyRule{
@@ -152,21 +200,35 @@ func (r *SwiftReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 			tpl := swift.SecretTemplates(instance, serviceLabels)
 			err = secret.EnsureSecrets(ctx, helper, instance, tpl, &envVars)
 			if err != nil {
+				instance.Status.Conditions.Set(condition.FalseCondition(
+					condition.ServiceConfigReadyCondition,
+					condition.ErrorReason,
+					condition.SeverityWarning,
+					condition.ServiceConfigReadyErrorMessage,
+					err.Error()))
 				return ctrl.Result{}, err
 			}
 		} else {
+			instance.Status.Conditions.Set(condition.FalseCondition(
+				condition.ServiceConfigReadyCondition,
+				condition.ErrorReason,
+				condition.SeverityWarning,
+				condition.ServiceConfigReadyErrorMessage,
+				err.Error()))
 			return ctrl.Result{}, err
 		}
 	}
+
+	instance.Status.Conditions.MarkTrue(condition.ServiceConfigReadyCondition, condition.ServiceConfigReadyMessage)
 
 	// create or update Swift storage
 	swiftStorage, op, err := r.storageCreateOrUpdate(ctx, instance)
 	if err != nil {
 		instance.Status.Conditions.Set(condition.FalseCondition(
-			swiftv1beta1.SwiftStorageReadyCondition,
+			swiftv1.SwiftStorageReadyCondition,
 			condition.ErrorReason,
 			condition.SeverityWarning,
-			swiftv1beta1.SwiftStorageReadyErrorMessage,
+			swiftv1.SwiftStorageReadyErrorMessage,
 			err.Error()))
 		return ctrl.Result{}, err
 	}
@@ -175,7 +237,7 @@ func (r *SwiftReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	}
 
 	// Mirror SwiftStorage's condition status
-	c := swiftStorage.Status.Conditions.Mirror(swiftv1beta1.SwiftStorageReadyCondition)
+	c := swiftStorage.Status.Conditions.Mirror(swiftv1.SwiftStorageReadyCondition)
 	if c != nil {
 		instance.Status.Conditions.Set(c)
 	}
@@ -184,10 +246,10 @@ func (r *SwiftReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	swiftRing, op, err := r.ringCreateOrUpdate(ctx, instance)
 	if err != nil {
 		instance.Status.Conditions.Set(condition.FalseCondition(
-			swiftv1beta1.SwiftRingReadyCondition,
+			swiftv1.SwiftRingReadyCondition,
 			condition.ErrorReason,
 			condition.SeverityWarning,
-			swiftv1beta1.SwiftRingReadyErrorMessage,
+			swiftv1.SwiftRingReadyErrorMessage,
 			err.Error()))
 		return ctrl.Result{}, err
 	}
@@ -196,7 +258,7 @@ func (r *SwiftReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	}
 
 	// Mirror SwiftRing's condition status
-	c = swiftRing.Status.Conditions.Mirror(swiftv1beta1.SwiftRingReadyCondition)
+	c = swiftRing.Status.Conditions.Mirror(swiftv1.SwiftRingReadyCondition)
 	if c != nil {
 		instance.Status.Conditions.Set(c)
 	}
@@ -205,10 +267,10 @@ func (r *SwiftReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	swiftProxy, op, err := r.proxyCreateOrUpdate(ctx, instance)
 	if err != nil {
 		instance.Status.Conditions.Set(condition.FalseCondition(
-			swiftv1beta1.SwiftProxyReadyCondition,
+			swiftv1.SwiftProxyReadyCondition,
 			condition.ErrorReason,
 			condition.SeverityWarning,
-			swiftv1beta1.SwiftProxyReadyErrorMessage,
+			swiftv1.SwiftProxyReadyErrorMessage,
 			err.Error()))
 		return ctrl.Result{}, err
 	}
@@ -217,42 +279,44 @@ func (r *SwiftReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	}
 
 	// Mirror SwiftProxy's condition status
-	c = swiftProxy.Status.Conditions.Mirror(swiftv1beta1.SwiftProxyReadyCondition)
+	c = swiftProxy.Status.Conditions.Mirror(swiftv1.SwiftProxyReadyCondition)
 	if c != nil {
 		instance.Status.Conditions.Set(c)
 	}
 
-	if instance.IsReady() {
-		instance.Status.Conditions.MarkTrue(condition.ReadyCondition, condition.ReadyMessage)
-		if err := r.Status().Update(ctx, instance); err != nil {
-			return ctrl.Result{}, err
-		}
-
-		r.Log.Info(fmt.Sprintf("Deployment %s successfully reconciled", instance.Name))
-	}
-
+	r.Log.Info(fmt.Sprintf("Reconciled Service '%s' successfully", instance.Name))
 	return ctrl.Result{}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *SwiftReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&swiftv1beta1.Swift{}).
-		Owns(&swiftv1beta1.SwiftRing{}).
-		Owns(&swiftv1beta1.SwiftStorage{}).
-		Owns(&swiftv1beta1.SwiftProxy{}).
+		For(&swiftv1.Swift{}).
+		Owns(&swiftv1.SwiftRing{}).
+		Owns(&swiftv1.SwiftStorage{}).
+		Owns(&swiftv1.SwiftProxy{}).
 		Complete(r)
 }
 
-func (r *SwiftReconciler) ringCreateOrUpdate(ctx context.Context, instance *swiftv1beta1.Swift) (*swiftv1beta1.SwiftRing, controllerutil.OperationResult, error) {
+func (r *SwiftReconciler) reconcileDelete(ctx context.Context, instance *swiftv1.Swift, helper *helper.Helper) (ctrl.Result, error) {
+	r.Log.Info(fmt.Sprintf("Reconciling Service '%s' delete", instance.Name))
 
-	swiftRingSpec := swiftv1beta1.SwiftRingSpec{
+	// Service is deleted so remove the finalizer.
+	controllerutil.RemoveFinalizer(instance, helper.GetFinalizer())
+	r.Log.Info(fmt.Sprintf("Reconciled Service '%s' delete successfully", instance.Name))
+
+	return ctrl.Result{}, nil
+}
+
+func (r *SwiftReconciler) ringCreateOrUpdate(ctx context.Context, instance *swiftv1.Swift) (*swiftv1.SwiftRing, controllerutil.OperationResult, error) {
+
+	swiftRingSpec := swiftv1.SwiftRingSpec{
 		RingReplicas:    instance.Spec.SwiftRing.RingReplicas,
 		ContainerImage:  instance.Spec.SwiftRing.ContainerImage,
 		SwiftConfSecret: instance.Spec.SwiftConfSecret,
 	}
 
-	deployment := &swiftv1beta1.SwiftRing{
+	deployment := &swiftv1.SwiftRing{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      fmt.Sprintf("%s-ring", instance.Name),
 			Namespace: instance.Namespace,
@@ -272,9 +336,9 @@ func (r *SwiftReconciler) ringCreateOrUpdate(ctx context.Context, instance *swif
 	return deployment, op, err
 }
 
-func (r *SwiftReconciler) storageCreateOrUpdate(ctx context.Context, instance *swiftv1beta1.Swift) (*swiftv1beta1.SwiftStorage, controllerutil.OperationResult, error) {
+func (r *SwiftReconciler) storageCreateOrUpdate(ctx context.Context, instance *swiftv1.Swift) (*swiftv1.SwiftStorage, controllerutil.OperationResult, error) {
 
-	swiftStorageSpec := swiftv1beta1.SwiftStorageSpec{
+	swiftStorageSpec := swiftv1.SwiftStorageSpec{
 		Replicas:                instance.Spec.SwiftStorage.Replicas,
 		StorageClass:            instance.Spec.SwiftStorage.StorageClass,
 		StorageRequest:          instance.Spec.SwiftStorage.StorageRequest,
@@ -286,7 +350,7 @@ func (r *SwiftReconciler) storageCreateOrUpdate(ctx context.Context, instance *s
 		SwiftConfSecret:         instance.Spec.SwiftConfSecret,
 	}
 
-	deployment := &swiftv1beta1.SwiftStorage{
+	deployment := &swiftv1.SwiftStorage{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      fmt.Sprintf("%s-storage", instance.Name),
 			Namespace: instance.Namespace,
@@ -306,9 +370,9 @@ func (r *SwiftReconciler) storageCreateOrUpdate(ctx context.Context, instance *s
 	return deployment, op, err
 }
 
-func (r *SwiftReconciler) proxyCreateOrUpdate(ctx context.Context, instance *swiftv1beta1.Swift) (*swiftv1beta1.SwiftProxy, controllerutil.OperationResult, error) {
+func (r *SwiftReconciler) proxyCreateOrUpdate(ctx context.Context, instance *swiftv1.Swift) (*swiftv1.SwiftProxy, controllerutil.OperationResult, error) {
 
-	swiftProxySpec := swiftv1beta1.SwiftProxySpec{
+	swiftProxySpec := swiftv1.SwiftProxySpec{
 		Replicas:                instance.Spec.SwiftProxy.Replicas,
 		ContainerImageProxy:     instance.Spec.SwiftProxy.ContainerImageProxy,
 		ContainerImageMemcached: instance.Spec.SwiftProxy.ContainerImageMemcached,
@@ -318,7 +382,7 @@ func (r *SwiftReconciler) proxyCreateOrUpdate(ctx context.Context, instance *swi
 		SwiftConfSecret:         instance.Spec.SwiftConfSecret,
 	}
 
-	deployment := &swiftv1beta1.SwiftProxy{
+	deployment := &swiftv1.SwiftProxy{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      fmt.Sprintf("%s-proxy", instance.Name),
 			Namespace: instance.Namespace,
