@@ -1,4 +1,4 @@
-name: OpenStackSwift Operator image builder
+name: Swift Operator image builder
 
 on:
   workflow_dispatch:
