@@ -22,6 +22,7 @@ import (
 
 	"github.com/go-logr/logr"
 
+	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -295,6 +296,9 @@ func (r *SwiftReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Owns(&swiftv1.SwiftRing{}).
 		Owns(&swiftv1.SwiftStorage{}).
 		Owns(&swiftv1.SwiftProxy{}).
+		Owns(&corev1.ServiceAccount{}).
+		Owns(&rbacv1.Role{}).
+		Owns(&rbacv1.RoleBinding{}).
 		Complete(r)
 }
 
