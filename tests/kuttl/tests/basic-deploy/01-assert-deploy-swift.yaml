@@ -1,0 +1,58 @@
+apiVersion: swift.openstack.org/v1beta1
+kind: Swift
+metadata:
+  name: swift
+spec:
+  swiftRing:
+    ringReplicas: 1
+    containerImage: quay.io/podified-antelope-centos9/openstack-swift-proxy-server:current-podified
+  swiftStorage:
+    replicas: 1
+    containerImageAccount: quay.io/podified-antelope-centos9/openstack-swift-account:current-podified
+    containerImageContainer: quay.io/podified-antelope-centos9/openstack-swift-container:current-podified
+    containerImageObject: quay.io/podified-antelope-centos9/openstack-swift-object:current-podified
+    containerImageProxy: quay.io/podified-antelope-centos9/openstack-swift-proxy-server:current-podified
+    containerImageMemcached: quay.io/podified-antelope-centos9/openstack-memcached:current-podified
+  swiftProxy:
+    replicas: 1
+    passwordSelectors:
+      service: SwiftPassword
+    containerImageAccount: quay.io/podified-antelope-centos9/openstack-swift-account:current-podified
+    containerImageContainer: quay.io/podified-antelope-centos9/openstack-swift-container:current-podified
+    containerImageObject: quay.io/podified-antelope-centos9/openstack-swift-object:current-podified
+    containerImageProxy: quay.io/podified-antelope-centos9/openstack-swift-proxy-server:current-podified
+    containerImageMemcached: quay.io/podified-antelope-centos9/openstack-memcached:current-podified
+status:
+  conditions:
+  - message: Setup complete
+    reason: Ready
+    status: "True"
+    type: Ready
+  - message: RoleBinding created
+    reason: Ready
+    status: "True"
+    type: RoleBindingReady
+  - message: Role created
+    reason: Ready
+    status: "True"
+    type: RoleReady
+  - message: ServiceAccount created
+    reason: Ready
+    status: "True"
+    type: ServiceAccountReady
+  - message: Service config create completed
+    reason: Ready
+    status: "True"
+    type: ServiceConfigReady
+  - message: Setup complete
+    reason: Ready
+    status: "True"
+    type: SwiftProxyReady
+  - message: Setup complete
+    reason: Ready
+    status: "True"
+    type: SwiftRingReady
+  - message: Setup complete
+    reason: Ready
+    status: "True"
+    type: SwiftStorageReady
