@@ -9,7 +9,6 @@ require (
 	github.com/openshift/api v3.9.0+incompatible
 	github.com/openstack-k8s-operators/keystone-operator/api v0.1.0
 	github.com/openstack-k8s-operators/lib-common/modules/common v0.1.0
-	github.com/openstack-k8s-operators/lib-common/modules/test v0.1.1
 	github.com/openstack-k8s-operators/swift-operator/api v0.1.0
 	k8s.io/api v0.26.7
 	k8s.io/apimachinery v0.26.7
@@ -47,9 +46,7 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
-	github.com/openstack-k8s-operators/infra-operator/apis v0.1.0 // indirect
 	github.com/openstack-k8s-operators/lib-common/modules/openstack v0.1.0 // indirect
-	github.com/openstack-k8s-operators/mariadb-operator/api v0.1.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_golang v1.14.0 // indirect
 	github.com/prometheus/client_model v0.3.0 // indirect
@@ -59,7 +56,6 @@ require (
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
 	go.uber.org/zap v1.24.0 // indirect
-	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1 // indirect
 	golang.org/x/net v0.12.0 // indirect
 	golang.org/x/oauth2 v0.0.0-20220909003341-f21342109be1 // indirect
 	golang.org/x/sys v0.10.0 // indirect
