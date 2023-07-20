@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Namespace
 metadata:
   labels:
-    control-plane: swift-controller-manager
+    control-plane: controller-manager
   name: system
 ---
 apiVersion: apps/v1
@@ -11,22 +11,20 @@ metadata:
   name: controller-manager
   namespace: system
   labels:
-    control-plane: swift-controller-manager
-    app.kubernetes.io/name: swift-operator
-    app.kubernetes.io/component: swift
+    control-plane: controller-manager
+    openstack.org/operator-name: swift
 spec:
   selector:
     matchLabels:
-      control-plane: swift-controller-manager
+      openstack.org/operator-name: swift
   replicas: 1
   template:
     metadata:
       annotations:
         kubectl.kubernetes.io/default-container: manager
       labels:
-        control-plane: swift-controller-manager
-        app.kubernetes.io/name: swift-operator
-        app.kubernetes.io/component: swift
+        control-plane: controller-manager
+        openstack.org/operator-name: swift
     spec:
       securityContext:
         runAsNonRoot: true
