@@ -21,6 +21,7 @@ testbin/*
 #Operator SDK generated files
 /bundle/
 bundle.Dockerfile
+config/manager/kustomization.yaml
 
 # editor and IDE paraphernalia
 .idea
