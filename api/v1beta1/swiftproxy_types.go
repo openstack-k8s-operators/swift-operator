@@ -75,9 +75,6 @@ type SwiftProxyStatus struct {
 
 	// Conditions
 	Conditions condition.Conditions `json:"conditions,omitempty" optional:"true"`
-
-	// API endpoints
-	APIEndpoints map[string]map[string]string `json:"apiEndpoints,omitempty"`
 }
 
 //+kubebuilder:object:root=true
