@@ -90,13 +90,6 @@ spec:
           status:
             description: SwiftProxyStatus defines the observed state of SwiftProxy
             properties:
-              apiEndpoints:
-                additionalProperties:
-                  additionalProperties:
-                    type: string
-                  type: object
-                description: API endpoints
-                type: object
               conditions:
                 description: Conditions
                 items:

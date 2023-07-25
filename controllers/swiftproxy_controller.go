@@ -152,11 +152,6 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return ctrlResult, nil
 	}
 
-	if instance.Status.APIEndpoints == nil {
-		instance.Status.APIEndpoints = map[string]map[string]string{}
-	}
-	instance.Status.APIEndpoints[swift.ServiceName] = apiEndpoints
-
 	// Create Keystone Service
 	serviceSpec := keystonev1.KeystoneServiceSpec{
 		ServiceType:        swift.ServiceType,
@@ -176,7 +171,7 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	// Create Keystone endpoints
 	endpointSpec := keystonev1.KeystoneEndpointSpec{
 		ServiceName: swift.ServiceName,
-		Endpoints:   instance.Status.APIEndpoints[swift.ServiceName],
+		Endpoints:   apiEndpoints,
 	}
 	keystoneEndpoint := keystonev1.NewKeystoneEndpoint(
 		swift.ServiceName,
@@ -252,36 +247,32 @@ func (r *SwiftProxyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 func (r *SwiftProxyReconciler) reconcileDelete(ctx context.Context, instance *swiftv1beta1.SwiftProxy, helper *helper.Helper) (ctrl.Result, error) {
 	r.Log.Info(fmt.Sprintf("Reconciling Service '%s' delete", instance.Name))
 
-	// It's possible to get here before the endpoints have been set in the status, so check for this
-	if instance.Status.APIEndpoints != nil {
+	// Remove the finalizer from our KeystoneEndpoint CR
+	keystoneEndpoint, err := keystonev1.GetKeystoneEndpointWithName(ctx, helper, swift.ServiceName, instance.Namespace)
+	if err != nil && !apierrors.IsNotFound(err) {
+		return ctrl.Result{}, err
+	}
 
-		// Remove the finalizer from our KeystoneEndpoint CR
-		keystoneEndpoint, err := keystonev1.GetKeystoneEndpointWithName(ctx, helper, swift.ServiceName, instance.Namespace)
-		if err != nil && !apierrors.IsNotFound(err) {
+	if err == nil {
+		controllerutil.RemoveFinalizer(keystoneEndpoint, helper.GetFinalizer())
+		if err = helper.GetClient().Update(ctx, keystoneEndpoint); err != nil && !apierrors.IsNotFound(err) {
 			return ctrl.Result{}, err
 		}
+		util.LogForObject(helper, "Removed finalizer from our KeystoneEndpoint", instance)
+	}
 
-		if err == nil {
-			controllerutil.RemoveFinalizer(keystoneEndpoint, helper.GetFinalizer())
-			if err = helper.GetClient().Update(ctx, keystoneEndpoint); err != nil && !apierrors.IsNotFound(err) {
-				return ctrl.Result{}, err
-			}
-			util.LogForObject(helper, "Removed finalizer from our KeystoneEndpoint", instance)
-		}
+	// Remove the finalizer from our KeystoneService CR
+	keystoneService, err := keystonev1.GetKeystoneServiceWithName(ctx, helper, swift.ServiceName, instance.Namespace)
+	if err != nil && !apierrors.IsNotFound(err) {
+		return ctrl.Result{}, err
+	}
 
-		// Remove the finalizer from our KeystoneService CR
-		keystoneService, err := keystonev1.GetKeystoneServiceWithName(ctx, helper, swift.ServiceName, instance.Namespace)
-		if err != nil && !apierrors.IsNotFound(err) {
+	if err == nil {
+		controllerutil.RemoveFinalizer(keystoneService, helper.GetFinalizer())
+		if err = helper.GetClient().Update(ctx, keystoneService); err != nil && !apierrors.IsNotFound(err) {
 			return ctrl.Result{}, err
 		}
-
-		if err == nil {
-			controllerutil.RemoveFinalizer(keystoneService, helper.GetFinalizer())
-			if err = helper.GetClient().Update(ctx, keystoneService); err != nil && !apierrors.IsNotFound(err) {
-				return ctrl.Result{}, err
-			}
-			util.LogForObject(helper, "Removed finalizer from our KeystoneService", instance)
-		}
+		util.LogForObject(helper, "Removed finalizer from our KeystoneService", instance)
 	}
 
 	controllerutil.RemoveFinalizer(instance, helper.GetFinalizer())
