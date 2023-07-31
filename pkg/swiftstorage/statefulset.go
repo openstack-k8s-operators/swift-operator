@@ -231,6 +231,10 @@ func StatefulSet(
 					},
 				},
 			}},
+			PersistentVolumeClaimRetentionPolicy: &appsv1.StatefulSetPersistentVolumeClaimRetentionPolicy{
+				WhenDeleted: appsv1.DeletePersistentVolumeClaimRetentionPolicyType,
+				WhenScaled:  appsv1.RetainPersistentVolumeClaimRetentionPolicyType,
+			},
 		},
 	}
 }
