@@ -34,44 +34,44 @@ type PasswordSelector struct {
 
 // SwiftProxySpec defines the desired state of SwiftProxy
 type SwiftProxySpec struct {
-	// +kubebuilder:validation:required
+	// +kubebuilder:validation:Required
 	// +kubebuilder:default=1
 	// Replicas of Swift Proxy
-	Replicas int32 `json:"replicas"`
+	Replicas *int32 `json:"replicas"`
 
-	// +kubebuilder:validation:required
+	// +kubebuilder:validation:Required
 	// Swift Proxy Container Image URL
 	ContainerImageProxy string `json:"containerImageProxy"`
 
-	// +kubebuilder:validation:required
+	// +kubebuilder:validation:Required
 	// Image URL for Memcache servicd
 	ContainerImageMemcached string `json:"containerImageMemcached"`
 
-	// +kubebuilder:validation:required
+	// +kubebuilder:validation:Required
 	// +kubebuilder:default=swift
 	// ServiceUser - optional username used for this service to register in Swift
 	ServiceUser string `json:"serviceUser"`
 
-	// +kubebuilder:validation:required
+	// +kubebuilder:validation:Required
 	// +kubebuilder:default=osp-secret
 	// Secret containing OpenStack password information for Swift service user password
-	Secret string `json:"secret,omitempty"`
+	Secret string `json:"secret"`
 
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default={service: SwiftPassword}
 	// PasswordSelector - Selector to choose the Swift user password from the Secret
 	PasswordSelectors PasswordSelector `json:"passwordSelectors"`
 
-	// +kubebuilder:validation:required
+	// +kubebuilder:validation:Required
 	// +kubebuilder:default=swift-conf
 	// Name of Secret containing swift.conf
-	SwiftConfSecret string `json:"swiftConfSecret,omitempty"`
+	SwiftConfSecret string `json:"swiftConfSecret"`
 }
 
 // SwiftProxyStatus defines the observed state of SwiftProxy
 type SwiftProxyStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// ReadyCount of SwiftProxy instances
+	ReadyCount int32 `json:"readyCount,omitempty"`
 
 	// Conditions
 	Conditions condition.Conditions `json:"conditions,omitempty" optional:"true"`

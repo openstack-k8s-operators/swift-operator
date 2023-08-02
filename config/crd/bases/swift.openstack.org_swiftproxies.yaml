@@ -85,7 +85,9 @@ spec:
             - containerImageMemcached
             - containerImageProxy
             - replicas
+            - secret
             - serviceUser
+            - swiftConfSecret
             type: object
           status:
             description: SwiftProxyStatus defines the observed state of SwiftProxy
@@ -133,6 +135,10 @@ spec:
                   - type
                   type: object
                 type: array
+              readyCount:
+                description: ReadyCount of SwiftProxy instances
+                format: int32
+                type: integer
             type: object
         type: object
     served: true

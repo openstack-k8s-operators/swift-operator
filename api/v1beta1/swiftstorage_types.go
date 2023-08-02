@@ -26,10 +26,9 @@ import (
 
 // SwiftStorageSpec defines the desired state of SwiftStorage
 type SwiftStorageSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
-	Replicas int32 `json:"replicas"`
+	// +kubebuilder:validation:Required
+	// +kubebuilder:default=1
+	Replicas *int32 `json:"replicas"`
 
 	// +kubebuilder:validation:Required
 	// Name of StorageClass to use for Swift PVs
@@ -69,8 +68,10 @@ type SwiftStorageSpec struct {
 
 // SwiftStorageStatus defines the observed state of SwiftStorage
 type SwiftStorageStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// ReadyCount of SwiftStorage instances
+	ReadyCount int32 `json:"readyCount,omitempty"`
+
+	// Conditions
 	Conditions condition.Conditions `json:"conditions,omitempty" optional:"true"`
 }
 

@@ -158,22 +158,6 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		return ctrlResult, nil
 	}
 
-	// Ensure the StatefulSet is not resized after initial deployment
-	found, err := statefulset.GetStatefulSetWithName(ctx, helper, instance.Name, instance.Namespace)
-	if err != nil && !apierrors.IsNotFound(err) {
-		return ctrlResult, err
-	} else if err == nil {
-		if *found.Spec.Replicas > instance.Spec.Replicas {
-			r.Log.Info(fmt.Sprintf(
-				"Downsizing (%d -> %d) number of replicas not supported",
-				*found.Spec.Replicas, instance.Spec.Replicas))
-			instance.Spec.Replicas = *found.Spec.Replicas
-			if err := r.Client.Update(ctx, instance); err != nil {
-				return ctrl.Result{}, err
-			}
-		}
-	}
-
 	// Statefulset with all backend containers
 	sset := statefulset.NewStatefulSet(swiftstorage.StatefulSet(instance, serviceLabels), 5*time.Second)
 	ctrlResult, err = sset.CreateOrPatch(ctx, helper)
@@ -183,7 +167,8 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		return ctrlResult, nil
 	}
 
-	if sset.GetStatefulSet().Status.ReadyReplicas == instance.Spec.Replicas {
+	instance.Status.ReadyCount = sset.GetStatefulSet().Status.ReadyReplicas
+	if instance.Status.ReadyCount == *instance.Spec.Replicas {
 		envVars := make(map[string]env.Setter)
 		devices := swiftstorage.DeviceList(ctx, helper, instance)
 		tpl = swiftstorage.DeviceConfigMapTemplates(instance, devices)
