@@ -17,7 +17,12 @@ limitations under the License.
 package v1beta1
 
 import (
+	"fmt"
+
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
@@ -120,7 +125,26 @@ func (r *Swift) ValidateCreate() error {
 func (r *Swift) ValidateUpdate(old runtime.Object) error {
 	swiftlog.Info("validate update", "name", r.Name)
 
-	// TODO(user): fill in your validation logic upon object update.
+	oldSwift, ok := old.(*Swift)
+	if !ok || oldSwift == nil {
+		return apierrors.NewInternalError(fmt.Errorf("unable to convert existing object"))
+	}
+
+	if *r.Spec.SwiftStorage.Replicas < *oldSwift.Spec.SwiftStorage.Replicas {
+		return apierrors.NewForbidden(
+			schema.GroupResource{
+				Group:    GroupVersion.WithKind("Swift").Group,
+				Resource: GroupVersion.WithKind("Swift").Kind,
+			},
+			r.GetName(),
+			field.Invalid(
+				field.NewPath("spec").Child("swiftStorage").Child("replicas"),
+				*r.Spec.SwiftStorage.Replicas,
+				"SwiftStorage does not support scale-in",
+			),
+		)
+	}
+
 	return nil
 }
 
