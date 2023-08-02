@@ -70,8 +70,8 @@ type SwiftProxySpec struct {
 
 // SwiftProxyStatus defines the observed state of SwiftProxy
 type SwiftProxyStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// ReadyCount of SwiftProxy instances
+	ReadyCount int32 `json:"readyCount,omitempty"`
 
 	// Conditions
 	Conditions condition.Conditions `json:"conditions,omitempty" optional:"true"`

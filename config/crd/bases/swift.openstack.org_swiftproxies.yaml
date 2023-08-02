@@ -135,6 +135,10 @@ spec:
                   - type
                   type: object
                 type: array
+              readyCount:
+                description: ReadyCount of SwiftProxy instances
+                format: int32
+                type: integer
             type: object
         type: object
     served: true

@@ -167,7 +167,8 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		return ctrlResult, nil
 	}
 
-	if sset.GetStatefulSet().Status.ReadyReplicas == *instance.Spec.Replicas {
+	instance.Status.ReadyCount = sset.GetStatefulSet().Status.ReadyReplicas
+	if instance.Status.ReadyCount == *instance.Spec.Replicas {
 		envVars := make(map[string]env.Setter)
 		devices := swiftstorage.DeviceList(ctx, helper, instance)
 		tpl = swiftstorage.DeviceConfigMapTemplates(instance, devices)
