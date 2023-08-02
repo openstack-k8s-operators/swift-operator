@@ -29,6 +29,8 @@ type SwiftStorageSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
+	// +kubebuilder:validation:Required
+	// +kubebuilder:default=1
 	Replicas int32 `json:"replicas"`
 
 	// +kubebuilder:validation:Required
