@@ -85,7 +85,9 @@ spec:
             - containerImageMemcached
             - containerImageProxy
             - replicas
+            - secret
             - serviceUser
+            - swiftConfSecret
             type: object
           status:
             description: SwiftProxyStatus defines the observed state of SwiftProxy

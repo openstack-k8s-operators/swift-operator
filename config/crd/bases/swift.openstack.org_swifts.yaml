@@ -98,7 +98,9 @@ spec:
                 - containerImageMemcached
                 - containerImageProxy
                 - replicas
+                - secret
                 - serviceUser
+                - swiftConfSecret
                 type: object
               swiftRing:
                 description: SwiftRing - Spec definition for the Ring service of this
