@@ -37,7 +37,7 @@ type SwiftRingSpec struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default=1
 	// Number of Swift object replicas (=copies)
-	RingReplicas int64 `json:"ringReplicas"`
+	RingReplicas *int64 `json:"ringReplicas"`
 
 	// +kubebuilder:validation:Required
 	// Image URL for Swift proxy service

@@ -40,7 +40,7 @@ func DeviceList(ctx context.Context, h *helper.Helper, instance *swiftv1beta1.Sw
 	var devices strings.Builder
 
 	foundClaim := &corev1.PersistentVolumeClaim{}
-	for replica := 0; replica < int(instance.Spec.Replicas); replica++ {
+	for replica := 0; replica < int(*instance.Spec.Replicas); replica++ {
 		cn := fmt.Sprintf("%s-%s-%d", swift.ClaimName, instance.Name, replica)
 		err := h.GetClient().Get(ctx, types.NamespacedName{Name: cn, Namespace: instance.Namespace}, foundClaim)
 		capacity := resource.MustParse(instance.Spec.StorageRequest)

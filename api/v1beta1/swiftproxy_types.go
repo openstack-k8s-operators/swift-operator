@@ -37,7 +37,7 @@ type SwiftProxySpec struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default=1
 	// Replicas of Swift Proxy
-	Replicas int32 `json:"replicas"`
+	Replicas *int32 `json:"replicas"`
 
 	// +kubebuilder:validation:Required
 	// Swift Proxy Container Image URL
