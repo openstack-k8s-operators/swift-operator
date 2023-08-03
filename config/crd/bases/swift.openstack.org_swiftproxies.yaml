@@ -66,6 +66,7 @@ spec:
                 default: 1
                 description: Replicas of Swift Proxy
                 format: int32
+                minimum: 0
                 type: integer
               secret:
                 default: osp-secret

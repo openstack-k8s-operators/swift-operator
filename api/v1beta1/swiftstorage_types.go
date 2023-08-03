@@ -28,6 +28,7 @@ import (
 type SwiftStorageSpec struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default=1
+	// +kubebuilder:validation:Minimum=0
 	Replicas *int32 `json:"replicas"`
 
 	// +kubebuilder:validation:Required
