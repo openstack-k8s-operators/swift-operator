@@ -34,7 +34,7 @@ func GetRingJob(instance *swiftv1beta1.SwiftRing, labels map[string]string) *bat
 	envVars := map[string]env.Setter{}
 	envVars["CM_NAME"] = env.SetValue(swiftv1beta1.RingConfigMapName)
 	envVars["NAMESPACE"] = env.SetValue(instance.Namespace)
-	envVars["SWIFT_REPLICAS"] = env.SetValue(fmt.Sprint(instance.Spec.RingReplicas))
+	envVars["SWIFT_REPLICAS"] = env.SetValue(fmt.Sprint(*instance.Spec.RingReplicas))
 	envVars["OWNER_APIVERSION"] = env.SetValue(instance.APIVersion)
 	envVars["OWNER_KIND"] = env.SetValue(instance.Kind)
 	envVars["OWNER_UID"] = env.SetValue(string(instance.ObjectMeta.UID))
