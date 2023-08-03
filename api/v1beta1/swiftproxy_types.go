@@ -36,6 +36,7 @@ type PasswordSelector struct {
 type SwiftProxySpec struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default=1
+	// +kubebuilder:validation:Minimum=0
 	// Replicas of Swift Proxy
 	Replicas *int32 `json:"replicas"`
 

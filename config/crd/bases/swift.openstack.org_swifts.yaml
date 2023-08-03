@@ -79,6 +79,7 @@ spec:
                     default: 1
                     description: Replicas of Swift Proxy
                     format: int32
+                    minimum: 0
                     type: integer
                   secret:
                     default: osp-secret
@@ -113,6 +114,7 @@ spec:
                     default: 1
                     description: Number of Swift object replicas (=copies)
                     format: int64
+                    minimum: 1
                     type: integer
                   swiftConfSecret:
                     default: swift-conf
@@ -145,6 +147,7 @@ spec:
                   replicas:
                     default: 1
                     format: int32
+                    minimum: 0
                     type: integer
                   storageClass:
                     default: ""

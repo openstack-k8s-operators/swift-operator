@@ -36,6 +36,7 @@ type SwiftRingSpec struct {
 
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default=1
+	// +kubebuilder:validation:Minimum=1
 	// Number of Swift object replicas (=copies)
 	RingReplicas *int64 `json:"ringReplicas"`
 

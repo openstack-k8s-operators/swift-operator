@@ -51,6 +51,7 @@ spec:
                 default: 1
                 description: Number of Swift object replicas (=copies)
                 format: int64
+                minimum: 1
                 type: integer
               swiftConfSecret:
                 default: swift-conf
