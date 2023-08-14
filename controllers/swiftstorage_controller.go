@@ -19,8 +19,9 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"github.com/go-logr/logr"
 	"time"
+
+	"github.com/go-logr/logr"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -141,7 +142,10 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	}
 
 	// Headless Service
-	svc := service.NewService(swiftstorage.Service(instance), serviceLabels, 5*time.Second)
+	svc, err := service.NewService(swiftstorage.Service(instance), 5*time.Second, nil)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
 	ctrlResult, err = svc.CreateOrPatch(ctx, helper)
 	if err != nil {
 		return ctrlResult, err
