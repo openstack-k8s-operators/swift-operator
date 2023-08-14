@@ -18,6 +18,7 @@ package v1beta1
 
 import (
 	condition "github.com/openstack-k8s-operators/lib-common/modules/common/condition"
+	"github.com/openstack-k8s-operators/lib-common/modules/common/service"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -67,6 +68,17 @@ type SwiftProxySpec struct {
 	// +kubebuilder:default=swift-conf
 	// Name of Secret containing swift.conf
 	SwiftConfSecret string `json:"swiftConfSecret"`
+
+	// +kubebuilder:validation:Optional
+	// Override, provides the ability to override the generated manifest of several child resources.
+	Override ProxyOverrideSpec `json:"override,omitempty"`
+}
+
+// ProxyOverrideSpec to override the generated manifest of several child resources.
+type ProxyOverrideSpec struct {
+	// Override configuration for the Service created to serve traffic to the cluster.
+	// The key must be the endpoint type (public, internal)
+	Service map[string]service.OverrideSpec `json:"service,omitempty"`
 }
 
 // SwiftProxyStatus defines the observed state of SwiftProxy
