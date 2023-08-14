@@ -18,3 +18,37 @@ spec:
     replicas: 1
     passwordSelectors:
       service: SwiftPassword
+status:
+  conditions:
+  - message: Setup complete
+    reason: Ready
+    status: "True"
+    type: Ready
+  - message: RoleBinding created
+    reason: Ready
+    status: "True"
+    type: RoleBindingReady
+  - message: Role created
+    reason: Ready
+    status: "True"
+    type: RoleReady
+  - message: ServiceAccount created
+    reason: Ready
+    status: "True"
+    type: ServiceAccountReady
+  - message: Service config create completed
+    reason: Ready
+    status: "True"
+    type: ServiceConfigReady
+  - message: Setup complete
+    reason: Ready
+    status: "True"
+    type: SwiftProxyReady
+  - message: Setup complete
+    reason: Ready
+    status: "True"
+    type: SwiftRingReady
+  - message: Setup complete
+    reason: Ready
+    status: "True"
+    type: SwiftStorageReady
