@@ -114,11 +114,11 @@ func (instance Swift) IsReady() bool {
 func SetupDefaults() {
 	// Acquire environmental defaults and initialize Swift defaults with them
 	swiftDefaults := SwiftDefaults{
-		AccountContainerImageURL:   util.GetEnvVar("SWIFT_ACCOUNT_IMAGE_URL_DEFAULT", ContainerImageAccount),
-		ContainerContainerImageURL: util.GetEnvVar("SWIFT_CONTAINER_IMAGE_URL_DEFAULT", ContainerImageContainer),
-		ObjectContainerImageURL:    util.GetEnvVar("SWIFT_OBJECT_IMAGE_URL_DEFAULT", ContainerImageObject),
-		ProxyContainerImageURL:     util.GetEnvVar("SWIFT_PROXY_IMAGE_URL_DEFAULT", ContainerImageProxy),
-		MemcachedContainerImageURL: util.GetEnvVar("SWIFT_MEMCACHED_IMAGE_URL_DEFAULT", ContainerImageMemcached),
+		AccountContainerImageURL:   util.GetEnvVar("RELATED_IMAGE_SWIFT_ACCOUNT_IMAGE_URL_DEFAULT", ContainerImageAccount),
+		ContainerContainerImageURL: util.GetEnvVar("RELATED_IMAGE_SWIFT_CONTAINER_IMAGE_URL_DEFAULT", ContainerImageContainer),
+		ObjectContainerImageURL:    util.GetEnvVar("RELATED_IMAGE_SWIFT_OBJECT_IMAGE_URL_DEFAULT", ContainerImageObject),
+		ProxyContainerImageURL:     util.GetEnvVar("RELATED_IMAGE_SWIFT_PROXY_IMAGE_URL_DEFAULT", ContainerImageProxy),
+		MemcachedContainerImageURL: util.GetEnvVar("RELATED_IMAGE_SWIFT_MEMCACHED_IMAGE_URL_DEFAULT", ContainerImageMemcached),
 	}
 
 	SetupSwiftDefaults(swiftDefaults)

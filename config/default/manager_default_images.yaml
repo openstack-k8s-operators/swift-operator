@@ -11,13 +11,13 @@ spec:
       containers:
       - name: manager
         env:
-        - name: SWIFT_PROXY_IMAGE_URL_DEFAULT
+        - name: RELATED_IMAGE_SWIFT_PROXY_IMAGE_URL_DEFAULT
           value: quay.io/podified-antelope-centos9/openstack-swift-proxy-server:current-podified
-        - name: SWIFT_ACCOUNT_IMAGE_URL_DEFAULT
+        - name: RELATED_IMAGE_SWIFT_ACCOUNT_IMAGE_URL_DEFAULT
           value: quay.io/podified-antelope-centos9/openstack-swift-account:current-podified
-        - name: SWIFT_CONTAINER_IMAGE_URL_DEFAULT
+        - name: RELATED_IMAGE_SWIFT_CONTAINER_IMAGE_URL_DEFAULT
           value: quay.io/podified-antelope-centos9/openstack-swift-container:current-podified
-        - name: SWIFT_OBJECT_IMAGE_URL_DEFAULT
+        - name: RELATED_IMAGE_SWIFT_OBJECT_IMAGE_URL_DEFAULT
           value: quay.io/podified-antelope-centos9/openstack-swift-object:current-podified
-        - name: SWIFT_MEMCACHED_IMAGE_URL_DEFAULT
+        - name: RELATED_IMAGE_SWIFT_MEMCACHED_IMAGE_URL_DEFAULT
           value: quay.io/podified-antelope-centos9/openstack-memcached:current-podified
