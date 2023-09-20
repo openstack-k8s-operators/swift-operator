@@ -384,6 +384,7 @@ func (r *SwiftReconciler) proxyCreateOrUpdate(ctx context.Context, instance *swi
 		ServiceUser:             instance.Spec.SwiftProxy.ServiceUser,
 		PasswordSelectors:       instance.Spec.SwiftProxy.PasswordSelectors,
 		SwiftConfSecret:         instance.Spec.SwiftConfSecret,
+		Override:                instance.Spec.SwiftProxy.Override,
 	}
 
 	deployment := &swiftv1.SwiftProxy{

@@ -19,15 +19,15 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"github.com/go-logr/logr"
 	"time"
+
+	"github.com/go-logr/logr"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	routev1 "github.com/openshift/api/route/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -39,6 +39,7 @@ import (
 	"github.com/openstack-k8s-operators/lib-common/modules/common/env"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/helper"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/secret"
+	service "github.com/openstack-k8s-operators/lib-common/modules/common/service"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/util"
 
 	keystonev1 "github.com/openstack-k8s-operators/keystone-operator/api/v1beta1"
@@ -59,7 +60,6 @@ type SwiftProxyReconciler struct {
 //+kubebuilder:rbac:groups=swift.openstack.org,resources=swiftproxies/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=swift.openstack.org,resources=swiftproxies/finalizers,verbs=update
 //+kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=route.openshift.io,resources=routes,verbs=get;list;watch;create;update;patch;delete;
 //+kubebuilder:rbac:groups=keystone.openstack.org,resources=keystoneapis,verbs=get;list;watch
 //+kubebuilder:rbac:groups=keystone.openstack.org,resources=keystoneendpoints,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=keystone.openstack.org,resources=keystoneservices,verbs=get;list;watch;create;update;patch;delete
@@ -122,35 +122,109 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	serviceLabels := swiftproxy.Labels()
 
 	// Create a Service and endpoints for the proxy
-	var swiftPorts = map[endpoint.Endpoint]endpoint.Data{
-		endpoint.EndpointAdmin: endpoint.Data{
-			Port: swift.ProxyPort,
-			Path: "",
-		},
-		endpoint.EndpointPublic: endpoint.Data{
+	var swiftPorts = map[service.Endpoint]endpoint.Data{
+		service.EndpointPublic: {
 			Port: swift.ProxyPort,
 			Path: "/v1/AUTH_%(tenant_id)s",
 		},
-		endpoint.EndpointInternal: endpoint.Data{
+		service.EndpointInternal: {
 			Port: swift.ProxyPort,
 			Path: "/v1/AUTH_%(tenant_id)s",
 		},
 	}
 
-	apiEndpoints, ctrlResult, err := endpoint.ExposeEndpoints(
-		ctx,
-		helper,
-		swift.ServiceName,
-		serviceLabels,
-		swiftPorts,
-		time.Duration(5)*time.Second,
-	)
-	if err != nil {
-		r.Log.Error(err, "Failed to expose endpoints for Swift Proxy")
-		return ctrlResult, err
-	} else if (ctrlResult != ctrl.Result{}) {
-		return ctrlResult, nil
+	apiEndpoints := make(map[string]string)
+
+	for endpointType, data := range swiftPorts {
+		endpointTypeStr := string(endpointType)
+		endpointName := swift.ServiceName + "-" + endpointTypeStr
+		svcOverride := instance.Spec.Override.Service[endpointType]
+		if svcOverride.EmbeddedLabelsAnnotations == nil {
+			svcOverride.EmbeddedLabelsAnnotations = &service.EmbeddedLabelsAnnotations{}
+		}
+
+		exportLabels := util.MergeStringMaps(
+			serviceLabels,
+			map[string]string{
+				service.AnnotationEndpointKey: endpointTypeStr,
+			},
+		)
+
+		// Create the service
+		svc, err := service.NewService(
+			service.GenericService(&service.GenericServiceDetails{
+				Name:      endpointName,
+				Namespace: instance.Namespace,
+				Labels:    exportLabels,
+				Selector:  serviceLabels,
+				Port: service.GenericServicePort{
+					Name:     endpointName,
+					Port:     data.Port,
+					Protocol: corev1.ProtocolTCP,
+				},
+			}),
+			5,
+			&svcOverride.OverrideSpec,
+		)
+		if err != nil {
+			instance.Status.Conditions.Set(condition.FalseCondition(
+				condition.ExposeServiceReadyCondition,
+				condition.ErrorReason,
+				condition.SeverityWarning,
+				condition.ExposeServiceReadyErrorMessage,
+				err.Error()))
+
+			return ctrl.Result{}, err
+		}
+
+		svc.AddAnnotation(map[string]string{
+			service.AnnotationEndpointKey: endpointTypeStr,
+		})
+
+		// add Annotation to whether creating an ingress is required or not
+		if endpointType == service.EndpointPublic && svc.GetServiceType() == corev1.ServiceTypeClusterIP {
+			svc.AddAnnotation(map[string]string{
+				service.AnnotationIngressCreateKey: "true",
+			})
+		} else {
+			svc.AddAnnotation(map[string]string{
+				service.AnnotationIngressCreateKey: "false",
+			})
+			if svc.GetServiceType() == corev1.ServiceTypeLoadBalancer {
+				svc.AddAnnotation(map[string]string{
+					service.AnnotationHostnameKey: svc.GetServiceHostname(), // add annotation to register service name in dnsmasq
+				})
+			}
+		}
+
+		ctrlResult, err := svc.CreateOrPatch(ctx, helper)
+		if err != nil {
+			instance.Status.Conditions.Set(condition.FalseCondition(
+				condition.ExposeServiceReadyCondition,
+				condition.ErrorReason,
+				condition.SeverityWarning,
+				condition.ExposeServiceReadyErrorMessage,
+				err.Error()))
+
+			return ctrlResult, err
+		} else if (ctrlResult != ctrl.Result{}) {
+			instance.Status.Conditions.Set(condition.FalseCondition(
+				condition.ExposeServiceReadyCondition,
+				condition.RequestedReason,
+				condition.SeverityInfo,
+				condition.ExposeServiceReadyRunningMessage))
+			return ctrlResult, nil
+		}
+		// create service - end
+
+		// TODO: TLS, pass in https as protocol, create TLS cert
+		apiEndpoints[string(endpointType)], err = svc.GetAPIEndpoint(
+			svcOverride.EndpointURL, data.Protocol, data.Path)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
 	}
+	instance.Status.Conditions.MarkTrue(condition.ExposeServiceReadyCondition, condition.ExposeServiceReadyMessage)
 
 	// Create Keystone Service
 	serviceSpec := keystonev1.KeystoneServiceSpec{
@@ -163,7 +237,7 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		PasswordSelector:   instance.Spec.PasswordSelectors.Service,
 	}
 	keystoneService := keystonev1.NewKeystoneService(serviceSpec, instance.Namespace, serviceLabels, 10*time.Second)
-	ctrlResult, err = keystoneService.CreateOrPatch(ctx, helper)
+	ctrlResult, err := keystoneService.CreateOrPatch(ctx, helper)
 	if err != nil {
 		return ctrlResult, err
 	}
@@ -241,7 +315,6 @@ func (r *SwiftProxyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Owns(&appsv1.Deployment{}).
 		Owns(&corev1.Service{}).
 		Owns(&corev1.ConfigMap{}).
-		Owns(&routev1.Route{}).
 		Complete(r)
 }
 
