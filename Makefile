@@ -89,7 +89,8 @@ help: ## Display this help.
 
 .PHONY: manifests
 manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
-	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases && \
+	rm -f api/bases/* && cp -a config/crd/bases api/
 
 .PHONY: generate
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
@@ -108,10 +109,17 @@ tidy: ## Run go mod tidy on every mod file in the repo
 	go mod tidy
 	cd ./api && go mod tidy
 
+.PHONY: golangci-lint
+golangci-lint:
+	test -s $(LOCALBIN)/golangci-lint || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.51.2
+	$(LOCALBIN)/golangci-lint run --fix --verbose
+
+PROCS?=$(shell expr $(shell nproc --ignore 2) / 2)
+PROC_CMD = --procs ${PROCS}
+
 .PHONY: test
 test: manifests generate fmt vet envtest ginkgo ## Run tests.
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" \
-	 $(GINKGO) --trace --randomize-all ${PROC_CMD} $(GINKGO_ARGS) ./tests/functional/...
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" $(GINKGO) --trace --cover --coverpkg=../../pkg/swift,../../pkg/swiftproxy/../../pkg/swiftring,../../swiftstorage,../../controllers,../../api/v1beta1 --coverprofile cover.out --covermode=atomic ${PROC_CMD} $(GINKGO_ARGS) ./tests/...
 
 .PHONY: gotest
 gotest: test
@@ -191,6 +199,11 @@ envtest: $(ENVTEST) ## Download envtest-setup locally if necessary.
 $(ENVTEST): $(LOCALBIN)
 	test -s $(LOCALBIN)/setup-envtest || GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
 
+.PHONY: ginkgo
+ginkgo: $(GINKGO) ## Download ginkgo locally if necessary.
+$(GINKGO): $(LOCALBIN)
+	test -s $(LOCALBIN)/ginkgo || GOBIN=$(LOCALBIN) go install github.com/onsi/ginkgo/v2/ginkgo
+
 .PHONY: bundle
 bundle: manifests kustomize ## Generate bundle manifests and metadata, then validate generated files.
 	operator-sdk generate kustomize manifests -q
@@ -247,6 +260,55 @@ catalog-build: opm ## Build a catalog image.
 catalog-push: ## Push a catalog image.
 	$(MAKE) docker-push IMG=$(CATALOG_IMG)
 
+# CI tools repo for running tests
+CI_TOOLS_REPO := https://github.com/openstack-k8s-operators/openstack-k8s-operators-ci
+CI_TOOLS_REPO_DIR = $(shell pwd)/CI_TOOLS_REPO
+.PHONY: get-ci-tools
+get-ci-tools:
+	if [ -d  "$(CI_TOOLS_REPO_DIR)" ]; then \
+		echo "Ci tools exists"; \
+		pushd "$(CI_TOOLS_REPO_DIR)"; \
+		git pull --rebase; \
+		popd; \
+	else \
+		git clone $(CI_TOOLS_REPO) "$(CI_TOOLS_REPO_DIR)"; \
+	fi
+
+# Run go fmt against code
+gofmt: get-ci-tools
+	GOWORK=off $(CI_TOOLS_REPO_DIR)/test-runner/gofmt.sh
+	GOWORK=off $(CI_TOOLS_REPO_DIR)/test-runner/gofmt.sh ./api
+
+# Run go vet against code
+govet: get-ci-tools
+	GOWORK=off $(CI_TOOLS_REPO_DIR)/test-runner/govet.sh
+	GOWORK=off $(CI_TOOLS_REPO_DIR)/test-runner/govet.sh ./api
+
+# Run go test against code
+gotest: test
+
+# Run golangci-lint test against code
+golangci: get-ci-tools
+	GOWORK=off $(CI_TOOLS_REPO_DIR)/test-runner/golangci.sh
+	GOWORK=off $(CI_TOOLS_REPO_DIR)/test-runner/golangci.sh ./api
+
+# Run go lint against code
+golint: get-ci-tools
+	GOWORK=off PATH=$(GOBIN):$(PATH); $(CI_TOOLS_REPO_DIR)/test-runner/golint.sh
+	GOWORK=off PATH=$(GOBIN):$(PATH); $(CI_TOOLS_REPO_DIR)/test-runner/golint.sh ./api
+
+.PHONY: gowork
+gowork: ## Generate go.work file to support our multi module repository
+	test -f go.work || go work init
+	go work use .
+	go work use ./api
+	go work sync
+
+.PHONY: operator-lint
+operator-lint: gowork ## Runs operator-lint
+	GOBIN=$(LOCALBIN) go install github.com/gibizer/operator-lint@v0.3.0
+	go vet -vettool=$(LOCALBIN)/operator-lint ./... ./api/...
+
 # Used for webhook testing
 # Please ensure the swift-controller-manager deployment and
 # webhook definitions are removed from the csv before running
@@ -259,24 +321,3 @@ SKIP_CERT ?=false
 run-with-webhook: manifests generate fmt vet ## Run a controller from your host.
 	/bin/bash hack/configure_local_webhook.sh
 	go run ./main.go
-
-.PHONY: gowork
-gowork: ## Generate go.work file to support our multi module repository
-	test -f go.work || go work init
-	go work use .
-	go work use ./api
-
-.PHONY: operator-lint
-operator-lint: gowork ## Runs operator-lint
-	GOBIN=$(LOCALBIN) go install github.com/gibizer/operator-lint@latest
-	go vet -vettool=$(LOCALBIN)/operator-lint ./... ./api/...
-
-.PHONY: golangci-lint
-golangci-lint:
-	test -s $(LOCALBIN)/golangci-lint || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.51.2
-	$(LOCALBIN)/golangci-lint run --fix
-
-.PHONY: ginkgo
-ginkgo: $(GINKGO) ## Download ginkgo locally if necessary.
-$(GINKGO): $(LOCALBIN)
-	test -s $(LOCALBIN)/ginkgo || GOBIN=$(LOCALBIN) go install github.com/onsi/ginkgo/v2/ginkgo
