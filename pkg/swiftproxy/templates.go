@@ -18,15 +18,23 @@ package swiftproxy
 
 import (
 	"fmt"
+
 	"github.com/openstack-k8s-operators/lib-common/modules/common/util"
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
 )
 
-func SecretTemplates(instance *swiftv1beta1.SwiftProxy, labels map[string]string, authURL string, password string) []util.Template {
+func SecretTemplates(
+	instance *swiftv1beta1.SwiftProxy,
+	labels map[string]string,
+	keystonePublicURL string,
+	keystoneInternalURL string,
+	password string,
+) []util.Template {
 	templateParameters := make(map[string]interface{})
 	templateParameters["ServiceUser"] = instance.Spec.ServiceUser
 	templateParameters["ServicePassword"] = password
-	templateParameters["KeystonePublicURL"] = authURL
+	templateParameters["KeystonePublicURL"] = keystonePublicURL
+	templateParameters["KeystoneInternalURL"] = keystoneInternalURL
 
 	return []util.Template{
 		{

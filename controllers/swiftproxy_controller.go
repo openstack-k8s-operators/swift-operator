@@ -258,12 +258,16 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return ctrlResult, err
 	}
 
-	// Get the Keystone authURL
+	// Get the Keystone endpoint URLs
 	keystoneAPI, err := keystonev1.GetKeystoneAPI(ctx, helper, instance.Namespace, map[string]string{})
 	if err != nil {
 		return ctrlResult, err
 	}
-	authURL, err := keystoneAPI.GetEndpoint(endpoint.EndpointPublic)
+	keystonePublicURL, err := keystoneAPI.GetEndpoint(endpoint.EndpointPublic)
+	if err != nil {
+		return ctrlResult, err
+	}
+	keystoneInternalURL, err := keystoneAPI.GetEndpoint(endpoint.EndpointInternal)
 	if err != nil {
 		return ctrlResult, err
 	}
@@ -277,7 +281,13 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 
 	// Create a Secret populated with content from templates/
 	envVars := make(map[string]env.Setter)
-	tpl := swiftproxy.SecretTemplates(instance, serviceLabels, authURL, password)
+	tpl := swiftproxy.SecretTemplates(
+		instance,
+		serviceLabels,
+		keystonePublicURL,
+		keystoneInternalURL,
+		password,
+	)
 	err = secret.EnsureSecrets(ctx, helper, instance, tpl, &envVars)
 	if err != nil {
 		return ctrl.Result{}, err
