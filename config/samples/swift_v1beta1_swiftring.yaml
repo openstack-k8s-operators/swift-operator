@@ -5,4 +5,3 @@ metadata:
 spec:
   ringReplicas: 1
   swiftConfSecret: swift-conf
-  containerImage: quay.io/podified-antelope-centos9/openstack-swift-proxy-server:current-podified
