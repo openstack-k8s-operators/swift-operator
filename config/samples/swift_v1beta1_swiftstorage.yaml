@@ -7,8 +7,3 @@ spec:
   storageRequest: 10G
   replicas: 1
   swiftConfSecret: swift-conf
-  containerImageAccount: quay.io/podified-antelope-centos9/openstack-swift-account:current-podified
-  containerImageContainer: quay.io/podified-antelope-centos9/openstack-swift-container:current-podified
-  containerImageObject: quay.io/podified-antelope-centos9/openstack-swift-object:current-podified
-  containerImageProxy: quay.io/podified-antelope-centos9/openstack-swift-proxy-server:current-podified
-  containerImageMemcached: quay.io/podified-antelope-centos9/openstack-memcached:current-podified

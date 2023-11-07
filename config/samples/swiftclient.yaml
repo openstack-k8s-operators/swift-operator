@@ -9,7 +9,6 @@ spec:
       type: RuntimeDefault
   containers:
   - name: swiftclient
-    image: quay.io/podified-antelope-centos9/openstack-swift-proxy-server:current-podified
     workingDir: /tmp
     env:
     - name: OS_AUTH_URL
