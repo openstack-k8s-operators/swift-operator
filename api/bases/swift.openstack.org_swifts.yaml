@@ -16,6 +16,10 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
+    - description: NetworkAttachments
+      jsonPath: .status.networkAttachments
+      name: NetworkAttachments
+      type: string
     - description: Status
       jsonPath: .status.conditions[0].status
       name: Status
@@ -44,6 +48,12 @@ spec:
           spec:
             description: SwiftSpec defines the desired state of Swift
             properties:
+              networkAttachments:
+                description: NetworkAttachments is a list of NetworkAttachment resource
+                  names to expose the services to the given network
+                items:
+                  type: string
+                type: array
               storageClass:
                 default: ""
                 description: Storage class. This is passed to SwiftStorage unless
@@ -63,6 +73,12 @@ spec:
                   containerImageProxy:
                     description: Swift Proxy Container Image URL
                     type: string
+                  networkAttachments:
+                    description: NetworkAttachments is a list of NetworkAttachment
+                      resource names to expose the services to the given network
+                    items:
+                      type: string
+                    type: array
                   override:
                     description: Override, provides the ability to override the generated
                       manifest of several child resources.
@@ -326,6 +342,12 @@ spec:
                   containerImageProxy:
                     description: Image URL for Swift proxy service
                     type: string
+                  networkAttachments:
+                    description: NetworkAttachments is a list of NetworkAttachment
+                      resource names to expose the services to the given network
+                    items:
+                      type: string
+                    type: array
                   replicas:
                     default: 1
                     format: int32
