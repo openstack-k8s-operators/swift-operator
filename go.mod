@@ -4,10 +4,10 @@ go 1.19
 
 require (
 	github.com/go-logr/logr v1.3.0
-	github.com/onsi/ginkgo/v2 v2.13.0
-	github.com/onsi/gomega v1.29.0
+	github.com/onsi/ginkgo/v2 v2.13.1
+	github.com/onsi/gomega v1.30.0
 	github.com/openstack-k8s-operators/keystone-operator/api v0.3.1-0.20231103151903-a1a0e540408d
-	github.com/openstack-k8s-operators/lib-common/modules/common v0.3.1-0.20231102083359-58e12a1299b2
+	github.com/openstack-k8s-operators/lib-common/modules/common v0.3.1-0.20231112102812-be1055bb92a2
 	github.com/openstack-k8s-operators/swift-operator/api v0.1.0
 	k8s.io/api v0.26.10
 	k8s.io/apimachinery v0.26.10
@@ -46,7 +46,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/openshift/api v3.9.0+incompatible // indirect
-	github.com/openstack-k8s-operators/lib-common/modules/openstack v0.3.1-0.20231102083359-58e12a1299b2 // indirect
+	github.com/openstack-k8s-operators/lib-common/modules/openstack v0.3.1-0.20231112102812-be1055bb92a2 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_golang v1.14.0 // indirect
 	github.com/prometheus/client_model v0.3.0 // indirect
@@ -57,11 +57,11 @@ require (
 	go.uber.org/zap v1.26.0 // indirect
 	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/oauth2 v0.4.0 // indirect
-	golang.org/x/sys v0.13.0 // indirect
+	golang.org/x/sys v0.14.0 // indirect
 	golang.org/x/term v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
-	golang.org/x/tools v0.13.0 // indirect
+	golang.org/x/tools v0.14.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.2.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
