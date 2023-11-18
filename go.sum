@@ -236,10 +236,10 @@ github.com/openshift/api v0.0.0-20230414143018-3367bc7e6ac7 h1:rncLxJBpFGqBztyxC
 github.com/openshift/api v0.0.0-20230414143018-3367bc7e6ac7/go.mod h1:ctXNyWanKEjGj8sss1KjjHQ3ENKFm33FFnS5BKaIPh4=
 github.com/openstack-k8s-operators/keystone-operator/api v0.3.1-0.20231103151903-a1a0e540408d h1:DbniGmM4s9c4MkkJhoDVprJtcBiB3ixpDZOu6VtgPJY=
 github.com/openstack-k8s-operators/keystone-operator/api v0.3.1-0.20231103151903-a1a0e540408d/go.mod h1:vIDFS1mvMsJ0ICXm2f8Qh+BmQwH/qef+Gq6SIoh4uKM=
-github.com/openstack-k8s-operators/lib-common/modules/common v0.3.1-0.20231112102812-be1055bb92a2 h1:3Vl0ioUhHrcGsj8bdlkp8lHIypqXsdT/HNSayMXjBrc=
-github.com/openstack-k8s-operators/lib-common/modules/common v0.3.1-0.20231112102812-be1055bb92a2/go.mod h1:cmaqs4ugZ5/vKzhsD00/ITBw7RBGNEasbbtU9xNGqS0=
-github.com/openstack-k8s-operators/lib-common/modules/openstack v0.3.1-0.20231112102812-be1055bb92a2 h1:0bqB0ZlbaRZibeKt/KNEZxHhOPUxJRRcsLYma20//f8=
-github.com/openstack-k8s-operators/lib-common/modules/openstack v0.3.1-0.20231112102812-be1055bb92a2/go.mod h1:P5h4fTbYiDZzQBcbKSs8mfXUJ4btTAgzWiB1dIDPGug=
+github.com/openstack-k8s-operators/lib-common/modules/common v0.3.1-0.20231114102008-65eb1b13d3a7 h1:UEgV9NNx0XbQlwiebhtS4qdt3mPsMs6c8DMyv+i5tBc=
+github.com/openstack-k8s-operators/lib-common/modules/common v0.3.1-0.20231114102008-65eb1b13d3a7/go.mod h1:mxh1HCiMTZm4cAqUK5yPigbZ5JJs3gOVgDVwbTbFAYk=
+github.com/openstack-k8s-operators/lib-common/modules/openstack v0.3.1-0.20231114102008-65eb1b13d3a7 h1:SqnQcIL0MZ5B+9G1W8fLLNM/HzGzcD5N4Zqoq/dtUmI=
+github.com/openstack-k8s-operators/lib-common/modules/openstack v0.3.1-0.20231114102008-65eb1b13d3a7/go.mod h1:P5h4fTbYiDZzQBcbKSs8mfXUJ4btTAgzWiB1dIDPGug=
 github.com/pkg/errors v0.8.0/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
