@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/go-logr/logr v1.3.0
-	github.com/onsi/ginkgo/v2 v2.13.1
+	github.com/onsi/ginkgo/v2 v2.13.2
 	github.com/onsi/gomega v1.30.0
 	github.com/openstack-k8s-operators/keystone-operator/api v0.3.1-0.20231121110947-d38363cf0f05
 	github.com/openstack-k8s-operators/lib-common/modules/common v0.3.1-0.20231122111552-6bd6025ade37
