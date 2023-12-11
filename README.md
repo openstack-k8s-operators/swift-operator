@@ -14,7 +14,7 @@ are two simple ways to test this, both are using [install_yamls](https://github.
 
 
 ### Setup CRC
-```sh
+```bash
 git clone https://github.com/openstack-k8s-operators/install_yamls
 pushd install_yaml/devsetup
 CPUS=12 MEMORY=25600 DISK=100 make crc
