@@ -5,9 +5,6 @@
 # manages these and also checks replication status to decide if rebalancing is
 # safe.
 
-# TODO: this should be set properly according to the number of devices
-PART_POWER=8
-MIN_PART_HOURS=1
 TARFILE="/tmp/swiftrings.tar.gz"
 BASE_URL="https://kubernetes.default.svc/api/v1/namespaces/${NAMESPACE}/configmaps"
 URL="${BASE_URL}/${CM_NAME}"
@@ -52,7 +49,7 @@ cd /etc/swift
 
 # Create new rings if not existing
 for f in account.builder container.builder object.builder; do
-    [ ! -e $f ] && swift-ring-builder $f create 8 ${SWIFT_REPLICAS} 1
+    [ ! -e $f ] && swift-ring-builder $f create ${SWIFT_PART_POWER} ${SWIFT_REPLICAS} ${SWIFT_MIN_PART_HOURS}
 done
 
 # Iterate over all devices from the list created by the SwiftStorage CR.

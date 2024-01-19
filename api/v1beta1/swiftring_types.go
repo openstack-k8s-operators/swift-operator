@@ -37,8 +37,20 @@ type SwiftRingSpec struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default=1
 	// +kubebuilder:validation:Minimum=1
-	// Number of Swift object replicas (=copies)
+	// Number of Swift data replicas (=copies)
 	RingReplicas *int64 `json:"ringReplicas"`
+
+	// +kubebuilder:validation:Required
+	// +kubebuilder:default=10
+	// +kubebuilder:validation:Minimum=1
+	// Partition power of the Swift rings
+	PartPower *int64 `json:"partPower"`
+
+	// +kubebuilder:validation:Required
+	// +kubebuilder:default=1
+	// +kubebuilder:validation:Minimum=1
+	// Minimum numbeir of hours to restrict moving a partition more than once
+	MinPartHours *int64 `json:"minPartHours"`
 
 	// +kubebuilder:validation:Required
 	// Image URL for Swift proxy service
