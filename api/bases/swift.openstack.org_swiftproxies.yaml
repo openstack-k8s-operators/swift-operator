@@ -16,6 +16,10 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
+    - description: NetworkAttachments
+      jsonPath: .status.networkAttachments
+      name: NetworkAttachments
+      type: string
     - description: Status
       jsonPath: .status.conditions[0].status
       name: Status
@@ -50,6 +54,12 @@ spec:
               containerImageProxy:
                 description: Swift Proxy Container Image URL
                 type: string
+              networkAttachments:
+                description: NetworkAttachments is a list of NetworkAttachment resource
+                  names to expose the services to the given network
+                items:
+                  type: string
+                type: array
               override:
                 description: Override, provides the ability to override the generated
                   manifest of several child resources.
@@ -310,6 +320,13 @@ spec:
                   - type
                   type: object
                 type: array
+              networkAttachments:
+                additionalProperties:
+                  items:
+                    type: string
+                  type: array
+                description: NetworkAttachments status of the deployment pods
+                type: object
               readyCount:
                 description: ReadyCount of SwiftProxy instances
                 format: int32

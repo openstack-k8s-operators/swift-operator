@@ -16,6 +16,10 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
+    - description: NetworkAttachments
+      jsonPath: .status.networkAttachments
+      name: NetworkAttachments
+      type: string
     - description: Status
       jsonPath: .status.conditions[0].status
       name: Status
@@ -59,6 +63,12 @@ spec:
               containerImageProxy:
                 description: Image URL for Swift proxy service
                 type: string
+              networkAttachments:
+                description: NetworkAttachments is a list of NetworkAttachment resource
+                  names to expose the services to the given network
+                items:
+                  type: string
+                type: array
               replicas:
                 default: 1
                 format: int32
@@ -133,6 +143,13 @@ spec:
                   - type
                   type: object
                 type: array
+              networkAttachments:
+                additionalProperties:
+                  items:
+                    type: string
+                  type: array
+                description: NetworkAttachments status of the deployment pods
+                type: object
               readyCount:
                 description: ReadyCount of SwiftStorage instances
                 format: int32
