@@ -73,7 +73,7 @@ type SwiftProxySpec struct {
 	// Override, provides the ability to override the generated manifest of several child resources.
 	Override ProxyOverrideSpec `json:"override,omitempty"`
 
-    // +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Optional
 	// NetworkAttachments is a list of NetworkAttachment resource names to expose the services to the given network
 	NetworkAttachments []string `json:"networkAttachments,omitempty"`
 }
@@ -93,7 +93,7 @@ type SwiftProxyStatus struct {
 	// Conditions
 	Conditions condition.Conditions `json:"conditions,omitempty" optional:"true"`
 
-    // NetworkAttachments status of the deployment pods
+	// NetworkAttachments status of the deployment pods
 	NetworkAttachments map[string][]string `json:"networkAttachments,omitempty"`
 }
 

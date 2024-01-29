@@ -66,7 +66,7 @@ type SwiftStorageSpec struct {
 	// Name of Secret containing swift.conf
 	SwiftConfSecret string `json:"swiftConfSecret"`
 
-    // +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Optional
 	// NetworkAttachments is a list of NetworkAttachment resource names to expose the services to the given network
 	NetworkAttachments []string `json:"networkAttachments,omitempty"`
 }
@@ -76,10 +76,10 @@ type SwiftStorageStatus struct {
 	// ReadyCount of SwiftStorage instances
 	ReadyCount int32 `json:"readyCount,omitempty"`
 
-    // Conditions
+	// Conditions
 	Conditions condition.Conditions `json:"conditions,omitempty" optional:"true"`
 
-    // NetworkAttachments status of the deployment pods
+	// NetworkAttachments status of the deployment pods
 	NetworkAttachments map[string][]string `json:"networkAttachments,omitempty"`
 }
 
