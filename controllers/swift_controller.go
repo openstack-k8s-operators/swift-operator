@@ -19,6 +19,8 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"strings"
+	"time"
 
 	"github.com/go-logr/logr"
 
@@ -27,10 +29,12 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
+	memcachedv1 "github.com/openstack-k8s-operators/infra-operator/apis/memcached/v1beta1"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/condition"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/env"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/helper"
@@ -138,6 +142,7 @@ func (r *SwiftReconciler) Reconcile(ctx context.Context, req ctrl.Request) (resu
 			condition.UnknownCondition(condition.ServiceAccountReadyCondition, condition.InitReason, condition.ServiceAccountReadyInitMessage),
 			condition.UnknownCondition(condition.RoleReadyCondition, condition.InitReason, condition.RoleReadyInitMessage),
 			condition.UnknownCondition(condition.RoleBindingReadyCondition, condition.InitReason, condition.RoleBindingReadyInitMessage),
+			condition.UnknownCondition(condition.MemcachedReadyCondition, condition.InitReason, condition.MemcachedReadyInitMessage),
 		)
 
 		instance.Status.Conditions.Init(&cl)
@@ -222,8 +227,45 @@ func (r *SwiftReconciler) reconcileNormal(ctx context.Context, instance *swiftv1
 
 	instance.Status.Conditions.MarkTrue(condition.ServiceConfigReadyCondition, condition.ServiceConfigReadyMessage)
 
+	//
+	// Check for required memcached used for caching
+	//
+	memcached, err := r.getSwiftMemcached(ctx, helper, instance)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			instance.Status.Conditions.Set(condition.FalseCondition(
+				condition.MemcachedReadyCondition,
+				condition.RequestedReason,
+				condition.SeverityInfo,
+				condition.MemcachedReadyWaitingMessage))
+			return ctrl.Result{RequeueAfter: time.Duration(10) * time.Second}, fmt.Errorf("memcached %s not found", instance.Spec.MemcachedInstance)
+		}
+		instance.Status.Conditions.Set(condition.FalseCondition(
+			condition.MemcachedReadyCondition,
+			condition.ErrorReason,
+			condition.SeverityWarning,
+			condition.MemcachedReadyErrorMessage,
+			err.Error()))
+		return ctrl.Result{}, err
+	}
+
+	if !memcached.IsReady() {
+		instance.Status.Conditions.Set(condition.FalseCondition(
+			condition.MemcachedReadyCondition,
+			condition.RequestedReason,
+			condition.SeverityInfo,
+			condition.MemcachedReadyWaitingMessage))
+		return ctrl.Result{RequeueAfter: time.Duration(10) * time.Second}, fmt.Errorf("memcached %s is not ready", memcached.Name)
+	}
+	// Mark the Memcached Service as Ready if we get to this point with no errors
+	instance.Status.Conditions.MarkTrue(
+		condition.MemcachedReadyCondition, condition.MemcachedReadyMessage)
+	// run check memcached - end
+
+	memcachedServers := strings.Join(memcached.Status.ServerList, ",")
+
 	// create or update Swift storage
-	swiftStorage, op, err := r.storageCreateOrUpdate(ctx, instance)
+	swiftStorage, op, err := r.storageCreateOrUpdate(ctx, instance, memcachedServers)
 	if err != nil {
 		instance.Status.Conditions.Set(condition.FalseCondition(
 			swiftv1.SwiftStorageReadyCondition,
@@ -265,7 +307,7 @@ func (r *SwiftReconciler) reconcileNormal(ctx context.Context, instance *swiftv1
 	}
 
 	// create or update Swift proxy
-	swiftProxy, op, err := r.proxyCreateOrUpdate(ctx, instance)
+	swiftProxy, op, err := r.proxyCreateOrUpdate(ctx, instance, memcachedServers)
 	if err != nil {
 		instance.Status.Conditions.Set(condition.FalseCondition(
 			swiftv1.SwiftProxyReadyCondition,
@@ -340,7 +382,7 @@ func (r *SwiftReconciler) ringCreateOrUpdate(ctx context.Context, instance *swif
 	return deployment, op, err
 }
 
-func (r *SwiftReconciler) storageCreateOrUpdate(ctx context.Context, instance *swiftv1.Swift) (*swiftv1.SwiftStorage, controllerutil.OperationResult, error) {
+func (r *SwiftReconciler) storageCreateOrUpdate(ctx context.Context, instance *swiftv1.Swift, memcachedServers string) (*swiftv1.SwiftStorage, controllerutil.OperationResult, error) {
 
 	swiftStorageSpec := swiftv1.SwiftStorageSpec{
 		Replicas:                instance.Spec.SwiftStorage.Replicas,
@@ -353,6 +395,7 @@ func (r *SwiftReconciler) storageCreateOrUpdate(ctx context.Context, instance *s
 		ContainerImageMemcached: instance.Spec.SwiftStorage.ContainerImageMemcached,
 		SwiftConfSecret:         instance.Spec.SwiftConfSecret,
 		NetworkAttachments:      instance.Spec.SwiftStorage.NetworkAttachments,
+		MemcachedServers:        memcachedServers,
 	}
 
 	deployment := &swiftv1.SwiftStorage{
@@ -375,18 +418,18 @@ func (r *SwiftReconciler) storageCreateOrUpdate(ctx context.Context, instance *s
 	return deployment, op, err
 }
 
-func (r *SwiftReconciler) proxyCreateOrUpdate(ctx context.Context, instance *swiftv1.Swift) (*swiftv1.SwiftProxy, controllerutil.OperationResult, error) {
+func (r *SwiftReconciler) proxyCreateOrUpdate(ctx context.Context, instance *swiftv1.Swift, memcachedServers string) (*swiftv1.SwiftProxy, controllerutil.OperationResult, error) {
 
 	swiftProxySpec := swiftv1.SwiftProxySpec{
-		Replicas:                instance.Spec.SwiftProxy.Replicas,
-		ContainerImageProxy:     instance.Spec.SwiftProxy.ContainerImageProxy,
-		ContainerImageMemcached: instance.Spec.SwiftProxy.ContainerImageMemcached,
-		Secret:                  instance.Spec.SwiftProxy.Secret,
-		ServiceUser:             instance.Spec.SwiftProxy.ServiceUser,
-		PasswordSelectors:       instance.Spec.SwiftProxy.PasswordSelectors,
-		SwiftConfSecret:         instance.Spec.SwiftConfSecret,
-		Override:                instance.Spec.SwiftProxy.Override,
-		NetworkAttachments:      instance.Spec.SwiftStorage.NetworkAttachments,
+		Replicas:            instance.Spec.SwiftProxy.Replicas,
+		ContainerImageProxy: instance.Spec.SwiftProxy.ContainerImageProxy,
+		Secret:              instance.Spec.SwiftProxy.Secret,
+		ServiceUser:         instance.Spec.SwiftProxy.ServiceUser,
+		PasswordSelectors:   instance.Spec.SwiftProxy.PasswordSelectors,
+		SwiftConfSecret:     instance.Spec.SwiftConfSecret,
+		Override:            instance.Spec.SwiftProxy.Override,
+		NetworkAttachments:  instance.Spec.SwiftStorage.NetworkAttachments,
+		MemcachedServers:    memcachedServers,
 	}
 
 	deployment := &swiftv1.SwiftProxy{
@@ -407,4 +450,24 @@ func (r *SwiftReconciler) proxyCreateOrUpdate(ctx context.Context, instance *swi
 	})
 
 	return deployment, op, err
+}
+
+// getSwiftMemcached - gets the Memcached instance used for Swift cache backend
+func (r *SwiftReconciler) getSwiftMemcached(
+	ctx context.Context,
+	h *helper.Helper,
+	instance *swiftv1.Swift,
+) (*memcachedv1.Memcached, error) {
+	memcached := &memcachedv1.Memcached{}
+	err := h.GetClient().Get(
+		ctx,
+		types.NamespacedName{
+			Name:      instance.Spec.MemcachedInstance,
+			Namespace: instance.Namespace,
+		},
+		memcached)
+	if err != nil {
+		return nil, err
+	}
+	return memcached, err
 }

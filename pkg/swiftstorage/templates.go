@@ -22,8 +22,9 @@ import (
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
 )
 
-func ConfigMapTemplates(instance *swiftv1beta1.SwiftStorage, labels map[string]string) []util.Template {
+func ConfigMapTemplates(instance *swiftv1beta1.SwiftStorage, labels map[string]string, memcachedServers string) []util.Template {
 	templateParameters := make(map[string]interface{})
+	templateParameters["MemcachedServers"] = memcachedServers
 
 	return []util.Template{
 		{

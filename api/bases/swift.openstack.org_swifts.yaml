@@ -48,6 +48,10 @@ spec:
           spec:
             description: SwiftSpec defines the desired state of Swift
             properties:
+              memcachedInstance:
+                default: memcached
+                description: Memcached instance name.
+                type: string
               networkAttachments:
                 description: NetworkAttachments is a list of NetworkAttachment resource
                   names to expose the services to the given network
@@ -72,6 +76,10 @@ spec:
                     type: string
                   containerImageProxy:
                     description: Swift Proxy Container Image URL
+                    type: string
+                  memcachedServers:
+                    default: ""
+                    description: List of memcached servers.
                     type: string
                   networkAttachments:
                     description: NetworkAttachments is a list of NetworkAttachment
@@ -296,6 +304,7 @@ spec:
                 required:
                 - containerImageMemcached
                 - containerImageProxy
+                - memcachedServers
                 - replicas
                 - secret
                 - serviceUser
@@ -342,6 +351,10 @@ spec:
                   containerImageProxy:
                     description: Image URL for Swift proxy service
                     type: string
+                  memcachedServers:
+                    default: ""
+                    description: List of memcached servers.
+                    type: string
                   networkAttachments:
                     description: NetworkAttachments is a list of NetworkAttachment
                       resource names to expose the services to the given network
@@ -371,12 +384,14 @@ spec:
                 - containerImageMemcached
                 - containerImageObject
                 - containerImageProxy
+                - memcachedServers
                 - replicas
                 - storageClass
                 - storageRequest
                 - swiftConfSecret
                 type: object
             required:
+            - memcachedInstance
             - storageClass
             - swiftConfSecret
             - swiftProxy

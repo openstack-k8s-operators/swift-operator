@@ -29,12 +29,14 @@ func SecretTemplates(
 	keystonePublicURL string,
 	keystoneInternalURL string,
 	password string,
+	memcachedServers string,
 ) []util.Template {
 	templateParameters := make(map[string]interface{})
 	templateParameters["ServiceUser"] = instance.Spec.ServiceUser
 	templateParameters["ServicePassword"] = password
 	templateParameters["KeystonePublicURL"] = keystonePublicURL
 	templateParameters["KeystoneInternalURL"] = keystoneInternalURL
+	templateParameters["MemcachedServers"] = memcachedServers
 
 	return []util.Template{
 		{

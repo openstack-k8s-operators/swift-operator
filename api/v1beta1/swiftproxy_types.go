@@ -49,7 +49,6 @@ type SwiftProxySpec struct {
 	// Image URL for Memcache servicd
 	ContainerImageMemcached string `json:"containerImageMemcached"`
 
-	// +kubebuilder:validation:Required
 	// +kubebuilder:default=swift
 	// ServiceUser - optional username used for this service to register in Swift
 	ServiceUser string `json:"serviceUser"`
@@ -76,6 +75,11 @@ type SwiftProxySpec struct {
 	// +kubebuilder:validation:Optional
 	// NetworkAttachments is a list of NetworkAttachment resource names to expose the services to the given network
 	NetworkAttachments []string `json:"networkAttachments,omitempty"`
+
+	// +kubebuilder:validation:Required
+	// +kubebuilder:default=""
+	// List of memcached servers.
+	MemcachedServers string `json:"memcachedServers"`
 }
 
 // ProxyOverrideSpec to override the generated manifest of several child resources.

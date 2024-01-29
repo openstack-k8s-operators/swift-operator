@@ -54,6 +54,10 @@ spec:
               containerImageProxy:
                 description: Swift Proxy Container Image URL
                 type: string
+              memcachedServers:
+                default: ""
+                description: List of memcached servers.
+                type: string
               networkAttachments:
                 description: NetworkAttachments is a list of NetworkAttachment resource
                   names to expose the services to the given network
@@ -269,6 +273,7 @@ spec:
             required:
             - containerImageMemcached
             - containerImageProxy
+            - memcachedServers
             - replicas
             - secret
             - serviceUser
