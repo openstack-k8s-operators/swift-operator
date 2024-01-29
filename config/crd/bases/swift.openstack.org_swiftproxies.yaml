@@ -48,9 +48,6 @@ spec:
           spec:
             description: SwiftProxySpec defines the desired state of SwiftProxy
             properties:
-              containerImageMemcached:
-                description: Image URL for Memcache servicd
-                type: string
               containerImageProxy:
                 description: Swift Proxy Container Image URL
                 type: string
@@ -271,7 +268,6 @@ spec:
                 description: Name of Secret containing swift.conf
                 type: string
             required:
-            - containerImageMemcached
             - containerImageProxy
             - memcachedServers
             - replicas

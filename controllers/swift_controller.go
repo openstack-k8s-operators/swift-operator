@@ -392,7 +392,6 @@ func (r *SwiftReconciler) storageCreateOrUpdate(ctx context.Context, instance *s
 		ContainerImageContainer: instance.Spec.SwiftStorage.ContainerImageContainer,
 		ContainerImageObject:    instance.Spec.SwiftStorage.ContainerImageObject,
 		ContainerImageProxy:     instance.Spec.SwiftStorage.ContainerImageProxy,
-		ContainerImageMemcached: instance.Spec.SwiftStorage.ContainerImageMemcached,
 		SwiftConfSecret:         instance.Spec.SwiftConfSecret,
 		NetworkAttachments:      instance.Spec.SwiftStorage.NetworkAttachments,
 		MemcachedServers:        memcachedServers,

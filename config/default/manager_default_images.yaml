@@ -19,5 +19,3 @@ spec:
           value: quay.io/podified-antelope-centos9/openstack-swift-container:current-podified
         - name: RELATED_IMAGE_SWIFT_OBJECT_IMAGE_URL_DEFAULT
           value: quay.io/podified-antelope-centos9/openstack-swift-object:current-podified
-        - name: RELATED_IMAGE_SWIFT_MEMCACHED_IMAGE_URL_DEFAULT
-          value: quay.io/podified-antelope-centos9/openstack-memcached:current-podified

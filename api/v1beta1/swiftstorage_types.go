@@ -58,10 +58,6 @@ type SwiftStorageSpec struct {
 	ContainerImageProxy string `json:"containerImageProxy"`
 
 	// +kubebuilder:validation:Required
-	// Image URL for Memcache servicd
-	ContainerImageMemcached string `json:"containerImageMemcached"`
-
-	// +kubebuilder:validation:Required
 	// +kubebuilder:default=swift-conf
 	// Name of Secret containing swift.conf
 	SwiftConfSecret string `json:"swiftConfSecret"`

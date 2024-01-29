@@ -45,10 +45,6 @@ type SwiftProxySpec struct {
 	// Swift Proxy Container Image URL
 	ContainerImageProxy string `json:"containerImageProxy"`
 
-	// +kubebuilder:validation:Required
-	// Image URL for Memcache servicd
-	ContainerImageMemcached string `json:"containerImageMemcached"`
-
 	// +kubebuilder:default=swift
 	// ServiceUser - optional username used for this service to register in Swift
 	ServiceUser string `json:"serviceUser"`

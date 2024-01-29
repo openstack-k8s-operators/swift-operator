@@ -16,9 +16,8 @@ limitations under the License.
 package swift
 
 const (
-	RunAsUser     int64 = 42445
-	ProxyPort     int32 = 8080
-	MemcachedPort int32 = 11211
+	RunAsUser int64 = 42445
+	ProxyPort int32 = 8080
 
 	AccountServerPort   int32 = 6202
 	ContainerServerPort int32 = 6201

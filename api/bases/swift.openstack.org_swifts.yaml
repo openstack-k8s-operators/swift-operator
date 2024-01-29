@@ -71,9 +71,6 @@ spec:
                 description: SwiftProxy - Spec definition for the Proxy service of
                   this Swift deployment
                 properties:
-                  containerImageMemcached:
-                    description: Image URL for Memcache servicd
-                    type: string
                   containerImageProxy:
                     description: Swift Proxy Container Image URL
                     type: string
@@ -302,7 +299,6 @@ spec:
                     description: Name of Secret containing swift.conf
                     type: string
                 required:
-                - containerImageMemcached
                 - containerImageProxy
                 - memcachedServers
                 - replicas
@@ -342,9 +338,6 @@ spec:
                   containerImageContainer:
                     description: Image URL for Swift container service
                     type: string
-                  containerImageMemcached:
-                    description: Image URL for Memcache servicd
-                    type: string
                   containerImageObject:
                     description: Image URL for Swift object service
                     type: string
@@ -381,7 +374,6 @@ spec:
                 required:
                 - containerImageAccount
                 - containerImageContainer
-                - containerImageMemcached
                 - containerImageObject
                 - containerImageProxy
                 - memcachedServers
