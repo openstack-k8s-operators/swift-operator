@@ -100,7 +100,6 @@ X-Openstack-Request-Id: txbb13222da0d94527a7101-00649551fc
 - [ ] Replace simple rebalance script with a smarter Python-based tool
 - [ ] Refactor conf file copying, Secret and ConfigMap usage
 - [ ] Use Kolla
-- [ ] Support Network isolation
 
 ## License
 
