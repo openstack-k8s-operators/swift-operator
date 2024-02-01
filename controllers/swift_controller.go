@@ -427,7 +427,7 @@ func (r *SwiftReconciler) proxyCreateOrUpdate(ctx context.Context, instance *swi
 		PasswordSelectors:   instance.Spec.SwiftProxy.PasswordSelectors,
 		SwiftConfSecret:     instance.Spec.SwiftConfSecret,
 		Override:            instance.Spec.SwiftProxy.Override,
-		NetworkAttachments:  instance.Spec.SwiftStorage.NetworkAttachments,
+		NetworkAttachments:  instance.Spec.SwiftProxy.NetworkAttachments,
 		MemcachedServers:    memcachedServers,
 	}
 
