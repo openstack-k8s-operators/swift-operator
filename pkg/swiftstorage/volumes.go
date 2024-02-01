@@ -85,6 +85,12 @@ func getStorageVolumes(instance *swiftv1beta1.SwiftStorage) []corev1.Volume {
 				},
 			},
 		},
+		{
+			Name: "lock",
+			VolumeSource: corev1.VolumeSource{
+				EmptyDir: &corev1.EmptyDirVolumeSource{Medium: ""},
+			},
+		},
 	}
 }
 
@@ -124,6 +130,11 @@ func getStorageVolumeMounts() []corev1.VolumeMount {
 			Name:      "scripts",
 			MountPath: "/usr/local/bin/container-scripts",
 			ReadOnly:  true,
+		},
+		{
+			Name:      "lock",
+			MountPath: "/var/lock",
+			ReadOnly:  false,
 		},
 	}
 }
