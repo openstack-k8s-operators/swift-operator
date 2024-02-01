@@ -163,6 +163,14 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.Cont
 			VolumeMounts:    getStorageVolumeMounts(),
 			Command:         []string{"/usr/bin/rsync", "--daemon", "--no-detach", "--config=/etc/swift/rsyncd.conf", "--log-file=/dev/stdout"},
 		},
+		{
+			Name:            "swift-recon-cron",
+			Image:           swiftstorage.Spec.ContainerImageObject,
+			ImagePullPolicy: corev1.PullIfNotPresent,
+			SecurityContext: &securityContext,
+			VolumeMounts:    getStorageVolumeMounts(),
+			Command:         []string{"sh", "-c", "while true; do /usr/bin/swift-recon-cron /etc/swift/object-server.conf -v; sleep 300; done"},
+		},
 	}
 }
 
