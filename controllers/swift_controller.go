@@ -396,6 +396,7 @@ func (r *SwiftReconciler) storageCreateOrUpdate(ctx context.Context, instance *s
 		NetworkAttachments:      instance.Spec.SwiftStorage.NetworkAttachments,
 		MemcachedServers:        memcachedServers,
 		ContainerSharderEnabled: instance.Spec.SwiftStorage.ContainerSharderEnabled,
+		DefaultConfigOverwrite:  instance.Spec.SwiftStorage.DefaultConfigOverwrite,
 	}
 
 	deployment := &swiftv1.SwiftStorage{
@@ -421,16 +422,17 @@ func (r *SwiftReconciler) storageCreateOrUpdate(ctx context.Context, instance *s
 func (r *SwiftReconciler) proxyCreateOrUpdate(ctx context.Context, instance *swiftv1.Swift, memcachedServers string) (*swiftv1.SwiftProxy, controllerutil.OperationResult, error) {
 
 	swiftProxySpec := swiftv1.SwiftProxySpec{
-		Replicas:            instance.Spec.SwiftProxy.Replicas,
-		ContainerImageProxy: instance.Spec.SwiftProxy.ContainerImageProxy,
-		Secret:              instance.Spec.SwiftProxy.Secret,
-		ServiceUser:         instance.Spec.SwiftProxy.ServiceUser,
-		PasswordSelectors:   instance.Spec.SwiftProxy.PasswordSelectors,
-		SwiftConfSecret:     instance.Spec.SwiftConfSecret,
-		Override:            instance.Spec.SwiftProxy.Override,
-		NetworkAttachments:  instance.Spec.SwiftProxy.NetworkAttachments,
-		MemcachedServers:    memcachedServers,
-		TLS:                 instance.Spec.SwiftProxy.TLS,
+		Replicas:               instance.Spec.SwiftProxy.Replicas,
+		ContainerImageProxy:    instance.Spec.SwiftProxy.ContainerImageProxy,
+		Secret:                 instance.Spec.SwiftProxy.Secret,
+		ServiceUser:            instance.Spec.SwiftProxy.ServiceUser,
+		PasswordSelectors:      instance.Spec.SwiftProxy.PasswordSelectors,
+		SwiftConfSecret:        instance.Spec.SwiftConfSecret,
+		Override:               instance.Spec.SwiftProxy.Override,
+		NetworkAttachments:     instance.Spec.SwiftProxy.NetworkAttachments,
+		MemcachedServers:       memcachedServers,
+		TLS:                    instance.Spec.SwiftProxy.TLS,
+		DefaultConfigOverwrite: instance.Spec.SwiftProxy.DefaultConfigOverwrite,
 	}
 
 	deployment := &swiftv1.SwiftProxy{

@@ -51,6 +51,12 @@ spec:
               containerImageProxy:
                 description: Swift Proxy Container Image URL
                 type: string
+              defaultConfigOverwrite:
+                additionalProperties:
+                  type: string
+                description: DefaultConfigOverwrite - can be used to add additionalfiles.
+                  Those get added to the service config dir in /etc/<servicename>-conf.d
+                type: object
               memcachedServers:
                 default: ""
                 description: List of memcached servers.

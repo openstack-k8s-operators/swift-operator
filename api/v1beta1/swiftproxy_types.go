@@ -82,6 +82,10 @@ type SwiftProxySpec struct {
 	// +operator-sdk:csv:customresourcedefinitions:type=spec
 	// TLS - Parameters related to the TLS
 	TLS tls.API `json:"tls,omitempty"`
+
+	// DefaultConfigOverwrite - can be used to add additionalfiles. Those get
+	// added to the service config dir in /etc/<servicename>-conf.d
+	DefaultConfigOverwrite map[string]string `json:"defaultConfigOverwrite,omitempty"`
 }
 
 // ProxyOverrideSpec to override the generated manifest of several child resources.
