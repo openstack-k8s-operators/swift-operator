@@ -101,18 +101,6 @@ func Deployment(
 							VolumeMounts:   getProxyVolumeMounts(),
 							Command:        []string{"/usr/bin/swift-proxy-server", "/etc/swift/proxy-server.conf", "-v"},
 						},
-						{
-							Image:           instance.Spec.ContainerImageMemcached,
-							Name:            "memcached",
-							ImagePullPolicy: corev1.PullIfNotPresent,
-							SecurityContext: &securityContext,
-							Ports: []corev1.ContainerPort{{
-								ContainerPort: swift.MemcachedPort,
-								Name:          "memcached",
-							}},
-							VolumeMounts: getProxyVolumeMounts(),
-							Command:      []string{"/usr/bin/memcached", "-p", "11211", "-u", "memcached"},
-						},
 					},
 				},
 			},

@@ -101,7 +101,6 @@ X-Openstack-Request-Id: txbb13222da0d94527a7101-00649551fc
 - [ ] Refactor conf file copying, Secret and ConfigMap usage
 - [ ] Use Kolla
 - [ ] Support Network isolation
-- [ ] Use memcached if available within cluster
 
 ## License
 

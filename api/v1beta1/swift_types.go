@@ -28,7 +28,6 @@ const (
 	ContainerImageContainer = "quay.io/podified-antelope-centos9/openstack-swift-container:current-podified"
 	ContainerImageObject    = "quay.io/podified-antelope-centos9/openstack-swift-object:current-podified"
 	ContainerImageProxy     = "quay.io/podified-antelope-centos9/openstack-swift-proxy-server:current-podified"
-	ContainerImageMemcached = "quay.io/podified-antelope-centos9/openstack-memcached:current-podified"
 )
 
 // SwiftSpec defines the desired state of Swift
@@ -59,6 +58,11 @@ type SwiftSpec struct {
 	// +kubebuilder:validation:Optional
 	// NetworkAttachments is a list of NetworkAttachment resource names to expose the services to the given network
 	NetworkAttachments []string `json:"networkAttachments,omitempty"`
+
+	// +kubebuilder:validation:Required
+	// +kubebuilder:default=memcached
+	// Memcached instance name.
+	MemcachedInstance string `json:"memcachedInstance"`
 }
 
 // SwiftStatus defines the observed state of Swift
@@ -123,7 +127,6 @@ func SetupDefaults() {
 		ContainerContainerImageURL: util.GetEnvVar("RELATED_IMAGE_SWIFT_CONTAINER_IMAGE_URL_DEFAULT", ContainerImageContainer),
 		ObjectContainerImageURL:    util.GetEnvVar("RELATED_IMAGE_SWIFT_OBJECT_IMAGE_URL_DEFAULT", ContainerImageObject),
 		ProxyContainerImageURL:     util.GetEnvVar("RELATED_IMAGE_SWIFT_PROXY_IMAGE_URL_DEFAULT", ContainerImageProxy),
-		MemcachedContainerImageURL: util.GetEnvVar("RELATED_IMAGE_SWIFT_MEMCACHED_IMAGE_URL_DEFAULT", ContainerImageMemcached),
 	}
 
 	SetupSwiftDefaults(swiftDefaults)

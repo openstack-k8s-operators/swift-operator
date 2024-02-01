@@ -58,10 +58,6 @@ type SwiftStorageSpec struct {
 	ContainerImageProxy string `json:"containerImageProxy"`
 
 	// +kubebuilder:validation:Required
-	// Image URL for Memcache servicd
-	ContainerImageMemcached string `json:"containerImageMemcached"`
-
-	// +kubebuilder:validation:Required
 	// +kubebuilder:default=swift-conf
 	// Name of Secret containing swift.conf
 	SwiftConfSecret string `json:"swiftConfSecret"`
@@ -69,6 +65,11 @@ type SwiftStorageSpec struct {
 	// +kubebuilder:validation:Optional
 	// NetworkAttachments is a list of NetworkAttachment resource names to expose the services to the given network
 	NetworkAttachments []string `json:"networkAttachments,omitempty"`
+
+	// +kubebuilder:validation:Required
+	// +kubebuilder:default=""
+	// List of memcached servers.
+	MemcachedServers string `json:"memcachedServers"`
 }
 
 // SwiftStorageStatus defines the observed state of SwiftStorage

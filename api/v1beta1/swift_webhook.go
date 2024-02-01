@@ -34,7 +34,6 @@ type SwiftDefaults struct {
 	ContainerContainerImageURL string
 	ObjectContainerImageURL    string
 	ProxyContainerImageURL     string
-	MemcachedContainerImageURL string
 }
 
 var swiftDefaults SwiftDefaults
@@ -94,17 +93,9 @@ func (spec *SwiftSpec) Default() {
 		spec.SwiftStorage.ContainerImageProxy = swiftDefaults.ProxyContainerImageURL
 	}
 
-	if spec.SwiftStorage.ContainerImageMemcached == "" {
-		spec.SwiftStorage.ContainerImageMemcached = swiftDefaults.MemcachedContainerImageURL
-	}
-
 	// proxy
 	if spec.SwiftProxy.ContainerImageProxy == "" {
 		spec.SwiftProxy.ContainerImageProxy = swiftDefaults.ProxyContainerImageURL
-	}
-
-	if spec.SwiftProxy.ContainerImageMemcached == "" {
-		spec.SwiftProxy.ContainerImageMemcached = swiftDefaults.MemcachedContainerImageURL
 	}
 }
 

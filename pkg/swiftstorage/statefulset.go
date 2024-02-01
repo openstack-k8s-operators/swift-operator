@@ -163,14 +163,6 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.Cont
 			VolumeMounts:    getStorageVolumeMounts(),
 			Command:         []string{"/usr/bin/rsync", "--daemon", "--no-detach", "--config=/etc/swift/rsyncd.conf", "--log-file=/dev/stdout"},
 		},
-		{
-			Name:            "memcached",
-			Image:           swiftstorage.Spec.ContainerImageMemcached,
-			ImagePullPolicy: corev1.PullIfNotPresent,
-			SecurityContext: &securityContext,
-			Ports:           getPorts(swift.MemcachedPort, "memcached"),
-			Command:         []string{"/usr/bin/memcached", "-p", "11211", "-u", "memcached"},
-		},
 	}
 }
 
