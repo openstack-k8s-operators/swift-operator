@@ -1,0 +1,297 @@
+#
+# Check for:
+#
+# - 1 Swift CR
+# - 1 SwiftAPI CR
+# - Deployment with tls volumes
+# - https KeystoneEndpoints
+
+apiVersion: swift.openstack.org/v1beta1
+kind: Swift
+metadata:
+  name: swift
+spec:
+  swiftRing:
+    ringReplicas: 1
+  swiftStorage:
+    storageClass: local-storage
+    replicas: 1
+  swiftProxy:
+    replicas: 1
+    tls:
+      api:
+        internal:
+          secretName: cert-swift-internal-svc
+        public:
+          secretName: cert-swift-public-svc
+      caBundleSecretName: combined-ca-bundle
+status:
+  conditions:
+  - message: Setup complete
+    reason: Ready
+    status: "True"
+    type: Ready
+  - message: " Memcached instance has been provisioned"
+    reason: Ready
+    status: "True"
+    type: MemcachedReady
+  - message: RoleBinding created
+    reason: Ready
+    status: "True"
+    type: RoleBindingReady
+  - message: Role created
+    reason: Ready
+    status: "True"
+    type: RoleReady
+  - message: ServiceAccount created
+    reason: Ready
+    status: "True"
+    type: ServiceAccountReady
+  - message: Service config create completed
+    reason: Ready
+    status: "True"
+    type: ServiceConfigReady
+  - message: Setup complete
+    reason: Ready
+    status: "True"
+    type: SwiftProxyReady
+  - message: Setup complete
+    reason: Ready
+    status: "True"
+    type: SwiftRingReady
+  - message: Setup complete
+    reason: Ready
+    status: "True"
+    type: SwiftStorageReady
+---
+apiVersion: swift.openstack.org/v1beta1
+kind: SwiftProxy
+metadata:
+  name: swift-proxy
+spec:
+  replicas: 1
+  tls:
+    api:
+      internal:
+        secretName: cert-swift-internal-svc
+      public:
+        secretName: cert-swift-public-svc
+    caBundleSecretName: combined-ca-bundle
+status:
+  conditions:
+  - message: Setup complete
+    reason: Ready
+    status: "True"
+    type: Ready
+  - message: Exposing service completed
+    reason: Ready
+    status: "True"
+    type: ExposeServiceReady
+  - message: Input data complete
+    reason: Ready
+    status: "True"
+    type: InputReady
+  - message: Setup complete
+    reason: Ready
+    status: "True"
+    type: KeystoneEndpointReady
+  - message: Setup complete
+    reason: Ready
+    status: "True"
+    type: KeystoneServiceReady
+  - message: NetworkAttachments completed
+    reason: Ready
+    status: "True"
+    type: NetworkAttachmentsReady
+  - message: Service config create completed
+    reason: Ready
+    status: "True"
+    type: ServiceConfigReady
+  - message: Setup complete
+    reason: Ready
+    status: "True"
+    type: SwiftProxyReady
+  - message: Input data complete
+    reason: Ready
+    status: "True"
+    type: TLSInputReady
+  readyCount: 1
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: swift-proxy
+spec:
+  template:
+    spec:
+      containers:
+      - command:
+        - /usr/local/bin/container-scripts/ring-sync.sh
+        livenessProbe:
+          httpGet:
+            scheme: HTTPS
+        name: ring-sync
+        readinessProbe:
+          httpGet:
+            scheme: HTTPS
+        volumeMounts:
+        - mountPath: /var/lib/config-data/default
+          name: config-data
+          readOnly: true
+        - mountPath: /var/lib/config-data/swiftconf
+          name: swiftconf
+          readOnly: true
+        - mountPath: /var/lib/config-data/rings
+          name: ring-data
+          readOnly: true
+        - mountPath: /etc/swift
+          name: config-data-merged
+        - mountPath: /usr/local/bin/container-scripts
+          name: scripts
+          readOnly: true
+        - mountPath: /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem
+          name: combined-ca-bundle
+          readOnly: true
+          subPath: tls-ca-bundle.pem
+      - args:
+        - -DFOREGROUND
+        command:
+        - /usr/sbin/httpd
+        livenessProbe:
+          httpGet:
+            scheme: HTTPS
+        name: proxy-httpd
+        readinessProbe:
+          httpGet:
+            scheme: HTTPS
+        volumeMounts:
+        - mountPath: /var/lib/config-data/default
+          name: config-data
+          readOnly: true
+        - mountPath: /var/lib/config-data/swiftconf
+          name: swiftconf
+          readOnly: true
+        - mountPath: /var/lib/config-data/rings
+          name: ring-data
+          readOnly: true
+        - mountPath: /etc/swift
+          name: config-data-merged
+        - mountPath: /usr/local/bin/container-scripts
+          name: scripts
+          readOnly: true
+        - mountPath: /etc/httpd/conf/httpd.conf
+          name: config-data
+          readOnly: true
+          subPath: httpd.conf
+        - mountPath: /etc/httpd/conf.d/ssl.conf
+          name: config-data
+          readOnly: true
+          subPath: ssl.conf
+        - mountPath: /run/httpd
+          name: run-httpd
+        - mountPath: /var/log/httpd
+          name: log-httpd
+        - mountPath: /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem
+          name: combined-ca-bundle
+          readOnly: true
+          subPath: tls-ca-bundle.pem
+        - mountPath: /etc/pki/tls/certs/internal.crt
+          name: internal-tls-certs
+          readOnly: true
+          subPath: tls.crt
+        - mountPath: /etc/pki/tls/private/internal.key
+          name: internal-tls-certs
+          readOnly: true
+          subPath: tls.key
+        - mountPath: /etc/pki/tls/certs/public.crt
+          name: public-tls-certs
+          readOnly: true
+          subPath: tls.crt
+        - mountPath: /etc/pki/tls/private/public.key
+          name: public-tls-certs
+          readOnly: true
+          subPath: tls.key
+      - command:
+        - /usr/bin/swift-proxy-server
+        - /etc/swift/proxy-server.conf
+        - -v
+        livenessProbe:
+          httpGet:
+            scheme: HTTPS
+        name: proxy-server
+        readinessProbe:
+          httpGet:
+            scheme: HTTPS
+        volumeMounts:
+        - mountPath: /var/lib/config-data/default
+          name: config-data
+          readOnly: true
+        - mountPath: /var/lib/config-data/swiftconf
+          name: swiftconf
+          readOnly: true
+        - mountPath: /var/lib/config-data/rings
+          name: ring-data
+          readOnly: true
+        - mountPath: /etc/swift
+          name: config-data-merged
+        - mountPath: /usr/local/bin/container-scripts
+          name: scripts
+          readOnly: true
+        - mountPath: /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem
+          name: combined-ca-bundle
+          readOnly: true
+          subPath: tls-ca-bundle.pem
+      securityContext:
+        fsGroup: 42445
+      volumes:
+      - name: config-data
+        secret:
+          defaultMode: 420
+          secretName: swift-proxy-config-data
+      - name: swiftconf
+        secret:
+          defaultMode: 420
+          secretName: swift-conf
+      - configMap:
+          defaultMode: 420
+          name: swift-ring-files
+        name: ring-data
+      - emptyDir: {}
+        name: config-data-merged
+      - name: scripts
+        secret:
+          defaultMode: 493
+          secretName: swift-proxy-scripts
+      - emptyDir: {}
+        name: run-httpd
+      - emptyDir: {}
+        name: log-httpd
+      - name: combined-ca-bundle
+        secret:
+          defaultMode: 292
+          secretName: combined-ca-bundle
+      - name: internal-tls-certs
+        secret:
+          defaultMode: 256
+          secretName: cert-swift-internal-svc
+      - name: public-tls-certs
+        secret:
+          defaultMode: 256
+          secretName: cert-swift-public-svc
+status:
+  readyReplicas: 1
+---
+# the actual addresses of the api endpoints are platform specific, so we can't rely on
+# kuttl asserts to check them. This short script gathers the addresses and checks that
+# the two endpoints are defined and their addresses follow the default pattern
+apiVersion: kuttl.dev/v1beta1
+kind: TestAssert
+commands:
+  - script: |
+      template='{{.spec.endpoints.internal}}{{":"}}{{.spec.endpoints.public}}{{"\n"}}'
+      regex="https:\/\/swift-internal.$NAMESPACE.*:https:\/\/swift-public.$NAMESPACE.*"
+      apiEndpoints=$(oc get -n $NAMESPACE KeystoneEndpoint swift -o go-template="$template")
+      matches=$(echo "$apiEndpoints" | sed -e "s?$regex??")
+      if [[ -n "$matches" ]]; then
+        exit 1
+      fi

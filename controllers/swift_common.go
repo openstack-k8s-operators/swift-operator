@@ -1,4 +1,5 @@
 /*
+Copyright 2022.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,23 +14,21 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package swift
+package controllers
 
+// fields to index to reconcile when change
 const (
-	RunAsUser      int64 = 42445
-	ProxyPort      int32 = 8081
-	ProxyHttpdPort int32 = 8080
-	MemcachedPort  int32 = 11211
+	passwordSecretField     = ".spec.secret"
+	caBundleSecretNameField = ".spec.tls.caBundleSecretName"
+	tlsAPIInternalField     = ".spec.tls.api.internal.secretName"
+	tlsAPIPublicField       = ".spec.tls.api.public.secretName"
+)
 
-	AccountServerPort   int32 = 6202
-	ContainerServerPort int32 = 6201
-	ObjectServerPort    int32 = 6200
-	RsyncPort           int32 = 873
-
-	ServiceName        = "swift"
-	ServiceType        = "object-store"
-	ServiceAccount     = "swift-swift"
-	ServiceDescription = "Swift Object Storage"
-
-	ClaimName = "srv"
+var (
+	swiftProxyWatchFields = []string{
+		passwordSecretField,
+		caBundleSecretNameField,
+		tlsAPIInternalField,
+		tlsAPIPublicField,
+	}
 )

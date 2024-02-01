@@ -65,6 +65,18 @@ func getProxyVolumes(instance *swiftv1beta1.SwiftProxy) []corev1.Volume {
 				},
 			},
 		},
+		{
+			Name: "run-httpd",
+			VolumeSource: corev1.VolumeSource{
+				EmptyDir: &corev1.EmptyDirVolumeSource{Medium: ""},
+			},
+		},
+		{
+			Name: "log-httpd",
+			VolumeSource: corev1.VolumeSource{
+				EmptyDir: &corev1.EmptyDirVolumeSource{Medium: ""},
+			},
+		},
 	}
 }
 
@@ -94,6 +106,34 @@ func getProxyVolumeMounts() []corev1.VolumeMount {
 			Name:      "scripts",
 			MountPath: "/usr/local/bin/container-scripts",
 			ReadOnly:  true,
+		},
+	}
+}
+
+// getHttpdVolumeMounts - Returns the VolumeMounts used by the httpd sidecar
+func getHttpdVolumeMounts() []corev1.VolumeMount {
+	return []corev1.VolumeMount{
+		{
+			Name:      "config-data",
+			MountPath: "/etc/httpd/conf/httpd.conf",
+			SubPath:   "httpd.conf",
+			ReadOnly:  true,
+		},
+		{
+			Name:      "config-data",
+			MountPath: "/etc/httpd/conf.d/ssl.conf",
+			SubPath:   "ssl.conf",
+			ReadOnly:  true,
+		},
+		{
+			Name:      "run-httpd",
+			MountPath: "/run/httpd",
+			ReadOnly:  false,
+		},
+		{
+			Name:      "log-httpd",
+			MountPath: "/var/log/httpd",
+			ReadOnly:  false,
 		},
 	}
 }
