@@ -70,6 +70,11 @@ type SwiftStorageSpec struct {
 	// +kubebuilder:default=""
 	// List of memcached servers.
 	MemcachedServers string `json:"memcachedServers"`
+
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default=false
+	// If the container sharder daemon is enabled.
+	ContainerSharderEnabled bool `json:"containerSharderEnabled"`
 }
 
 // SwiftStorageStatus defines the observed state of SwiftStorage

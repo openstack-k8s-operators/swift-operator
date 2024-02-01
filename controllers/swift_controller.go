@@ -395,6 +395,7 @@ func (r *SwiftReconciler) storageCreateOrUpdate(ctx context.Context, instance *s
 		SwiftConfSecret:         instance.Spec.SwiftConfSecret,
 		NetworkAttachments:      instance.Spec.SwiftStorage.NetworkAttachments,
 		MemcachedServers:        memcachedServers,
+		ContainerSharderEnabled: instance.Spec.SwiftStorage.ContainerSharderEnabled,
 	}
 
 	deployment := &swiftv1.SwiftStorage{

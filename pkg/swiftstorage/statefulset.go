@@ -38,7 +38,7 @@ func getPorts(port int32, name string) []corev1.ContainerPort {
 func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.Container {
 	securityContext := swift.GetSecurityContext()
 
-	return []corev1.Container{
+	containers := []corev1.Container{
 		{
 			Name:            "ring-sync",
 			Image:           swiftstorage.Spec.ContainerImageProxy,
@@ -164,6 +164,19 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.Cont
 			Command:         []string{"/usr/bin/rsync", "--daemon", "--no-detach", "--config=/etc/swift/rsyncd.conf", "--log-file=/dev/stdout"},
 		},
 	}
+
+	if swiftstorage.Spec.ContainerSharderEnabled {
+		containers = append(containers, corev1.Container{
+			Name:            "container-sharder",
+			Image:           swiftstorage.Spec.ContainerImageContainer,
+			ImagePullPolicy: corev1.PullIfNotPresent,
+			SecurityContext: &securityContext,
+			VolumeMounts:    getStorageVolumeMounts(),
+			Command:         []string{"/usr/bin/swift-container-sharder", "/etc/swift/container-server.conf", "-v"},
+		})
+	}
+
+	return containers
 }
 
 func StatefulSet(
