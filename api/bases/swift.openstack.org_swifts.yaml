@@ -344,6 +344,10 @@ spec:
                   containerImageProxy:
                     description: Image URL for Swift proxy service
                     type: string
+                  containerSharderEnabled:
+                    default: false
+                    description: If the container sharder daemon is enabled.
+                    type: boolean
                   memcachedServers:
                     default: ""
                     description: List of memcached servers.
