@@ -193,14 +193,14 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		}
 	}
 
-	_, err = networkattachment.CreateNetworksAnnotation(instance.Namespace, instance.Spec.NetworkAttachments)
+	serviceAnnotations, err := networkattachment.CreateNetworksAnnotation(instance.Namespace, instance.Spec.NetworkAttachments)
 	if err != nil {
 		return ctrl.Result{}, fmt.Errorf("failed create network annotation from %s: %w",
 			instance.Spec.NetworkAttachments, err)
 	}
 
 	// Statefulset with all backend containers
-	sset := statefulset.NewStatefulSet(swiftstorage.StatefulSet(instance, serviceLabels), 5*time.Second)
+	sset := statefulset.NewStatefulSet(swiftstorage.StatefulSet(instance, serviceLabels, serviceAnnotations), 5*time.Second)
 	ctrlResult, err = sset.CreateOrPatch(ctx, helper)
 	if err != nil {
 		return ctrlResult, err
