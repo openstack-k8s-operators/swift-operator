@@ -430,6 +430,7 @@ func (r *SwiftReconciler) proxyCreateOrUpdate(ctx context.Context, instance *swi
 		Override:            instance.Spec.SwiftProxy.Override,
 		NetworkAttachments:  instance.Spec.SwiftProxy.NetworkAttachments,
 		MemcachedServers:    memcachedServers,
+		TLS:                 instance.Spec.SwiftProxy.TLS,
 	}
 
 	deployment := &swiftv1.SwiftProxy{
