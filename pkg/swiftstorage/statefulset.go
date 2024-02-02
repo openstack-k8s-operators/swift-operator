@@ -175,7 +175,7 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.Cont
 }
 
 func StatefulSet(
-	swiftstorage *swiftv1beta1.SwiftStorage, labels map[string]string) *appsv1.StatefulSet {
+	swiftstorage *swiftv1beta1.SwiftStorage, labels map[string]string, annotations map[string]string) *appsv1.StatefulSet {
 
 	trueVal := true
 	OnRootMismatch := corev1.FSGroupChangeOnRootMismatch
@@ -195,7 +195,8 @@ func StatefulSet(
 			Replicas: swiftstorage.Spec.Replicas,
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: labels,
+					Labels:      labels,
+					Annotations: annotations,
 				},
 				Spec: corev1.PodSpec{
 					ServiceAccountName: swift.ServiceAccount,

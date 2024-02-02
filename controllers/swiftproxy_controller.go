@@ -325,14 +325,14 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		}
 	}
 
-	_, err = networkattachment.CreateNetworksAnnotation(instance.Namespace, instance.Spec.NetworkAttachments)
+	serviceAnnotations, err := networkattachment.CreateNetworksAnnotation(instance.Namespace, instance.Spec.NetworkAttachments)
 	if err != nil {
 		return ctrl.Result{}, fmt.Errorf("failed create network annotation from %s: %w",
 			instance.Spec.NetworkAttachments, err)
 	}
 
 	// Create Deployment
-	depl := deployment.NewDeployment(swiftproxy.Deployment(instance, serviceLabels), 5*time.Second)
+	depl := deployment.NewDeployment(swiftproxy.Deployment(instance, serviceLabels, serviceAnnotations), 5*time.Second)
 	ctrlResult, err = depl.CreateOrPatch(ctx, helper)
 	if err != nil {
 		return ctrlResult, err

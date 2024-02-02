@@ -28,7 +28,7 @@ import (
 )
 
 func Deployment(
-	instance *swiftv1beta1.SwiftProxy, labels map[string]string) *appsv1.Deployment {
+	instance *swiftv1beta1.SwiftProxy, labels map[string]string, annotations map[string]string) *appsv1.Deployment {
 
 	trueVal := true
 	securityContext := swift.GetSecurityContext()
@@ -65,7 +65,8 @@ func Deployment(
 			Replicas: instance.Spec.Replicas,
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: labels,
+					Labels:      labels,
+					Annotations: annotations,
 				},
 				Spec: corev1.PodSpec{
 					ServiceAccountName: swift.ServiceAccount,
