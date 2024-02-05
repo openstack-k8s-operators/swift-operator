@@ -1,5 +1,5 @@
-ARG GOLANG_BUILDER=golang:1.19
-ARG OPERATOR_BASE_IMAGE=gcr.io/distroless/static:nonroot
+ARG GOLANG_BUILDER=golang:1.20
+ARG OPERATOR_BASE_IMAGE=gcr.io/distroless/base
 
 # Build the manager binary
 FROM $GOLANG_BUILDER AS builder
@@ -27,7 +27,7 @@ RUN mkdir -p ${DEST_ROOT}/usr/local/bin/
 RUN if [ ! -f $CACHITO_ENV_FILE ]; then go mod download ; fi
 
 # Build manager
-RUN if [ -f $CACHITO_ENV_FILE ] ; then source $CACHITO_ENV_FILE ; fi ; CGO_ENABLED=0  GO111MODULE=on go build ${GO_BUILD_EXTRA_ARGS} -a -o ${DEST_ROOT}/manager main.go
+RUN if [ -f $CACHITO_ENV_FILE ] ; then source $CACHITO_ENV_FILE ; fi ; CGO_ENABLED=1 GO111MODULE=on go build ${GO_BUILD_EXTRA_ARGS} -a -o ${DEST_ROOT}/manager main.go
 
 RUN cp -r templates ${DEST_ROOT}/templates
 
