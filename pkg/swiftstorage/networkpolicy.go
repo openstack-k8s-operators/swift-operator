@@ -32,6 +32,7 @@ import (
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
 	"github.com/openstack-k8s-operators/swift-operator/pkg/swift"
 	"github.com/openstack-k8s-operators/swift-operator/pkg/swiftproxy"
+	"github.com/openstack-k8s-operators/swift-operator/pkg/swiftring"
 )
 
 //+kubebuilder:rbac:groups=networking.k8s.io,resources=networkpolicies,verbs=get;list;watch;create;update;patch;delete
@@ -46,6 +47,7 @@ func NetworkPolicy(
 
 	storageLabels := Labels()
 	proxyLabels := swiftproxy.Labels()
+	ringLabels := swiftring.Labels()
 
 	storagePeers := []networkingv1.NetworkPolicyPeer{
 		{
@@ -106,6 +108,11 @@ func NetworkPolicy(
 						{
 							PodSelector: &metav1.LabelSelector{
 								MatchLabels: proxyLabels,
+							},
+						},
+						{
+							PodSelector: &metav1.LabelSelector{
+								MatchLabels: ringLabels,
 							},
 						},
 					},

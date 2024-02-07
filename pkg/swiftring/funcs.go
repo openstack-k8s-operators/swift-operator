@@ -16,5 +16,5 @@ limitations under the License.
 package swiftring
 
 func Labels() map[string]string {
-	return map[string]string{"app.kubernetes.io/name": "SwiftRing"}
+	return map[string]string{"batch.kubernetes.io/job-name": "SwiftRing"}
 }
