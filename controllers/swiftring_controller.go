@@ -27,7 +27,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	"github.com/openstack-k8s-operators/lib-common/modules/common/condition"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/configmap"
@@ -196,8 +195,7 @@ func (r *SwiftRingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *SwiftRingReconciler) SetupWithManager(mgr ctrl.Manager) error {
-
-	deviceConfigMapFilter := func(o client.Object) []reconcile.Request {
+	deviceConfigMapFilter := func(ctx context.Context, o client.Object) []reconcile.Request {
 		result := []reconcile.Request{}
 		if o.GetName() == swiftv1beta1.DeviceConfigMapName {
 			// There should be only one SwiftRing instance within
@@ -225,6 +223,6 @@ func (r *SwiftRingReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Owns(&corev1.ConfigMap{}).
 		Owns(&rbacv1.ClusterRole{}).
 		Owns(&rbacv1.ClusterRoleBinding{}).
-		Watches(&source.Kind{Type: &corev1.ConfigMap{}}, handler.EnqueueRequestsFromMapFunc(deviceConfigMapFilter)).
+		Watches(&corev1.ConfigMap{}, handler.EnqueueRequestsFromMapFunc(deviceConfigMapFilter)).
 		Complete(r)
 }
