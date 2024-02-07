@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -52,6 +53,15 @@ type SwiftStorageReconciler struct {
 	Scheme  *runtime.Scheme
 	Log     logr.Logger
 	Kclient kubernetes.Interface
+}
+
+// Partial struct of the NetworkAttachmentDefinition
+// config to retrieve the subnet range
+type Netconfig struct {
+	Name string `json:"name"`
+	Ipam struct {
+		Range string `json:"range"`
+	} `json:"ipam"`
 }
 
 //+kubebuilder:rbac:groups=swift.openstack.org,resources=swiftstorages,verbs=get;list;watch;create;update;patch;delete
@@ -161,18 +171,10 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		return ctrlResult, nil
 	}
 
-	// Limit internal storage traffic to Swift services
-	np := swiftstorage.NewNetworkPolicy(swiftstorage.NetworkPolicy(instance), serviceLabels, 5*time.Second)
-	ctrlResult, err = np.CreateOrPatch(ctx, helper)
-	if err != nil {
-		return ctrlResult, err
-	} else if (ctrlResult != ctrl.Result{}) {
-		return ctrlResult, nil
-	}
-
 	// networks to attach to
+	storageNetworkRange := ""
 	for _, netAtt := range instance.Spec.NetworkAttachments {
-		_, err := networkattachment.GetNADWithName(ctx, helper, netAtt, instance.Namespace)
+		nad, err := networkattachment.GetNADWithName(ctx, helper, netAtt, instance.Namespace)
 		if err != nil {
 			if apierrors.IsNotFound(err) {
 				instance.Status.Conditions.Set(condition.FalseCondition(
@@ -191,12 +193,31 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 				err.Error()))
 			return ctrl.Result{}, err
 		}
+
+		// Get the storage network subnet range to include it in the
+		// NetworkPolicy for the storage pods
+		config := Netconfig{}
+		if err = json.Unmarshal([]byte(nad.Spec.Config), &config); err != nil {
+			return ctrlResult, err
+		}
+		if config.Name == "storage" {
+			storageNetworkRange = config.Ipam.Range
+		}
 	}
 
 	serviceAnnotations, err := networkattachment.CreateNetworksAnnotation(instance.Namespace, instance.Spec.NetworkAttachments)
 	if err != nil {
 		return ctrl.Result{}, fmt.Errorf("failed create network annotation from %s: %w",
 			instance.Spec.NetworkAttachments, err)
+	}
+
+	// Limit internal storage traffic to Swift services
+	np := swiftstorage.NewNetworkPolicy(swiftstorage.NetworkPolicy(instance, storageNetworkRange), serviceLabels, 5*time.Second)
+	ctrlResult, err = np.CreateOrPatch(ctx, helper)
+	if err != nil {
+		return ctrlResult, err
+	} else if (ctrlResult != ctrl.Result{}) {
+		return ctrlResult, nil
 	}
 
 	// Statefulset with all backend containers
