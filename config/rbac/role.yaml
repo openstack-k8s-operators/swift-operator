@@ -168,6 +168,18 @@ rules:
   - list
   - watch
 - apiGroups:
+  - network.openstack.org
+  resources:
+  - dnsdata
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
   - networking.k8s.io
   resources:
   - networkpolicies
