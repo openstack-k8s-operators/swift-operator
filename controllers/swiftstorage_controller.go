@@ -136,22 +136,6 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	serviceLabels := swiftstorage.Labels()
 	envVars := make(map[string]env.Setter)
 
-	// Check if there is already an existing ConfigMap and device list. If
-	// not, create an initial device list to bootstrap the cluster with The
-	// weights are simply set to the requested size, this will be changed
-	// once all StatefulSets are running
-	_, ctrlResult, err := configmap.GetConfigMap(ctx, helper, instance, swiftv1beta1.DeviceConfigMapName, 5*time.Second)
-	if err != nil {
-		return ctrlResult, err
-	} else if (ctrlResult != ctrl.Result{}) {
-		devices := swiftstorage.DeviceList(ctx, helper, instance)
-		tpl := swiftstorage.DeviceConfigMapTemplates(instance, devices)
-		err = configmap.EnsureConfigMaps(ctx, helper, instance, tpl, &envVars)
-		if err != nil {
-			return ctrl.Result{}, err
-		}
-	}
-
 	// Create a ConfigMap populated with content from templates/
 	tpl := swiftstorage.ConfigMapTemplates(instance, serviceLabels, instance.Spec.MemcachedServers)
 	err = configmap.EnsureConfigMaps(ctx, helper, instance, tpl, &envVars)
@@ -164,7 +148,7 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	if err != nil {
 		return ctrl.Result{}, err
 	}
-	ctrlResult, err = svc.CreateOrPatch(ctx, helper)
+	ctrlResult, err := svc.CreateOrPatch(ctx, helper)
 	if err != nil {
 		return ctrlResult, err
 	} else if (ctrlResult != ctrl.Result{}) {
@@ -231,13 +215,6 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 
 	instance.Status.ReadyCount = sset.GetStatefulSet().Status.ReadyReplicas
 	if instance.Status.ReadyCount == *instance.Spec.Replicas {
-		envVars := make(map[string]env.Setter)
-		devices := swiftstorage.DeviceList(ctx, helper, instance)
-		tpl = swiftstorage.DeviceConfigMapTemplates(instance, devices)
-		err = configmap.EnsureConfigMaps(ctx, helper, instance, tpl, &envVars)
-		if err != nil {
-			return ctrl.Result{}, err
-		}
 		instance.Status.Conditions.MarkTrue(condition.ReadyCondition, condition.ReadyMessage)
 		instance.Status.Conditions.MarkTrue(swiftv1beta1.SwiftStorageReadyCondition, condition.ReadyMessage)
 		if err := r.Status().Update(ctx, instance); err != nil {
