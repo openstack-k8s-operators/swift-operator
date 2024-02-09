@@ -45,18 +45,3 @@ func ConfigMapTemplates(instance *swiftv1beta1.SwiftStorage, labels map[string]s
 		},
 	}
 }
-
-func DeviceConfigMapTemplates(instance *swiftv1beta1.SwiftStorage, devices string) []util.Template {
-	data := make(map[string]string)
-	data["devices.csv"] = devices
-
-	return []util.Template{
-		{
-			Name:         swiftv1beta1.DeviceConfigMapName,
-			Namespace:    instance.Namespace,
-			Type:         util.TemplateTypeNone,
-			InstanceType: instance.Kind,
-			CustomData:   data,
-		},
-	}
-}
