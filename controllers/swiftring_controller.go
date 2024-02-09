@@ -35,6 +35,7 @@ import (
 	"github.com/openstack-k8s-operators/lib-common/modules/common/helper"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/job"
 
+	dataplanev1 "github.com/openstack-k8s-operators/dataplane-operator/api/v1beta1"
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
 	"github.com/openstack-k8s-operators/swift-operator/pkg/swift"
 	"github.com/openstack-k8s-operators/swift-operator/pkg/swiftring"
@@ -285,5 +286,6 @@ func (r *SwiftRingReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Owns(&rbacv1.ClusterRole{}).
 		Owns(&rbacv1.ClusterRoleBinding{}).
 		Watches(&swiftv1beta1.SwiftStorage{}, handler.EnqueueRequestsFromMapFunc(swiftRingFilter)).
+		Watches(&dataplanev1.OpenStackDataPlaneNodeSet{}, handler.EnqueueRequestsFromMapFunc(swiftRingFilter)).
 		Complete(r)
 }

@@ -17,5 +17,7 @@ package swiftring
 
 const (
 	// ComponentName -
-	ComponentName = "swift-ring"
+	ComponentName   = "swift-ring"
+	DataplaneDisks  = "edpm_swift_disks"
+	DataplaneDomain = "storage.example.com"
 )

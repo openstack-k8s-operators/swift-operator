@@ -17,7 +17,9 @@ package swiftring
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -31,11 +33,13 @@ import (
 	"github.com/openstack-k8s-operators/lib-common/modules/common/helper"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/util"
 
+	dataplanev1 "github.com/openstack-k8s-operators/dataplane-operator/api/v1beta1"
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
 	"github.com/openstack-k8s-operators/swift-operator/pkg/swift"
 )
 
 //+kubebuilder:rbac:groups=core,resources=persistentvolumeclaims,verbs=get;list;watch
+//+kubebuilder:rbac:groups=dataplane.openstack.org,resources=openstackdataplanenodesets,verbs=get;list;watch
 
 func DeviceList(ctx context.Context, h *helper.Helper, instance *swiftv1beta1.SwiftRing) (string, string, error) {
 	// Returns a list of devices as CSV
@@ -65,6 +69,51 @@ func DeviceList(ctx context.Context, h *helper.Helper, instance *swiftv1beta1.Sw
 			weight = weight / (1000 * 1000 * 1000) // 10GiB gets a weight of 10 etc.
 			// CSV: region,zone,hostname,devicename,weight
 			devices = append(devices, fmt.Sprintf("1,1,%s-%d.%s,%s,%d\n", storageInstance.Name, replica, storageInstance.Name, "d1", weight))
+		}
+	}
+
+	// Get all OpenStackDataPlaneNodeSets that deploy the Swift service and
+	// their used Swift disks
+	nodeSets := &dataplanev1.OpenStackDataPlaneNodeSetList{}
+	err = h.GetClient().List(context.Background(), nodeSets, listOpts...)
+	if err != nil && !errors.IsNotFound(err) {
+		return "", "", err
+	}
+	for _, nodeSet := range nodeSets.Items {
+		for _, service := range nodeSet.Spec.Services {
+			if service == "swift" {
+				// Get the global disk vars first that are used for all
+				// nodes if not set otherwise per-node
+				globalDisks := make(map[string]swiftv1beta1.SwiftDisk)
+				if edpmSwiftDisks, found := nodeSet.Spec.NodeTemplate.Ansible.AnsibleVars[DataplaneDisks]; found {
+					var swiftDisks []swiftv1beta1.SwiftDisk
+					if err := json.Unmarshal(edpmSwiftDisks, &swiftDisks); err == nil {
+						for _, disk := range swiftDisks {
+							globalDisks[disk.Path] = disk
+						}
+					}
+				}
+
+				for _, node := range nodeSet.Spec.Nodes {
+					hostName := fmt.Sprintf("%s.%s", node.HostName, DataplaneDomain)
+					hostDisks := make(map[string]swiftv1beta1.SwiftDisk)
+					for k, v := range globalDisks {
+						hostDisks[k] = v
+					}
+					// These overwrite the global vars if set
+					if edpmSwiftDisks, found := node.Ansible.AnsibleVars[DataplaneDisks]; found {
+						var swiftDisks []swiftv1beta1.SwiftDisk
+						if err := json.Unmarshal(edpmSwiftDisks, &swiftDisks); err == nil {
+							for _, disk := range swiftDisks {
+								hostDisks[disk.Path] = disk
+							}
+						}
+					}
+					for _, disk := range hostDisks {
+						devices = append(devices, fmt.Sprintf("%d,%d,%s,%s,%d\n", disk.Region, disk.Zone, hostName, filepath.Base(disk.Path), disk.Weight))
+					}
+				}
+			}
 		}
 	}
 
