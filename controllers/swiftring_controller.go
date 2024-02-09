@@ -151,31 +151,40 @@ func (r *SwiftRingReconciler) reconcileNormal(ctx context.Context, instance *swi
 
 	serviceLabels := swiftring.Labels()
 
-	// Create a ConfigMap populated with content from templates/
-	envVars := make(map[string]env.Setter)
-	tpl := swiftring.ConfigMapTemplates(instance, serviceLabels)
-	err := configmap.EnsureConfigMaps(ctx, helper, instance, tpl, &envVars)
-	if err != nil {
-		return ctrl.Result{}, err
-	}
-
 	// Swift ring init job - start
 	if instance.Status.Hash == nil {
 		instance.Status.Hash = map[string]string{}
 	}
-	ringCreateHash := instance.Status.Hash[swiftv1beta1.RingCreateHash]
 
-	// Check if the device list ConfigMap did change and if so, delete the
-	// rebalance Job. This will result in a new Job that rebalances with
-	// the updated device list
-	_, deviceListHash, err := configmap.GetConfigMapAndHashWithName(ctx, helper, swift.DeviceConfigMapName, instance.Namespace)
+	deviceList, deviceListHash, err := swiftring.DeviceList(ctx, helper, instance)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
+
 	if instance.Status.Hash[swiftv1beta1.DeviceListHash] != deviceListHash {
-		if err := job.DeleteJob(ctx, helper, instance.Name+"-rebalance", instance.Namespace); err != nil {
+		// Create or update the devicelist ConfigMap
+		envVars := make(map[string]env.Setter)
+		tpl := swiftring.ConfigMapTemplates(instance, serviceLabels, deviceList)
+		err = configmap.EnsureConfigMaps(ctx, helper, instance, tpl, &envVars)
+		if err != nil {
 			return ctrl.Result{}, err
 		}
+
+		// Delete a possibly still existing job that finished to re-run the job
+		j, err := job.GetJobWithName(ctx, helper, instance.Name+"-rebalance", instance.Namespace)
+		if err != nil {
+			if !apierrors.IsNotFound(err) {
+				return ctrl.Result{}, err
+			}
+		} else {
+			if j.Status.Active == 0 {
+				err = job.DeleteJob(ctx, helper, instance.Name+"-rebalance", instance.Namespace)
+				if err != nil {
+					return ctrl.Result{}, err
+				}
+			}
+		}
+
 		instance.Status.Hash[swiftv1beta1.RingCreateHash] = ""
 		instance.Status.Hash[swiftv1beta1.DeviceListHash] = deviceListHash
 		if err := r.Status().Update(ctx, instance); err != nil {
@@ -183,7 +192,7 @@ func (r *SwiftRingReconciler) reconcileNormal(ctx context.Context, instance *swi
 		}
 	}
 
-	ringCreateJob := job.NewJob(swiftring.GetRingJob(instance, serviceLabels), swiftv1beta1.RingCreateHash, false, 5*time.Second, ringCreateHash)
+	ringCreateJob := job.NewJob(swiftring.GetRingJob(instance, serviceLabels), "rebalance", false, 5*time.Second, instance.Status.Hash[swiftv1beta1.RingCreateHash])
 	ctrlResult, err := ringCreateJob.DoJob(ctx, helper)
 	if (ctrlResult != ctrl.Result{}) {
 		instance.Status.Conditions.Set(condition.FalseCondition(
@@ -191,9 +200,6 @@ func (r *SwiftRingReconciler) reconcileNormal(ctx context.Context, instance *swi
 			condition.RequestedReason,
 			condition.SeverityInfo,
 			condition.ReadyInitMessage))
-		if err := r.Status().Update(ctx, instance); err != nil {
-			return ctrl.Result{}, err
-		}
 		return ctrlResult, nil
 	}
 	if err != nil {
@@ -210,7 +216,6 @@ func (r *SwiftRingReconciler) reconcileNormal(ctx context.Context, instance *swi
 
 	if ringCreateJob.HasChanged() {
 		instance.Status.Hash[swiftv1beta1.RingCreateHash] = ringCreateJob.GetHash()
-		instance.Status.Hash[swiftv1beta1.DeviceListHash] = deviceListHash
 		if err := r.Status().Update(ctx, instance); err != nil {
 			return ctrl.Result{}, err
 		}
@@ -255,24 +260,20 @@ func (r *SwiftRingReconciler) reconcileDelete(ctx context.Context, instance *swi
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *SwiftRingReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	deviceConfigMapFilter := func(ctx context.Context, o client.Object) []reconcile.Request {
+	swiftRingFilter := func(ctx context.Context, o client.Object) []reconcile.Request {
 		result := []reconcile.Request{}
-		if o.GetName() == swift.DeviceConfigMapName {
-			// There should be only one SwiftRing instance within
-			// the Namespace - that needs to be reconciled
-			swiftRings := &swiftv1beta1.SwiftRingList{}
-			listOpts := []client.ListOption{client.InNamespace(o.GetNamespace())}
-			err := r.Client.List(context.Background(), swiftRings, listOpts...)
-			if err != nil {
-				return nil
+		swiftRings := &swiftv1beta1.SwiftRingList{}
+		listOpts := []client.ListOption{client.InNamespace(o.GetNamespace())}
+		err := r.Client.List(context.Background(), swiftRings, listOpts...)
+		if err != nil {
+			return nil
+		}
+		for _, cr := range swiftRings.Items {
+			name := client.ObjectKey{
+				Namespace: o.GetNamespace(),
+				Name:      cr.Name,
 			}
-			for _, cr := range swiftRings.Items {
-				name := client.ObjectKey{
-					Namespace: o.GetNamespace(),
-					Name:      cr.Name,
-				}
-				result = append(result, reconcile.Request{NamespacedName: name})
-			}
+			result = append(result, reconcile.Request{NamespacedName: name})
 		}
 		return result
 	}
@@ -283,6 +284,6 @@ func (r *SwiftRingReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Owns(&corev1.ConfigMap{}).
 		Owns(&rbacv1.ClusterRole{}).
 		Owns(&rbacv1.ClusterRoleBinding{}).
-		Watches(&corev1.ConfigMap{}, handler.EnqueueRequestsFromMapFunc(deviceConfigMapFilter)).
+		Watches(&swiftv1beta1.SwiftStorage{}, handler.EnqueueRequestsFromMapFunc(swiftRingFilter)).
 		Complete(r)
 }
