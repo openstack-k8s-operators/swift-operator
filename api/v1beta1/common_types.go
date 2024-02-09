@@ -17,6 +17,8 @@ limitations under the License.
 package v1beta1
 
 const (
-	RingConfigMapName = "swift-ring-files"
+	RingConfigMapName   = "swift-ring-files"
 	DeviceConfigMapName = "swift-storage-devices"
+	DataplaneDisks      = "edpm_swift_disks"
+	DataplaneDomain     = "storage.example.com"
 )
