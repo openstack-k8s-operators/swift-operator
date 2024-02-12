@@ -47,9 +47,22 @@ spec:
               containerImage:
                 description: Image URL for Swift proxy service
                 type: string
+              minPartHours:
+                default: 1
+                description: Minimum numbeir of hours to restrict moving a partition
+                  more than once
+                format: int64
+                minimum: 1
+                type: integer
+              partPower:
+                default: 10
+                description: Partition power of the Swift rings
+                format: int64
+                minimum: 1
+                type: integer
               ringReplicas:
                 default: 1
-                description: Number of Swift object replicas (=copies)
+                description: Number of Swift data replicas (=copies)
                 format: int64
                 minimum: 1
                 type: integer
@@ -59,6 +72,8 @@ spec:
                 type: string
             required:
             - containerImage
+            - minPartHours
+            - partPower
             - ringReplicas
             - swiftConfSecret
             type: object
