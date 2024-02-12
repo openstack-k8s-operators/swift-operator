@@ -32,12 +32,13 @@ import (
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
 	"github.com/openstack-k8s-operators/swift-operator/pkg/swift"
 	"github.com/openstack-k8s-operators/swift-operator/pkg/swiftproxy"
+	"github.com/openstack-k8s-operators/swift-operator/pkg/swiftring"
 )
 
 //+kubebuilder:rbac:groups=networking.k8s.io,resources=networkpolicies,verbs=get;list;watch;create;update;patch;delete
 
 func NetworkPolicy(
-	instance *swiftv1beta1.SwiftStorage) *networkingv1.NetworkPolicy {
+	instance *swiftv1beta1.SwiftStorage, storageNetworkRange string) *networkingv1.NetworkPolicy {
 
 	portAccountServer := intstr.FromInt(int(swift.AccountServerPort))
 	portContainerServer := intstr.FromInt(int(swift.ContainerServerPort))
@@ -46,6 +47,23 @@ func NetworkPolicy(
 
 	storageLabels := Labels()
 	proxyLabels := swiftproxy.Labels()
+	ringLabels := swiftring.Labels()
+
+	storagePeers := []networkingv1.NetworkPolicyPeer{
+		{
+			PodSelector: &metav1.LabelSelector{
+				MatchLabels: storageLabels,
+			},
+		},
+	}
+
+	if storageNetworkRange != "" {
+		storagePeers = append(storagePeers, networkingv1.NetworkPolicyPeer{
+			IPBlock: &networkingv1.IPBlock{
+				CIDR: storageNetworkRange,
+			},
+		})
+	}
 
 	return &networkingv1.NetworkPolicy{
 		ObjectMeta: metav1.ObjectMeta{
@@ -72,13 +90,7 @@ func NetworkPolicy(
 							Port: &portRsync,
 						},
 					},
-					From: []networkingv1.NetworkPolicyPeer{
-						{
-							PodSelector: &metav1.LabelSelector{
-								MatchLabels: storageLabels,
-							},
-						},
-					},
+					From: storagePeers,
 				},
 				{
 					Ports: []networkingv1.NetworkPolicyPort{
@@ -96,6 +108,11 @@ func NetworkPolicy(
 						{
 							PodSelector: &metav1.LabelSelector{
 								MatchLabels: proxyLabels,
+							},
+						},
+						{
+							PodSelector: &metav1.LabelSelector{
+								MatchLabels: ringLabels,
 							},
 						},
 					},
