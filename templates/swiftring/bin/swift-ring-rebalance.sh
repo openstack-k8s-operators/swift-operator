@@ -87,6 +87,7 @@ CONFIGMAP_JSON='{
     "metadata":{
         "name":"'${CM_NAME}'",
         "namespace":"'${NAMESPACE}'",
+        "finalizers": ["swift-ring/finalizer"],
         "ownerReferences": [
             {
                 "apiVersion": "'${OWNER_APIVERSION}'",
