@@ -26,6 +26,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 // SwiftDefaults -
@@ -105,24 +106,24 @@ func (spec *SwiftSpec) Default() {
 var _ webhook.Validator = &Swift{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *Swift) ValidateCreate() error {
+func (r *Swift) ValidateCreate() (admission.Warnings, error) {
 	swiftlog.Info("validate create", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object creation.
-	return nil
+	return nil, nil
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *Swift) ValidateUpdate(old runtime.Object) error {
+func (r *Swift) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
 	swiftlog.Info("validate update", "name", r.Name)
 
 	oldSwift, ok := old.(*Swift)
 	if !ok || oldSwift == nil {
-		return apierrors.NewInternalError(fmt.Errorf("unable to convert existing object"))
+		return nil, apierrors.NewInternalError(fmt.Errorf("unable to convert existing object"))
 	}
 
 	if *r.Spec.SwiftStorage.Replicas < *oldSwift.Spec.SwiftStorage.Replicas {
-		return apierrors.NewForbidden(
+		return nil, apierrors.NewForbidden(
 			schema.GroupResource{
 				Group:    GroupVersion.WithKind("Swift").Group,
 				Resource: GroupVersion.WithKind("Swift").Kind,
@@ -136,13 +137,13 @@ func (r *Swift) ValidateUpdate(old runtime.Object) error {
 		)
 	}
 
-	return nil
+	return nil, nil
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *Swift) ValidateDelete() error {
+func (r *Swift) ValidateDelete() (admission.Warnings, error) {
 	swiftlog.Info("validate delete", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
-	return nil
+	return nil, nil
 }
