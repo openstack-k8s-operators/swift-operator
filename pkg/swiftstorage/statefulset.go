@@ -188,8 +188,8 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.Cont
 }
 
 func StatefulSet(
-	swiftstorage *swiftv1beta1.SwiftStorage, labels map[string]string, annotations map[string]string,
-) *appsv1.StatefulSet {
+	swiftstorage *swiftv1beta1.SwiftStorage, labels map[string]string, annotations map[string]string) *appsv1.StatefulSet {
+
 	trueVal := true
 	OnRootMismatch := corev1.FSGroupChangeOnRootMismatch
 	user := int64(swift.RunAsUser)
@@ -238,7 +238,7 @@ func StatefulSet(
 					AccessModes: []corev1.PersistentVolumeAccessMode{
 						corev1.ReadWriteOnce,
 					},
-					Resources: corev1.VolumeResourceRequirements{
+					Resources: corev1.ResourceRequirements{
 						Requests: corev1.ResourceList{
 							corev1.ResourceStorage: resource.MustParse(swiftstorage.Spec.StorageRequest),
 						},
