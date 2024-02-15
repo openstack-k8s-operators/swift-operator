@@ -19,6 +19,10 @@ spec:
       displayName: Swift Proxy
       kind: SwiftProxy
       name: swiftproxies.swift.openstack.org
+      specDescriptors:
+      - description: TLS - Parameters related to the TLS
+        displayName: TLS
+        path: tls
       version: v1beta1
     - description: SwiftRing is the Schema for the swiftrings API
       displayName: Swift Ring
@@ -29,6 +33,10 @@ spec:
       displayName: Swift
       kind: Swift
       name: swifts.swift.openstack.org
+      specDescriptors:
+      - description: TLS - Parameters related to the TLS
+        displayName: TLS
+        path: swiftProxy.tls
       version: v1beta1
     - description: SwiftStorage is the Schema for the swiftstorages API
       displayName: Swift Storage
