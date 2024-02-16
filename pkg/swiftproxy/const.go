@@ -13,16 +13,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package swiftring
+package swiftproxy
 
-import (
-	"github.com/openstack-k8s-operators/lib-common/modules/common"
-	"github.com/openstack-k8s-operators/swift-operator/pkg/swift"
+const (
+	// ComponentName -
+	ComponentName = "swift-proxy"
 )
-
-func Labels() map[string]string {
-	return map[string]string{
-		common.AppSelector:       swift.ServiceName,
-		common.ComponentSelector: ComponentName,
-	}
-}

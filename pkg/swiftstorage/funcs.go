@@ -25,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/types"
 
+	"github.com/openstack-k8s-operators/lib-common/modules/common"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/helper"
 
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
@@ -59,5 +60,8 @@ func DeviceList(ctx context.Context, h *helper.Helper, instance *swiftv1beta1.Sw
 }
 
 func Labels() map[string]string {
-	return map[string]string{"app.kubernetes.io/name": "SwiftStorage"}
+	return map[string]string{
+		common.AppSelector:       swift.ServiceName,
+		common.ComponentSelector: ComponentName,
+	}
 }
