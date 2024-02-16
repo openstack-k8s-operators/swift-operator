@@ -15,6 +15,14 @@ limitations under the License.
 
 package swiftproxy
 
+import (
+	"github.com/openstack-k8s-operators/lib-common/modules/common"
+	"github.com/openstack-k8s-operators/swift-operator/pkg/swift"
+)
+
 func Labels() map[string]string {
-	return map[string]string{"app.kubernetes.io/name": "SwiftProxy"}
+	return map[string]string{
+		common.AppSelector:       swift.ServiceName,
+		common.ComponentSelector: ComponentName,
+	}
 }

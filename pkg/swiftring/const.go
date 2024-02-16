@@ -15,14 +15,7 @@ limitations under the License.
 
 package swiftring
 
-import (
-	"github.com/openstack-k8s-operators/lib-common/modules/common"
-	"github.com/openstack-k8s-operators/swift-operator/pkg/swift"
+const (
+	// ComponentName -
+	ComponentName = "swift-ring"
 )
-
-func Labels() map[string]string {
-	return map[string]string{
-		common.AppSelector:       swift.ServiceName,
-		common.ComponentSelector: ComponentName,
-	}
-}
