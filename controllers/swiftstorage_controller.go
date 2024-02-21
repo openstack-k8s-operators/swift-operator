@@ -19,7 +19,9 @@ package controllers
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -45,6 +47,7 @@ import (
 	"github.com/openstack-k8s-operators/lib-common/modules/common/configmap"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/env"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/networkattachment"
+	"github.com/openstack-k8s-operators/lib-common/modules/common/pod"
 )
 
 // SwiftStorageReconciler reconciles a SwiftStorage object
@@ -72,6 +75,7 @@ type Netconfig struct {
 //+kubebuilder:rbac:groups=core,resources=configmaps,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=k8s.cni.cncf.io,resources=network-attachment-definitions,verbs=get;list;watch
 //+kubebuilder:rbac:groups=memcached.openstack.org,resources=memcacheds,verbs=get;list;watch;
+//+kubebuilder:rbac:groups=network.openstack.org,resources=dnsdata,verbs=get;list;watch;create;update;patch;delete
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -238,6 +242,53 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		if err != nil {
 			return ctrl.Result{}, err
 		}
+
+		// When the cluster is attached to an external network, create DNS record for every
+		// cluster member so it can be resolved from outside cluster (edpm nodes)
+		podList, err := pod.GetPodListWithLabel(ctx, helper, instance.Namespace, serviceLabels)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+
+		for _, swiftPod := range podList.Items {
+			dnsIP := ""
+			if len(instance.Spec.NetworkAttachments) > 0 {
+				// Currently only IPv4 is supported
+				dnsIP, err = getPodIPv4InNetwork(swiftPod, instance.Namespace, "storage")
+				if err != nil {
+					return ctrl.Result{}, err
+				}
+			}
+
+			if len(dnsIP) == 0 {
+				// If this is reached it means that no IP was found in the network
+				// or no networkAttachment exists. Try to use podIP if possible
+				if len(swiftPod.Status.PodIP) > 0 {
+					dnsIP = swiftPod.Status.PodIP
+				}
+			}
+
+			if len(dnsIP) == 0 {
+				return ctrl.Result{}, errors.New("Unable to get any IP address for pod")
+			}
+
+			hostName := fmt.Sprintf("%s.%s.%s.svc", swiftPod.Name, instance.Name, swiftPod.Namespace)
+
+			// Create DNSData CR
+			err = swiftstorage.DNSData(
+				ctx,
+				helper,
+				hostName,
+				dnsIP,
+				instance,
+				swiftPod,
+				serviceLabels,
+			)
+			if err != nil {
+				return ctrl.Result{}, err
+			}
+		}
+
 		instance.Status.Conditions.MarkTrue(condition.ReadyCondition, condition.ReadyMessage)
 		instance.Status.Conditions.MarkTrue(swiftv1beta1.SwiftStorageReadyCondition, condition.ReadyMessage)
 		if err := r.Status().Update(ctx, instance); err != nil {
@@ -258,4 +309,26 @@ func (r *SwiftStorageReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Owns(&corev1.Service{}).
 		Owns(&networkingv1.NetworkPolicy{}).
 		Complete(r)
+}
+
+func getPodIPv4InNetwork(swiftPod corev1.Pod, namespace string, networkAttachment string) (string, error) {
+	networkName := fmt.Sprintf("%s/%s", namespace, networkAttachment)
+	netStat, err := networkattachment.GetNetworkStatusFromAnnotation(swiftPod.Annotations)
+	if err != nil {
+		err = fmt.Errorf("Error while getting the Network Status for pod %s: %v", swiftPod.Name, err)
+		return "", err
+	}
+	for _, net := range netStat {
+		if net.Name == networkName {
+			for _, ip := range net.IPs {
+				if !strings.Contains(ip, ":") {
+					return ip, nil
+				}
+			}
+		}
+	}
+
+	// If this is reached it means that no IP was found, construct error and return
+	err = fmt.Errorf("Error while getting IPv4 address from pod %s in network %s", swiftPod.Name, networkAttachment)
+	return "", err
 }

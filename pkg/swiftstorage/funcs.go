@@ -54,7 +54,7 @@ func DeviceList(ctx context.Context, h *helper.Helper, instance *swiftv1beta1.Sw
 		}
 		weight = weight / (1000 * 1000 * 1000) // 10GiB gets a weight of 10 etc.
 		// CSV: region,zone,hostname,devicename,weight
-		devices.WriteString(fmt.Sprintf("1,1,%s-%d.%s,%s,%d\n", instance.Name, replica, instance.Name, "d1", weight))
+		devices.WriteString(fmt.Sprintf("1,1,%s-%d.%s.%s.svc,%s,%d\n", instance.Name, replica, instance.Name, instance.Namespace, "d1", weight))
 	}
 	return devices.String()
 }
