@@ -213,7 +213,7 @@ spec:
           subPath: tls.key
       - command:
         - /usr/bin/swift-proxy-server
-        - /etc/swift/proxy-server.conf
+        - /etc/swift/proxy-server.conf.d
         - -v
         livenessProbe:
           httpGet:

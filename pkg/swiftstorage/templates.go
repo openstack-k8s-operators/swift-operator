@@ -26,6 +26,11 @@ func ConfigMapTemplates(instance *swiftv1beta1.SwiftStorage, labels map[string]s
 	templateParameters := make(map[string]interface{})
 	templateParameters["MemcachedServers"] = memcachedServers
 
+	customData := map[string]string{}
+	for key, data := range instance.Spec.DefaultConfigOverwrite {
+		customData[key] = data
+	}
+
 	return []util.Template{
 		{
 			Name:          fmt.Sprintf("%s-config-data", instance.Name),
@@ -34,6 +39,7 @@ func ConfigMapTemplates(instance *swiftv1beta1.SwiftStorage, labels map[string]s
 			InstanceType:  instance.Kind,
 			Labels:        labels,
 			ConfigOptions: templateParameters,
+			CustomData:    customData,
 		},
 		{
 			Name:               fmt.Sprintf("%s-scripts", instance.Name),

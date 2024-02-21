@@ -75,6 +75,10 @@ type SwiftStorageSpec struct {
 	// +kubebuilder:default=false
 	// If the container sharder daemon is enabled.
 	ContainerSharderEnabled bool `json:"containerSharderEnabled"`
+
+	// DefaultConfigOverwrite - can be used to add additionalfiles. Those get
+	// added to the service config dir in /etc/<servicename>-conf.d
+	DefaultConfigOverwrite map[string]string `json:"defaultConfigOverwrite,omitempty"`
 }
 
 // SwiftStorageStatus defines the observed state of SwiftStorage

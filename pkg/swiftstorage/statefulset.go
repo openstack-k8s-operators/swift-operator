@@ -54,7 +54,7 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.Cont
 			SecurityContext: &securityContext,
 			Ports:           getPorts(swift.AccountServerPort, "account"),
 			VolumeMounts:    getStorageVolumeMounts(),
-			Command:         []string{"/usr/bin/swift-account-server", "/etc/swift/account-server.conf", "-v"},
+			Command:         []string{"/usr/bin/swift-account-server", "/etc/swift/account-server.conf.d", "-v"},
 		},
 		{
 			Name:            "account-replicator",
@@ -62,7 +62,7 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.Cont
 			ImagePullPolicy: corev1.PullIfNotPresent,
 			SecurityContext: &securityContext,
 			VolumeMounts:    getStorageVolumeMounts(),
-			Command:         []string{"/usr/bin/swift-account-replicator", "/etc/swift/account-server.conf", "-v"},
+			Command:         []string{"/usr/bin/swift-account-replicator", "/etc/swift/account-server.conf.d", "-v"},
 		},
 		{
 			Name:            "account-auditor",
@@ -70,7 +70,7 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.Cont
 			ImagePullPolicy: corev1.PullIfNotPresent,
 			SecurityContext: &securityContext,
 			VolumeMounts:    getStorageVolumeMounts(),
-			Command:         []string{"/usr/bin/swift-account-auditor", "/etc/swift/account-server.conf", "-v"},
+			Command:         []string{"/usr/bin/swift-account-auditor", "/etc/swift/account-server.conf.d", "-v"},
 		},
 		{
 			Name:            "account-reaper",
@@ -78,7 +78,7 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.Cont
 			ImagePullPolicy: corev1.PullIfNotPresent,
 			SecurityContext: &securityContext,
 			VolumeMounts:    getStorageVolumeMounts(),
-			Command:         []string{"/usr/bin/swift-account-reaper", "/etc/swift/account-server.conf", "-v"},
+			Command:         []string{"/usr/bin/swift-account-reaper", "/etc/swift/account-server.conf.d", "-v"},
 		},
 		{
 			Name:            "container-server",
@@ -87,7 +87,7 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.Cont
 			SecurityContext: &securityContext,
 			Ports:           getPorts(swift.ContainerServerPort, "container"),
 			VolumeMounts:    getStorageVolumeMounts(),
-			Command:         []string{"/usr/bin/swift-container-server", "/etc/swift/container-server.conf", "-v"},
+			Command:         []string{"/usr/bin/swift-container-server", "/etc/swift/container-server.conf.d", "-v"},
 		},
 		{
 			Name:            "container-replicator",
@@ -95,7 +95,7 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.Cont
 			ImagePullPolicy: corev1.PullIfNotPresent,
 			SecurityContext: &securityContext,
 			VolumeMounts:    getStorageVolumeMounts(),
-			Command:         []string{"/usr/bin/swift-container-replicator", "/etc/swift/container-server.conf", "-v"},
+			Command:         []string{"/usr/bin/swift-container-replicator", "/etc/swift/container-server.conf.d", "-v"},
 		},
 		{
 			Name:            "container-auditor",
@@ -103,7 +103,7 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.Cont
 			ImagePullPolicy: corev1.PullIfNotPresent,
 			SecurityContext: &securityContext,
 			VolumeMounts:    getStorageVolumeMounts(),
-			Command:         []string{"/usr/bin/swift-container-replicator", "/etc/swift/container-server.conf", "-v"},
+			Command:         []string{"/usr/bin/swift-container-replicator", "/etc/swift/container-server.conf.d", "-v"},
 		},
 		{
 			Name:            "container-updater",
@@ -111,7 +111,7 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.Cont
 			ImagePullPolicy: corev1.PullIfNotPresent,
 			SecurityContext: &securityContext,
 			VolumeMounts:    getStorageVolumeMounts(),
-			Command:         []string{"/usr/bin/swift-container-replicator", "/etc/swift/container-server.conf", "-v"},
+			Command:         []string{"/usr/bin/swift-container-replicator", "/etc/swift/container-server.conf.d", "-v"},
 		},
 		{
 			Name:            "object-server",
@@ -120,7 +120,7 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.Cont
 			SecurityContext: &securityContext,
 			Ports:           getPorts(swift.ObjectServerPort, "object"),
 			VolumeMounts:    getStorageVolumeMounts(),
-			Command:         []string{"/usr/bin/swift-object-server", "/etc/swift/object-server.conf", "-v"},
+			Command:         []string{"/usr/bin/swift-object-server", "/etc/swift/object-server.conf.d", "-v"},
 		},
 		{
 			Name:            "object-replicator",
@@ -128,7 +128,7 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.Cont
 			ImagePullPolicy: corev1.PullIfNotPresent,
 			SecurityContext: &securityContext,
 			VolumeMounts:    getStorageVolumeMounts(),
-			Command:         []string{"/usr/bin/swift-object-replicator", "/etc/swift/object-server.conf", "-v"},
+			Command:         []string{"/usr/bin/swift-object-replicator", "/etc/swift/object-server.conf.d", "-v"},
 		},
 		{
 			Name:            "object-auditor",
@@ -136,7 +136,7 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.Cont
 			ImagePullPolicy: corev1.PullIfNotPresent,
 			SecurityContext: &securityContext,
 			VolumeMounts:    getStorageVolumeMounts(),
-			Command:         []string{"/usr/bin/swift-object-replicator", "/etc/swift/object-server.conf", "-v"},
+			Command:         []string{"/usr/bin/swift-object-replicator", "/etc/swift/object-server.conf.d", "-v"},
 		},
 		{
 			Name:            "object-updater",
@@ -144,7 +144,7 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.Cont
 			ImagePullPolicy: corev1.PullIfNotPresent,
 			SecurityContext: &securityContext,
 			VolumeMounts:    getStorageVolumeMounts(),
-			Command:         []string{"/usr/bin/swift-object-replicator", "/etc/swift/object-server.conf", "-v"},
+			Command:         []string{"/usr/bin/swift-object-replicator", "/etc/swift/object-server.conf.d", "-v"},
 		},
 		{
 			Name:            "object-expirer",
@@ -152,7 +152,7 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.Cont
 			ImagePullPolicy: corev1.PullIfNotPresent,
 			SecurityContext: &securityContext,
 			VolumeMounts:    getStorageVolumeMounts(),
-			Command:         []string{"/usr/bin/swift-object-expirer", "/etc/swift/object-expirer.conf", "-v"},
+			Command:         []string{"/usr/bin/swift-object-expirer", "/etc/swift/object-expirer.conf.d", "-v"},
 		},
 		{
 			Name:            "rsync",
@@ -169,7 +169,7 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.Cont
 			ImagePullPolicy: corev1.PullIfNotPresent,
 			SecurityContext: &securityContext,
 			VolumeMounts:    getStorageVolumeMounts(),
-			Command:         []string{"sh", "-c", "while true; do /usr/bin/swift-recon-cron /etc/swift/object-server.conf -v; sleep 300; done"},
+			Command:         []string{"sh", "-c", "while true; do /usr/bin/swift-recon-cron /etc/swift/object-server.conf.d -v; sleep 300; done"},
 		},
 	}
 
@@ -180,7 +180,7 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.Cont
 			ImagePullPolicy: corev1.PullIfNotPresent,
 			SecurityContext: &securityContext,
 			VolumeMounts:    getStorageVolumeMounts(),
-			Command:         []string{"/usr/bin/swift-container-sharder", "/etc/swift/container-server.conf", "-v"},
+			Command:         []string{"/usr/bin/swift-container-sharder", "/etc/swift/container-server.conf.d", "-v"},
 		})
 	}
 

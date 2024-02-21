@@ -55,6 +55,10 @@ func SecretTemplates(
 		httpdVhostConfig[endpt.String()] = endptConfig
 	}
 	templateParameters["VHosts"] = httpdVhostConfig
+	customData := map[string]string{}
+	for key, data := range instance.Spec.DefaultConfigOverwrite {
+		customData[key] = data
+	}
 
 	return []util.Template{
 		{
@@ -64,6 +68,7 @@ func SecretTemplates(
 			InstanceType:  instance.Kind,
 			ConfigOptions: templateParameters,
 			Labels:        labels,
+			CustomData:    customData,
 		},
 		{
 			Name:               fmt.Sprintf("%s-scripts", instance.Name),

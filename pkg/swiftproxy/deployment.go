@@ -176,7 +176,7 @@ func Deployment(
 							ReadinessProbe: readinessProbe,
 							LivenessProbe:  livenessProbe,
 							VolumeMounts:   volumeMounts,
-							Command:        []string{"/usr/bin/swift-proxy-server", "/etc/swift/proxy-server.conf", "-v"},
+							Command:        []string{"/usr/bin/swift-proxy-server", "/etc/swift/proxy-server.conf.d", "-v"},
 						},
 					},
 				},
