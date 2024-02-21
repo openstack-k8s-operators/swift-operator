@@ -24,21 +24,28 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/openstack-k8s-operators/lib-common/modules/common"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/helper"
 
+	dataplanev1 "github.com/openstack-k8s-operators/dataplane-operator/api/v1beta1"
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
 	"github.com/openstack-k8s-operators/swift-operator/pkg/swift"
 )
 
 //+kubebuilder:rbac:groups=core,resources=persistentvolumeclaims,verbs=get;list;watch
+//+kubebuilder:rbac:groups=dataplane.openstack.org,resources=openstackdataplanenodesets,verbs=get;list;watch
 
 func DeviceList(ctx context.Context, h *helper.Helper, instance *swiftv1beta1.SwiftStorage) string {
 	// Creates a CSV list of devices. If PVCs do not exist yet (because not
 	// all StatefulSets are up yet), it will just use the request capacity
 	// as value.
 	var devices strings.Builder
+
+	listOpts := []client.ListOption{client.InNamespace(instance.GetNamespace())}
+	nodeSets := &dataplanev1.OpenStackDataPlaneNodeSetList{}
+	_ = h.GetClient().List(context.Background(), nodeSets, listOpts...)
 
 	foundClaim := &corev1.PersistentVolumeClaim{}
 	for replica := 0; replica < int(*instance.Spec.Replicas); replica++ {
