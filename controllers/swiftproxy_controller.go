@@ -393,6 +393,20 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return ctrlResult, err
 	}
 
+	// Create OpenStack roles for Swift RBAC
+	os, _, err := keystonev1.GetAdminServiceClient(ctx, helper, keystoneAPI)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+	_, err = os.CreateRole(r.Log, "SwiftProjectReader")
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+	_, err = os.CreateRole(r.Log, "SwiftSystemReader")
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
 	// Get the service password
 	sps, hash, err := secret.GetSecret(ctx, helper, instance.Spec.Secret, instance.Namespace)
 	if err != nil {
