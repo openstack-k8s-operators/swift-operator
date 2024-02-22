@@ -134,7 +134,8 @@ func Deployment(
 						// as root/swift/0440.
 						FSGroup: ptr.To(swift.RunAsUser),
 					},
-					Volumes: volumes,
+					Volumes:  volumes,
+					Affinity: swift.GetPodAffinity(ComponentName),
 					Containers: []corev1.Container{
 						{
 							Name:            "ring-sync",

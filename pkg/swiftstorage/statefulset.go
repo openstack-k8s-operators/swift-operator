@@ -227,6 +227,7 @@ func StatefulSet(
 					},
 					Volumes:    getStorageVolumes(swiftstorage),
 					Containers: getStorageContainers(swiftstorage),
+					Affinity:   swift.GetPodAffinity(ComponentName),
 				},
 			},
 			VolumeClaimTemplates: []corev1.PersistentVolumeClaim{{
