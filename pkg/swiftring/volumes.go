@@ -33,6 +33,12 @@ func getRingVolumes(instance *swiftv1beta1.SwiftRing) []corev1.Volume {
 					LocalObjectReference: corev1.LocalObjectReference{
 						Name: instance.Name + "-scripts",
 					},
+					Items: []corev1.KeyToPath{
+						{
+							Key:  "swift-ring-tool",
+							Path: "swift-ring-tool",
+						},
+					},
 				},
 			},
 		},
@@ -67,7 +73,8 @@ func getRingVolumeMounts() []corev1.VolumeMount {
 	return []corev1.VolumeMount{
 		{
 			Name:      "scripts",
-			MountPath: "/usr/local/bin/container-scripts",
+			SubPath:   "swift-ring-tool",
+			MountPath: "/usr/local/bin/swift-ring-tool",
 			ReadOnly:  true,
 		},
 		{

@@ -61,7 +61,7 @@ func GetRingJob(instance *swiftv1beta1.SwiftRing, labels map[string]string) *bat
 					Containers: []corev1.Container{
 						{
 							Name:            instance.Name + "-rebalance",
-							Command:         []string{"/usr/local/bin/container-scripts/swift-ring-rebalance.sh", "all"},
+							Command:         []string{"/usr/local/bin/swift-ring-tool", "all"},
 							Image:           instance.Spec.ContainerImage,
 							SecurityContext: &securityContext,
 							VolumeMounts:    getRingVolumeMounts(),
