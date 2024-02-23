@@ -25,7 +25,7 @@ import (
 
 func ConfigMapTemplates(instance *swiftv1beta1.SwiftRing, labels map[string]string, devices string) []util.Template {
 	data := make(map[string]string)
-	data["devices.csv"] = devices
+	data["devices.txt"] = devices
 
 	return []util.Template{
 		{

@@ -68,7 +68,7 @@ func DeviceList(ctx context.Context, h *helper.Helper, instance *swiftv1beta1.Sw
 			}
 			weight = weight / (1000 * 1000 * 1000) // 10GiB gets a weight of 10 etc.
 			// CSV: region,zone,hostname,devicename,weight
-			devices = append(devices, fmt.Sprintf("1,1,%s-%d.%s,%s,%d\n", storageInstance.Name, replica, storageInstance.Name, "d1", weight))
+			devices = append(devices, fmt.Sprintf("1 1 %s-%d.%s %s %d\n", storageInstance.Name, replica, storageInstance.Name, "d1", weight))
 		}
 	}
 
@@ -110,7 +110,7 @@ func DeviceList(ctx context.Context, h *helper.Helper, instance *swiftv1beta1.Sw
 						}
 					}
 					for _, disk := range hostDisks {
-						devices = append(devices, fmt.Sprintf("%d,%d,%s,%s,%d\n", disk.Region, disk.Zone, hostName, filepath.Base(disk.Path), disk.Weight))
+						devices = append(devices, fmt.Sprintf("%d %d %s %s %d\n", disk.Region, disk.Zone, hostName, filepath.Base(disk.Path), disk.Weight))
 					}
 				}
 			}
