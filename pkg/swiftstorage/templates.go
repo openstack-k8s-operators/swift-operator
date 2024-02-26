@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/util"
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
+	"github.com/openstack-k8s-operators/swift-operator/pkg/swift"
 )
 
 func ConfigMapTemplates(instance *swiftv1beta1.SwiftStorage, labels map[string]string, memcachedServers string) []util.Template {
@@ -58,7 +59,7 @@ func DeviceConfigMapTemplates(instance *swiftv1beta1.SwiftStorage, devices strin
 
 	return []util.Template{
 		{
-			Name:         swiftv1beta1.DeviceConfigMapName,
+			Name:         swift.DeviceConfigMapName,
 			Namespace:    instance.Namespace,
 			Type:         util.TemplateTypeNone,
 			InstanceType: instance.Kind,

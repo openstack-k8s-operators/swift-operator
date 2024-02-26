@@ -35,6 +35,7 @@ import (
 	"github.com/openstack-k8s-operators/lib-common/modules/common/job"
 
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
+	"github.com/openstack-k8s-operators/swift-operator/pkg/swift"
 	"github.com/openstack-k8s-operators/swift-operator/pkg/swiftring"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -133,7 +134,7 @@ func (r *SwiftRingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	// Check if the device list ConfigMap did change and if so, delete the
 	// rebalance Job. This will result in a new Job that rebalances with
 	// the updated device list
-	_, deviceListHash, err := configmap.GetConfigMapAndHashWithName(ctx, helper, swiftv1beta1.DeviceConfigMapName, instance.Namespace)
+	_, deviceListHash, err := configmap.GetConfigMapAndHashWithName(ctx, helper, swift.DeviceConfigMapName, instance.Namespace)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -196,7 +197,7 @@ func (r *SwiftRingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 func (r *SwiftRingReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	deviceConfigMapFilter := func(ctx context.Context, o client.Object) []reconcile.Request {
 		result := []reconcile.Request{}
-		if o.GetName() == swiftv1beta1.DeviceConfigMapName {
+		if o.GetName() == swift.DeviceConfigMapName {
 			// There should be only one SwiftRing instance within
 			// the Namespace - that needs to be reconciled
 			swiftRings := &swiftv1beta1.SwiftRingList{}
