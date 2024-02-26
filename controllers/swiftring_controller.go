@@ -33,7 +33,6 @@ import (
 	"github.com/openstack-k8s-operators/lib-common/modules/common/env"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/helper"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/job"
-	"github.com/openstack-k8s-operators/lib-common/modules/common/secret"
 
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
 	"github.com/openstack-k8s-operators/swift-operator/pkg/swiftring"
@@ -117,10 +116,10 @@ func (r *SwiftRingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 	serviceLabels := swiftring.Labels()
 
-	// Create a Secret populated with content from templates/
+	// Create a ConfigMap populated with content from templates/
 	envVars := make(map[string]env.Setter)
-	tpl := swiftring.SecretTemplates(instance, serviceLabels)
-	err = secret.EnsureSecrets(ctx, helper, instance, tpl, &envVars)
+	tpl := swiftring.ConfigMapTemplates(instance, serviceLabels)
+	err = configmap.EnsureConfigMaps(ctx, helper, instance, tpl, &envVars)
 	if err != nil {
 		return ctrl.Result{}, err
 	}

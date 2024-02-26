@@ -27,9 +27,11 @@ func getRingVolumes(instance *swiftv1beta1.SwiftRing) []corev1.Volume {
 		{
 			Name: "scripts",
 			VolumeSource: corev1.VolumeSource{
-				Secret: &corev1.SecretVolumeSource{
+				ConfigMap: &corev1.ConfigMapVolumeSource{
 					DefaultMode: &scriptsVolumeDefaultMode,
-					SecretName:  instance.Name + "-scripts",
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: instance.Name + "-scripts",
+					},
 				},
 			},
 		},

@@ -22,7 +22,7 @@ import (
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
 )
 
-func SecretTemplates(instance *swiftv1beta1.SwiftRing, labels map[string]string) []util.Template {
+func ConfigMapTemplates(instance *swiftv1beta1.SwiftRing, labels map[string]string) []util.Template {
 	return []util.Template{
 		{
 			Name:         fmt.Sprintf("%s-scripts", instance.Name),
