@@ -57,7 +57,7 @@ func getStorageVolumes(instance *swiftv1beta1.SwiftStorage) []corev1.Volume {
 			VolumeSource: corev1.VolumeSource{
 				ConfigMap: &corev1.ConfigMapVolumeSource{
 					LocalObjectReference: corev1.LocalObjectReference{
-						Name: swiftv1beta1.RingConfigMapName,
+						Name: swift.RingConfigMapName,
 					},
 				},
 			},

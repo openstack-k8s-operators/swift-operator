@@ -16,9 +16,8 @@ limitations under the License.
 package swift
 
 import (
-	common "github.com/openstack-k8s-operators/lib-common/modules/common"
+	"github.com/openstack-k8s-operators/lib-common/modules/common"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/affinity"
-
 	corev1 "k8s.io/api/core/v1"
 	"math/rand"
 )
@@ -41,7 +40,10 @@ func GetSecurityContext() corev1.SecurityContext {
 }
 
 func Labels() map[string]string {
-	return map[string]string{"app.kubernetes.io/name": "Swift"}
+	return map[string]string{
+		common.AppSelector:       ServiceName,
+		common.ComponentSelector: ServiceName, // identical in this case
+	}
 }
 
 func RandomString(length int) string {

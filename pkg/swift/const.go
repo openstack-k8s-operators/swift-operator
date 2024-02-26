@@ -19,7 +19,6 @@ const (
 	RunAsUser      int64 = 42445
 	ProxyPort      int32 = 8081
 	ProxyHttpdPort int32 = 8080
-	MemcachedPort  int32 = 11211
 
 	AccountServerPort   int32 = 6202
 	ContainerServerPort int32 = 6201
@@ -32,4 +31,7 @@ const (
 	ServiceDescription = "Swift Object Storage"
 
 	ClaimName = "srv"
+
+	RingConfigMapName   = "swift-ring-files"
+	DeviceConfigMapName = "swift-storage-devices"
 )

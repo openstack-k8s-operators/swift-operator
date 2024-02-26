@@ -18,6 +18,7 @@ package swiftring
 
 import (
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
+	"github.com/openstack-k8s-operators/swift-operator/pkg/swift"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -27,9 +28,11 @@ func getRingVolumes(instance *swiftv1beta1.SwiftRing) []corev1.Volume {
 		{
 			Name: "scripts",
 			VolumeSource: corev1.VolumeSource{
-				Secret: &corev1.SecretVolumeSource{
+				ConfigMap: &corev1.ConfigMapVolumeSource{
 					DefaultMode: &scriptsVolumeDefaultMode,
-					SecretName:  instance.Name + "-scripts",
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: instance.Name + "-scripts",
+					},
 				},
 			},
 		},
@@ -52,7 +55,7 @@ func getRingVolumes(instance *swiftv1beta1.SwiftRing) []corev1.Volume {
 			VolumeSource: corev1.VolumeSource{
 				ConfigMap: &corev1.ConfigMapVolumeSource{
 					LocalObjectReference: corev1.LocalObjectReference{
-						Name: swiftv1beta1.DeviceConfigMapName,
+						Name: swift.DeviceConfigMapName,
 					},
 				},
 			},

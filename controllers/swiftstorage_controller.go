@@ -41,6 +41,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
+	"github.com/openstack-k8s-operators/swift-operator/pkg/swift"
 	"github.com/openstack-k8s-operators/swift-operator/pkg/swiftstorage"
 
 	"github.com/openstack-k8s-operators/lib-common/modules/common/condition"
@@ -144,7 +145,7 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	// not, create an initial device list to bootstrap the cluster with The
 	// weights are simply set to the requested size, this will be changed
 	// once all StatefulSets are running
-	_, ctrlResult, err := configmap.GetConfigMap(ctx, helper, instance, swiftv1beta1.DeviceConfigMapName, 5*time.Second)
+	_, ctrlResult, err := configmap.GetConfigMap(ctx, helper, instance, swift.DeviceConfigMapName, 5*time.Second)
 	if err != nil {
 		return ctrlResult, err
 	} else if (ctrlResult != ctrl.Result{}) {
