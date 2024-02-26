@@ -32,7 +32,7 @@ func DNSData(
 	// Create DNSData object
 	dnsData := &infranetworkv1.DNSData{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      swiftPod.Name,
+			Name:      "dns-" + swiftPod.Name,
 			Namespace: swiftPod.Namespace,
 			Labels:    serviceLabels,
 		},
