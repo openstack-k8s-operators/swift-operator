@@ -43,6 +43,7 @@ import (
 	"github.com/openstack-k8s-operators/lib-common/modules/common/util"
 
 	networkv1 "github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/apis/k8s.cni.cncf.io/v1"
+	barbicanv1 "github.com/openstack-k8s-operators/barbican-operator/api/v1beta1"
 	dataplanev1 "github.com/openstack-k8s-operators/dataplane-operator/api/v1beta1"
 	memcachedv1 "github.com/openstack-k8s-operators/infra-operator/apis/memcached/v1beta1"
 	infranetworkv1 "github.com/openstack-k8s-operators/infra-operator/apis/network/v1beta1"
@@ -64,6 +65,7 @@ func init() {
 	utilruntime.Must(networkv1.AddToScheme(scheme))
 	utilruntime.Must(infranetworkv1.AddToScheme(scheme))
 	utilruntime.Must(dataplanev1.AddToScheme(scheme))
+	utilruntime.Must(barbicanv1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 

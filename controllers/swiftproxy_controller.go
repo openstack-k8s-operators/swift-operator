@@ -78,6 +78,7 @@ type SwiftProxyReconciler struct {
 //+kubebuilder:rbac:groups=core,resources=secrets,verbs=get;list;watch;create;update;patch;delete;
 //+kubebuilder:rbac:groups=k8s.cni.cncf.io,resources=network-attachment-definitions,verbs=get;list;watch
 //+kubebuilder:rbac:groups=memcached.openstack.org,resources=memcacheds,verbs=get;list;watch;
+//+kubebuilder:rbac:groups=barbican.openstack.org,resources=barbicanapis,verbs=get;list;watch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -429,6 +430,29 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	envVars[sps.Name] = env.SetValue(hash)
 	password := string(sps.Data[instance.Spec.PasswordSelectors.Service])
 
+	secretRef := ""
+	if instance.Spec.EncryptionEnabled {
+		secretRef, err = swiftproxy.GetBarbicanSecret(instance, helper, keystonePublicURL, password)
+		if err != nil {
+			if apierrors.IsNotFound(err) {
+				instance.Status.Conditions.Set(condition.FalseCondition(
+					condition.InputReadyCondition,
+					condition.RequestedReason,
+					condition.SeverityInfo,
+					condition.InputReadyWaitingMessage))
+				r.Log.Error(err, "Failed to get secretRef from Barbican")
+				return ctrl.Result{RequeueAfter: time.Duration(10) * time.Second}, nil
+			}
+			instance.Status.Conditions.Set(condition.FalseCondition(
+				condition.InputReadyCondition,
+				condition.ErrorReason,
+				condition.SeverityWarning,
+				condition.InputReadyErrorMessage,
+				err.Error()))
+			return ctrl.Result{}, err
+		}
+	}
+
 	instance.Status.Conditions.MarkTrue(condition.InputReadyCondition, condition.InputReadyMessage)
 
 	// Create a Secret populated with content from templates/
@@ -439,6 +463,7 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		keystoneInternalURL,
 		password,
 		instance.Spec.MemcachedServers,
+		secretRef,
 	)
 	err = secret.EnsureSecrets(ctx, helper, instance, tpl, &envVars)
 	if err != nil {

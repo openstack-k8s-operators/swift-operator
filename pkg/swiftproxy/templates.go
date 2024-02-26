@@ -33,6 +33,7 @@ func SecretTemplates(
 	keystoneInternalURL string,
 	password string,
 	memcachedServers string,
+	secretRef string,
 ) []util.Template {
 	templateParameters := make(map[string]interface{})
 	templateParameters["ServiceUser"] = instance.Spec.ServiceUser
@@ -40,6 +41,7 @@ func SecretTemplates(
 	templateParameters["KeystonePublicURL"] = keystonePublicURL
 	templateParameters["KeystoneInternalURL"] = keystoneInternalURL
 	templateParameters["MemcachedServers"] = memcachedServers
+	templateParameters["SecretRef"] = secretRef
 
 	// create httpd  vhost template parameters
 	httpdVhostConfig := map[string]interface{}{}
