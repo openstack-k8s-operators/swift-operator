@@ -33,14 +33,3 @@ func SecretTemplates(instance *swiftv1beta1.SwiftRing, labels map[string]string)
 		},
 	}
 }
-
-func ConfigMapTemplates(instance *swiftv1beta1.SwiftRing, labels map[string]string) []util.Template {
-	return []util.Template{
-		{
-			Name:         swiftv1beta1.RingConfigMapName,
-			Namespace:    instance.Namespace,
-			Type:         util.TemplateTypeNone,
-			InstanceType: instance.Kind,
-		},
-	}
-}
