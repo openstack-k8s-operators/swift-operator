@@ -25,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -69,7 +70,7 @@ type SwiftRingReconciler struct {
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.12.2/pkg/reconcile
-func (r *SwiftRingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *SwiftRingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (result ctrl.Result, _err error) {
 	_ = r.Log.WithValues("swiftring", req.NamespacedName)
 
 	instance := &swiftv1beta1.SwiftRing{}
@@ -86,6 +87,43 @@ func (r *SwiftRingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, err
 	}
 
+	helper, err := helper.NewHelper(
+		instance,
+		r.Client,
+		r.Kclient,
+		r.Scheme,
+		r.Log,
+	)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	// Always patch the instance status when exiting this function so we can persist any changes.
+	defer func() {
+		// update the Ready condition based on the sub conditions
+		if instance.Status.Conditions.AllSubConditionIsTrue() {
+			instance.Status.Conditions.MarkTrue(
+				condition.ReadyCondition, condition.ReadyMessage)
+		} else {
+			// something is not ready so reset the Ready condition
+			instance.Status.Conditions.MarkUnknown(
+				condition.ReadyCondition, condition.InitReason, condition.ReadyInitMessage)
+			// and recalculate it based on the state of the rest of the conditions
+			instance.Status.Conditions.Set(
+				instance.Status.Conditions.Mirror(condition.ReadyCondition))
+		}
+		err := helper.PatchInstance(ctx, instance)
+		if err != nil {
+			_err = err
+			return
+		}
+	}()
+
+	// If we're not deleting this and the service object doesn't have our finalizer, add it.
+	if instance.DeletionTimestamp.IsZero() && controllerutil.AddFinalizer(instance, helper.GetFinalizer()) {
+		return ctrl.Result{}, nil
+	}
+
 	if instance.Status.Conditions == nil {
 		instance.Status.Conditions = condition.Conditions{}
 		cl := condition.CreateList(
@@ -100,27 +138,23 @@ func (r *SwiftRingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		}
 	}
 
-	helper, err := helper.NewHelper(
-		instance,
-		r.Client,
-		r.Kclient,
-		r.Scheme,
-		r.Log,
-	)
-	if err != nil {
-		return ctrl.Result{}, err
+	if !instance.DeletionTimestamp.IsZero() {
+		return r.reconcileDelete(ctx, instance, helper)
 	}
 
-	if !instance.DeletionTimestamp.IsZero() {
-		return ctrl.Result{}, nil
-	}
+	// Handle non-deleted clusters
+	return r.reconcileNormal(ctx, instance, helper)
+}
+
+func (r *SwiftRingReconciler) reconcileNormal(ctx context.Context, instance *swiftv1beta1.SwiftRing, helper *helper.Helper) (ctrl.Result, error) {
+	r.Log.Info(fmt.Sprintf("Reconciling Service '%s'", instance.Name))
 
 	serviceLabels := swiftring.Labels()
 
 	// Create a ConfigMap populated with content from templates/
 	envVars := make(map[string]env.Setter)
 	tpl := swiftring.ConfigMapTemplates(instance, serviceLabels)
-	err = configmap.EnsureConfigMaps(ctx, helper, instance, tpl, &envVars)
+	err := configmap.EnsureConfigMaps(ctx, helper, instance, tpl, &envVars)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -190,6 +224,32 @@ func (r *SwiftRingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	// Swift ring init job - end
 
 	r.Log.Info(fmt.Sprintf("Reconciled SwiftRing '%s' successfully", instance.Name))
+	return ctrl.Result{}, nil
+}
+
+func (r *SwiftRingReconciler) reconcileDelete(ctx context.Context, instance *swiftv1beta1.SwiftRing, helper *helper.Helper) (ctrl.Result, error) {
+	r.Log.Info(fmt.Sprintf("Reconciling Service '%s' delete", instance.Name))
+
+	ringConfigMap, _, err := configmap.GetConfigMapAndHashWithName(ctx, helper, swift.RingConfigMapName, instance.Namespace)
+	if err != nil && !apierrors.IsNotFound(err) {
+		return ctrl.Result{}, err
+	}
+	if err == nil {
+		// This finalizer is directly set when creating the ConfigMap using
+		// curl within the Job
+		if controllerutil.RemoveFinalizer(ringConfigMap, "swift-ring/finalizer") {
+			err = r.Update(ctx, ringConfigMap)
+			if err != nil && !apierrors.IsNotFound(err) {
+				return ctrl.Result{}, err
+			}
+			r.Log.Info(fmt.Sprintf("Removed finalizer from ConfigMap %s", swift.RingConfigMapName))
+		}
+	}
+
+	// Service is deleted so remove the finalizer.
+	controllerutil.RemoveFinalizer(instance, helper.GetFinalizer())
+	r.Log.Info(fmt.Sprintf("Reconciled Service '%s' delete successfully", instance.Name))
+
 	return ctrl.Result{}, nil
 }
 
