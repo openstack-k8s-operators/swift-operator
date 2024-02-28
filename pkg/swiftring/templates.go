@@ -20,10 +20,21 @@ import (
 	"fmt"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/util"
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
+	"github.com/openstack-k8s-operators/swift-operator/pkg/swift"
 )
 
-func ConfigMapTemplates(instance *swiftv1beta1.SwiftRing, labels map[string]string) []util.Template {
+func ConfigMapTemplates(instance *swiftv1beta1.SwiftRing, labels map[string]string, devices string) []util.Template {
+	data := make(map[string]string)
+	data["devices.csv"] = devices
+
 	return []util.Template{
+		{
+			Name:         swift.DeviceConfigMapName,
+			Namespace:    instance.Namespace,
+			Type:         util.TemplateTypeNone,
+			InstanceType: instance.Kind,
+			CustomData:   data,
+		},
 		{
 			Name:         fmt.Sprintf("%s-scripts", instance.Name),
 			Namespace:    instance.Namespace,

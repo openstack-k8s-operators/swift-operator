@@ -94,6 +94,15 @@ type SwiftRingList struct {
 	Items           []SwiftRing `json:"items"`
 }
 
+
+type SwiftDisk struct {
+	Device string `json:"device"`
+	Path   string `json:"path"`
+	Weight int32  `json:"weight"`
+	Region int32  `json:"region"`
+	Zone   int32  `json:"zone"`
+}
+
 func init() {
 	SchemeBuilder.Register(&SwiftRing{}, &SwiftRingList{})
 }
