@@ -193,7 +193,7 @@ func (r *SwiftRingReconciler) reconcileNormal(ctx context.Context, instance *swi
 		}
 	}
 
-	ringCreateJob := job.NewJob(swiftring.GetRingJob(instance, serviceLabels), "rebalance", false, 5*time.Second, instance.Status.Hash[swiftv1beta1.RingCreateHash])
+	ringCreateJob := job.NewJob(swiftring.GetRingJob(instance, serviceLabels), "rebalance", true, 5*time.Second, instance.Status.Hash[swiftv1beta1.RingCreateHash])
 	ctrlResult, err := ringCreateJob.DoJob(ctx, helper)
 	if (ctrlResult != ctrl.Result{}) {
 		instance.Status.Conditions.Set(condition.FalseCondition(
