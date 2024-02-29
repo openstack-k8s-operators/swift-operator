@@ -57,6 +57,10 @@ spec:
                 description: DefaultConfigOverwrite - can be used to add additionalfiles.
                   Those get added to the service config dir in /etc/<servicename>-conf.d
                 type: object
+              encryptionEnabled:
+                default: false
+                description: Encrypts new objects at rest
+                type: boolean
               memcachedServers:
                 default: ""
                 description: List of memcached servers.

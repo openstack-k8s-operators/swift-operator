@@ -18,4 +18,7 @@ package swiftproxy
 const (
 	// ComponentName -
 	ComponentName = "swift-proxy"
+
+	// Same as in OOO to be backward compatible
+	BarbicanSecretName = "swift_root_secret_uuid"
 )

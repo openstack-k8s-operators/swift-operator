@@ -86,6 +86,11 @@ type SwiftProxySpec struct {
 	// DefaultConfigOverwrite - can be used to add additionalfiles. Those get
 	// added to the service config dir in /etc/<servicename>-conf.d
 	DefaultConfigOverwrite map[string]string `json:"defaultConfigOverwrite,omitempty"`
+
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default=false
+	// Encrypts new objects at rest
+	EncryptionEnabled bool `json:"encryptionEnabled"`
 }
 
 // ProxyOverrideSpec to override the generated manifest of several child resources.
