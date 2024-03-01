@@ -383,15 +383,15 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	// Get the Keystone endpoint URLs
 	keystoneAPI, err := keystonev1.GetKeystoneAPI(ctx, helper, instance.Namespace, map[string]string{})
 	if err != nil {
-		return ctrlResult, err
+		return ctrl.Result{}, err
 	}
 	keystonePublicURL, err := keystoneAPI.GetEndpoint(endpoint.EndpointPublic)
 	if err != nil {
-		return ctrlResult, err
+		return ctrl.Result{}, err
 	}
 	keystoneInternalURL, err := keystoneAPI.GetEndpoint(endpoint.EndpointInternal)
 	if err != nil {
-		return ctrlResult, err
+		return ctrl.Result{}, err
 	}
 
 	// Create OpenStack roles for Swift RBAC

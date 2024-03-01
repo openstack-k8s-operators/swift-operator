@@ -187,7 +187,7 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		// NetworkPolicy for the storage pods
 		config := Netconfig{}
 		if err = json.Unmarshal([]byte(nad.Spec.Config), &config); err != nil {
-			return ctrlResult, err
+			return ctrl.Result{}, err
 		}
 		if config.Name == "storage" {
 			storageNetworkRange = config.Ipam.Range
