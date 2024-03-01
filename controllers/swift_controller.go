@@ -360,6 +360,7 @@ func (r *SwiftReconciler) ringCreateOrUpdate(ctx context.Context, instance *swif
 		RingReplicas:    instance.Spec.SwiftRing.RingReplicas,
 		ContainerImage:  instance.Spec.SwiftRing.ContainerImage,
 		SwiftConfSecret: instance.Spec.SwiftConfSecret,
+		TLS:             instance.Spec.SwiftProxy.TLS.Ca,
 	}
 
 	deployment := &swiftv1.SwiftRing{

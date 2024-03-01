@@ -42,6 +42,15 @@ func GetRingJob(instance *swiftv1beta1.SwiftRing, labels map[string]string) *bat
 	envVars["OWNER_UID"] = env.SetValue(string(instance.ObjectMeta.UID))
 	envVars["OWNER_NAME"] = env.SetValue(instance.ObjectMeta.Name)
 
+	volumes := getRingVolumes(instance)
+	volumeMounts := getRingVolumeMounts()
+
+	// add CA cert if defined
+	if instance.Spec.TLS.CaBundleSecretName != "" {
+		volumes = append(volumes, instance.Spec.TLS.CreateVolume())
+		volumeMounts = append(volumeMounts, instance.Spec.TLS.CreateVolumeMounts(nil)...)
+	}
+
 	return &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      instance.Name + "-rebalance",
@@ -64,12 +73,12 @@ func GetRingJob(instance *swiftv1beta1.SwiftRing, labels map[string]string) *bat
 							Command:         []string{"/usr/local/bin/swift-ring-tool", "all"},
 							Image:           instance.Spec.ContainerImage,
 							SecurityContext: &securityContext,
-							VolumeMounts:    getRingVolumeMounts(),
+							VolumeMounts:    volumeMounts,
 							Env:             env.MergeEnvs([]corev1.EnvVar{}, envVars),
 							WorkingDir:      "/etc/swift",
 						},
 					},
-					Volumes: getRingVolumes(instance),
+					Volumes: volumes,
 				},
 			},
 		},
