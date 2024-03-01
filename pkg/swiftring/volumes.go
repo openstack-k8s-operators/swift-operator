@@ -24,6 +24,7 @@ import (
 
 func getRingVolumes(instance *swiftv1beta1.SwiftRing) []corev1.Volume {
 	var scriptsVolumeDefaultMode int32 = 0755
+	trueVal := true
 	return []corev1.Volume{
 		{
 			Name: "scripts",
@@ -47,6 +48,12 @@ func getRingVolumes(instance *swiftv1beta1.SwiftRing) []corev1.Volume {
 			VolumeSource: corev1.VolumeSource{
 				Secret: &corev1.SecretVolumeSource{
 					SecretName: instance.Spec.SwiftConfSecret,
+					Items: []corev1.KeyToPath{
+						{
+							Key:  "swift.conf",
+							Path: "swift.conf",
+						},
+					},
 				},
 			},
 		},
@@ -66,6 +73,21 @@ func getRingVolumes(instance *swiftv1beta1.SwiftRing) []corev1.Volume {
 				},
 			},
 		},
+		{
+			Name: "dispersionconf",
+			VolumeSource: corev1.VolumeSource{
+				Secret: &corev1.SecretVolumeSource{
+					SecretName: "swift-proxy-config-data",
+					Optional:   &trueVal,
+					Items: []corev1.KeyToPath{
+						{
+							Key:  "dispersion.conf",
+							Path: "dispersion.conf",
+						},
+					},
+				},
+			},
+		},
 	}
 }
 
@@ -79,7 +101,8 @@ func getRingVolumeMounts() []corev1.VolumeMount {
 		},
 		{
 			Name:      "swiftconf",
-			MountPath: "/var/lib/config-data/swiftconf",
+			SubPath:   "swift.conf",
+			MountPath: "/etc/swift/swift.conf",
 			ReadOnly:  true,
 		},
 		{
@@ -90,6 +113,12 @@ func getRingVolumeMounts() []corev1.VolumeMount {
 		{
 			Name:      "ring-data-devices",
 			MountPath: "/var/lib/config-data/ring-devices",
+			ReadOnly:  true,
+		},
+		{
+			Name:      "dispersionconf",
+			SubPath:   "dispersion.conf",
+			MountPath: "/etc/swift/dispersion.conf",
 			ReadOnly:  true,
 		},
 	}
