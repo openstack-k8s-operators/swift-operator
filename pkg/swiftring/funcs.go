@@ -29,7 +29,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/openstack-k8s-operators/lib-common/modules/common"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/helper"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/util"
 
@@ -135,7 +134,6 @@ func DeviceList(ctx context.Context, h *helper.Helper, instance *swiftv1beta1.Sw
 
 func Labels() map[string]string {
 	return map[string]string{
-		common.AppSelector:       swift.ServiceName,
-		common.ComponentSelector: ComponentName,
+		"job-name": "swift-ring-rebalance",
 	}
 }
