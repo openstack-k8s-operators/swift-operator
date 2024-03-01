@@ -8,8 +8,6 @@ DEVICESFILE="/var/lib/config-data/ring-devices/devices.txt"
 export CURL_CA_BUNDLE=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
 TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
 
-cp -t /etc/swift/ /var/lib/config-data/swiftconf/*
-
 function get() {
     # Get the ConfigMap with the Swiftrings if it exists. If it exists, untar it
     # and update the rings. If it does not exist, create a new ConfigMap using a

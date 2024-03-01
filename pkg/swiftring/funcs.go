@@ -29,7 +29,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/openstack-k8s-operators/lib-common/modules/common"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/helper"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/util"
 
@@ -61,7 +60,11 @@ func DeviceList(ctx context.Context, h *helper.Helper, instance *swiftv1beta1.Sw
 			capacity := resource.MustParse(storageInstance.Spec.StorageRequest)
 			weight, _ := capacity.AsInt64()
 			if err == nil {
-				capacity := foundClaim.Status.Capacity["storage"]
+				if foundClaim.Status.Phase != corev1.ClaimBound {
+					err = fmt.Errorf("PVC %s found, but not bound yet (%s). Requeueing", cn, foundClaim.Status.Phase)
+					return "", "", err // requeueing
+				}
+				capacity := foundClaim.Status.Capacity[corev1.ResourceStorage]
 				weight, _ = capacity.AsInt64()
 			} else {
 				h.GetLogger().Info(fmt.Sprintf("Did not find PVC %s, assuming %s as capacity", cn, storageInstance.Spec.StorageRequest))
@@ -135,7 +138,6 @@ func DeviceList(ctx context.Context, h *helper.Helper, instance *swiftv1beta1.Sw
 
 func Labels() map[string]string {
 	return map[string]string{
-		common.AppSelector:       swift.ServiceName,
-		common.ComponentSelector: ComponentName,
+		"job-name": "swift-ring-rebalance",
 	}
 }
