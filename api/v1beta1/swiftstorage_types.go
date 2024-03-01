@@ -26,20 +26,7 @@ import (
 
 // SwiftStorageSpec defines the desired state of SwiftStorage
 type SwiftStorageSpec struct {
-	// +kubebuilder:validation:Required
-	// +kubebuilder:default=1
-	// +kubebuilder:validation:Minimum=0
-	Replicas *int32 `json:"replicas"`
-
-	// +kubebuilder:validation:Required
-	// Name of StorageClass to use for Swift PVs
-	// +kubebuilder:default=""
-	StorageClass string `json:"storageClass"`
-
-	// +kubebuilder:validation:Required
-	// +kubebuilder:default="10Gi"
-	// Minimum size for Swift PVs
-	StorageRequest string `json:"storageRequest"`
+	SwiftStorageSpecCore `json:",inline"`
 
 	// +kubebuilder:validation:Required
 	// Image URL for Swift account service
@@ -56,6 +43,24 @@ type SwiftStorageSpec struct {
 	// +kubebuilder:validation:Required
 	// Image URL for Swift proxy service
 	ContainerImageProxy string `json:"containerImageProxy"`
+}
+
+// SwiftStorageSpecCore -
+type SwiftStorageSpecCore struct {
+	// +kubebuilder:validation:Required
+	// +kubebuilder:default=1
+	// +kubebuilder:validation:Minimum=0
+	Replicas *int32 `json:"replicas"`
+
+	// +kubebuilder:validation:Required
+	// Name of StorageClass to use for Swift PVs
+	// +kubebuilder:default=""
+	StorageClass string `json:"storageClass"`
+
+	// +kubebuilder:validation:Required
+	// +kubebuilder:default="10Gi"
+	// Minimum size for Swift PVs
+	StorageRequest string `json:"storageRequest"`
 
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default=swift-conf

@@ -100,6 +100,11 @@ func (spec *SwiftSpec) Default() {
 	}
 }
 
+// Default - set defaults for this Swift core spec (this version is used by OpenStackControlplane webhooks)
+func (spec *SwiftSpecCore) Default() {
+	// nothing here yet
+}
+
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
 //+kubebuilder:webhook:path=/validate-swift-openstack-org-v1beta1-swift,mutating=false,failurePolicy=fail,sideEffects=None,groups=swift.openstack.org,resources=swifts,verbs=create;update,versions=v1beta1,name=vswift.kb.io,admissionReviewVersions=v1
 

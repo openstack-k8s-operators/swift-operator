@@ -35,6 +35,16 @@ type SwiftRingSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
+	SwiftRingSpecCore `json:",inline"`
+
+	// +kubebuilder:validation:Required
+	// Image URL for Swift proxy service
+	ContainerImage string `json:"containerImage"`
+}
+
+// SwiftRingSpec defines the desired state of SwiftRing
+type SwiftRingSpecCore struct {
+
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default=1
 	// +kubebuilder:validation:Minimum=1
@@ -52,10 +62,6 @@ type SwiftRingSpec struct {
 	// +kubebuilder:validation:Minimum=1
 	// Minimum numbeir of hours to restrict moving a partition more than once
 	MinPartHours *int64 `json:"minPartHours"`
-
-	// +kubebuilder:validation:Required
-	// Image URL for Swift proxy service
-	ContainerImage string `json:"containerImage"`
 
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default=swift-conf
@@ -99,7 +105,6 @@ type SwiftRingList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []SwiftRing `json:"items"`
 }
-
 
 type SwiftDisk struct {
 	Device string `json:"device"`
