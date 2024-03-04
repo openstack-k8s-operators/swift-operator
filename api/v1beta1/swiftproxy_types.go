@@ -36,15 +36,20 @@ type PasswordSelector struct {
 
 // SwiftProxySpec defines the desired state of SwiftProxy
 type SwiftProxySpec struct {
+	SwiftProxySpecCore `json:",inline"`
+
+	// +kubebuilder:validation:Required
+	// Swift Proxy Container Image URL
+	ContainerImageProxy string `json:"containerImageProxy"`
+}
+
+// SwiftProxySpecCore -
+type SwiftProxySpecCore struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default=1
 	// +kubebuilder:validation:Minimum=0
 	// Replicas of Swift Proxy
 	Replicas *int32 `json:"replicas"`
-
-	// +kubebuilder:validation:Required
-	// Swift Proxy Container Image URL
-	ContainerImageProxy string `json:"containerImageProxy"`
 
 	// +kubebuilder:default=swift
 	// ServiceUser - optional username used for this service to register in Swift

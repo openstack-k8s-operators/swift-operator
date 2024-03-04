@@ -359,10 +359,12 @@ func (r *SwiftReconciler) reconcileDelete(ctx context.Context, instance *swiftv1
 func (r *SwiftReconciler) ringCreateOrUpdate(ctx context.Context, instance *swiftv1.Swift) (*swiftv1.SwiftRing, controllerutil.OperationResult, error) {
 
 	swiftRingSpec := swiftv1.SwiftRingSpec{
-		RingReplicas:    instance.Spec.SwiftRing.RingReplicas,
-		ContainerImage:  instance.Spec.SwiftRing.ContainerImage,
-		SwiftConfSecret: instance.Spec.SwiftConfSecret,
-		TLS:             instance.Spec.SwiftProxy.TLS.Ca,
+		ContainerImage: instance.Spec.SwiftRing.ContainerImage,
+		SwiftRingSpecCore: swiftv1.SwiftRingSpecCore{
+			RingReplicas:    instance.Spec.SwiftRing.RingReplicas,
+			SwiftConfSecret: instance.Spec.SwiftConfSecret,
+			TLS:             instance.Spec.SwiftProxy.TLS.Ca,
+		},
 	}
 
 	deployment := &swiftv1.SwiftRing{
@@ -388,18 +390,20 @@ func (r *SwiftReconciler) ringCreateOrUpdate(ctx context.Context, instance *swif
 func (r *SwiftReconciler) storageCreateOrUpdate(ctx context.Context, instance *swiftv1.Swift, memcachedServers string) (*swiftv1.SwiftStorage, controllerutil.OperationResult, error) {
 
 	swiftStorageSpec := swiftv1.SwiftStorageSpec{
-		Replicas:                instance.Spec.SwiftStorage.Replicas,
-		StorageClass:            instance.Spec.SwiftStorage.StorageClass,
-		StorageRequest:          instance.Spec.SwiftStorage.StorageRequest,
 		ContainerImageAccount:   instance.Spec.SwiftStorage.ContainerImageAccount,
 		ContainerImageContainer: instance.Spec.SwiftStorage.ContainerImageContainer,
 		ContainerImageObject:    instance.Spec.SwiftStorage.ContainerImageObject,
 		ContainerImageProxy:     instance.Spec.SwiftStorage.ContainerImageProxy,
-		SwiftConfSecret:         instance.Spec.SwiftConfSecret,
-		NetworkAttachments:      instance.Spec.SwiftStorage.NetworkAttachments,
-		MemcachedServers:        memcachedServers,
-		ContainerSharderEnabled: instance.Spec.SwiftStorage.ContainerSharderEnabled,
-		DefaultConfigOverwrite:  instance.Spec.SwiftStorage.DefaultConfigOverwrite,
+		SwiftStorageSpecCore: swiftv1.SwiftStorageSpecCore{
+			Replicas:                instance.Spec.SwiftStorage.Replicas,
+			StorageClass:            instance.Spec.SwiftStorage.StorageClass,
+			StorageRequest:          instance.Spec.SwiftStorage.StorageRequest,
+			SwiftConfSecret:         instance.Spec.SwiftConfSecret,
+			NetworkAttachments:      instance.Spec.SwiftStorage.NetworkAttachments,
+			MemcachedServers:        memcachedServers,
+			ContainerSharderEnabled: instance.Spec.SwiftStorage.ContainerSharderEnabled,
+			DefaultConfigOverwrite:  instance.Spec.SwiftStorage.DefaultConfigOverwrite,
+		},
 	}
 
 	deployment := &swiftv1.SwiftStorage{
@@ -425,18 +429,20 @@ func (r *SwiftReconciler) storageCreateOrUpdate(ctx context.Context, instance *s
 func (r *SwiftReconciler) proxyCreateOrUpdate(ctx context.Context, instance *swiftv1.Swift, memcachedServers string) (*swiftv1.SwiftProxy, controllerutil.OperationResult, error) {
 
 	swiftProxySpec := swiftv1.SwiftProxySpec{
-		Replicas:               instance.Spec.SwiftProxy.Replicas,
-		ContainerImageProxy:    instance.Spec.SwiftProxy.ContainerImageProxy,
-		Secret:                 instance.Spec.SwiftProxy.Secret,
-		ServiceUser:            instance.Spec.SwiftProxy.ServiceUser,
-		PasswordSelectors:      instance.Spec.SwiftProxy.PasswordSelectors,
-		SwiftConfSecret:        instance.Spec.SwiftConfSecret,
-		Override:               instance.Spec.SwiftProxy.Override,
-		NetworkAttachments:     instance.Spec.SwiftProxy.NetworkAttachments,
-		MemcachedServers:       memcachedServers,
-		TLS:                    instance.Spec.SwiftProxy.TLS,
-		DefaultConfigOverwrite: instance.Spec.SwiftProxy.DefaultConfigOverwrite,
-		EncryptionEnabled:      instance.Spec.SwiftProxy.EncryptionEnabled,
+		ContainerImageProxy: instance.Spec.SwiftProxy.ContainerImageProxy,
+		SwiftProxySpecCore: swiftv1.SwiftProxySpecCore{
+			Replicas:               instance.Spec.SwiftProxy.Replicas,
+			Secret:                 instance.Spec.SwiftProxy.Secret,
+			ServiceUser:            instance.Spec.SwiftProxy.ServiceUser,
+			PasswordSelectors:      instance.Spec.SwiftProxy.PasswordSelectors,
+			SwiftConfSecret:        instance.Spec.SwiftConfSecret,
+			Override:               instance.Spec.SwiftProxy.Override,
+			NetworkAttachments:     instance.Spec.SwiftProxy.NetworkAttachments,
+			MemcachedServers:       memcachedServers,
+			TLS:                    instance.Spec.SwiftProxy.TLS,
+			DefaultConfigOverwrite: instance.Spec.SwiftProxy.DefaultConfigOverwrite,
+			EncryptionEnabled:      instance.Spec.SwiftProxy.EncryptionEnabled,
+		},
 	}
 
 	deployment := &swiftv1.SwiftProxy{

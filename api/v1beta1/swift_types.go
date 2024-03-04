@@ -32,6 +32,8 @@ const (
 
 // SwiftSpec defines the desired state of Swift
 type SwiftSpec struct {
+	SwiftSpecBase `json:",inline"`
+
 	// +kubebuilder:validation:Required
 	// SwiftRing - Spec definition for the Ring service of this Swift deployment
 	SwiftRing SwiftRingSpec `json:"swiftRing"`
@@ -43,6 +45,27 @@ type SwiftSpec struct {
 	// +kubebuilder:validation:Required
 	// SwiftProxy - Spec definition for the Proxy service of this Swift deployment
 	SwiftProxy SwiftProxySpec `json:"swiftProxy"`
+}
+
+// SwiftSpecCore defines the desired state of Swift (this version is used by OpenStackControlplane)
+type SwiftSpecCore struct {
+	SwiftSpecBase `json:",inline"`
+
+	// +kubebuilder:validation:Required
+	// SwiftRing - Spec definition for the Ring service of this Swift deployment
+	SwiftRing SwiftRingSpecCore `json:"swiftRing"`
+
+	// +kubebuilder:validation:Required
+	// SwiftStorage - Spec definition for the Storage service of this Swift deployment
+	SwiftStorage SwiftStorageSpecCore `json:"swiftStorage"`
+
+	// +kubebuilder:validation:Required
+	// SwiftProxy - Spec definition for the Proxy service of this Swift deployment
+	SwiftProxy SwiftProxySpecCore `json:"swiftProxy"`
+}
+
+// SwiftSpecBase -
+type SwiftSpecBase struct {
 
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default=swift-conf
