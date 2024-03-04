@@ -160,6 +160,12 @@ func (r *SwiftRingReconciler) reconcileNormal(ctx context.Context, instance *swi
 
 	deviceList, deviceListHash, err := swiftring.DeviceList(ctx, helper, instance)
 	if err != nil {
+		instance.Status.Conditions.Set(condition.FalseCondition(
+			swiftv1beta1.SwiftRingReadyCondition,
+			condition.ErrorReason,
+			condition.SeverityWarning,
+			swiftv1beta1.SwiftRingReadyErrorMessage,
+			err.Error()))
 		return ctrl.Result{}, err
 	}
 
