@@ -61,12 +61,6 @@ function update() {
         # Check if host/disk exists and only add if not
         swift-ring-builder object.builder search --ip $HOST --device $DEVICE_NAME
         [ $? -eq 2 ] && swift-ring-builder object.builder add --region $REGION --zone $ZONE --ip $HOST --port 6200 --device $DEVICE_NAME --weight $WEIGHT
-
-        # This will change the weights, eg. after bootstrapping and correct PVC
-        # sizes are known.
-        swift-ring-builder account.builder set_weight --region $REGION --zone $ZONE --ip $HOST --port 6202 --device $DEVICE_NAME $WEIGHT
-        swift-ring-builder container.builder set_weight --region $REGION --zone $ZONE --ip $HOST --port 6201 --device $DEVICE_NAME $WEIGHT
-        swift-ring-builder object.builder set_weight --region $REGION --zone $ZONE --ip $HOST --port 6200 --device $DEVICE_NAME $WEIGHT
 done < $DEVICESFILE
 }
 
