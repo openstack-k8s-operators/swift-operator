@@ -21,7 +21,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -230,8 +229,7 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		for _, swiftPod := range podList.Items {
 			dnsIP := ""
 			if len(instance.Spec.NetworkAttachments) > 0 {
-				// Currently only IPv4 is supported
-				dnsIP, err = getPodIPv4InNetwork(swiftPod, instance.Namespace, "storage")
+				dnsIP, err = getPodIPInNetwork(swiftPod, instance.Namespace, "storage")
 				if err != nil {
 					return ctrl.Result{}, err
 				}
@@ -288,7 +286,7 @@ func (r *SwiftStorageReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func getPodIPv4InNetwork(swiftPod corev1.Pod, namespace string, networkAttachment string) (string, error) {
+func getPodIPInNetwork(swiftPod corev1.Pod, namespace string, networkAttachment string) (string, error) {
 	networkName := fmt.Sprintf("%s/%s", namespace, networkAttachment)
 	netStat, err := networkattachment.GetNetworkStatusFromAnnotation(swiftPod.Annotations)
 	if err != nil {
@@ -298,14 +296,12 @@ func getPodIPv4InNetwork(swiftPod corev1.Pod, namespace string, networkAttachmen
 	for _, net := range netStat {
 		if net.Name == networkName {
 			for _, ip := range net.IPs {
-				if !strings.Contains(ip, ":") {
-					return ip, nil
-				}
+				return ip, nil
 			}
 		}
 	}
 
 	// If this is reached it means that no IP was found, construct error and return
-	err = fmt.Errorf("Error while getting IPv4 address from pod %s in network %s", swiftPod.Name, networkAttachment)
+	err = fmt.Errorf("Error while getting IP address from pod %s in network %s", swiftPod.Name, networkAttachment)
 	return "", err
 }
