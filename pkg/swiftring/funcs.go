@@ -25,7 +25,6 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -57,18 +56,16 @@ func DeviceList(ctx context.Context, h *helper.Helper, instance *swiftv1beta1.Sw
 			cn := fmt.Sprintf("%s-%s-%d", swift.ClaimName, storageInstance.Name, replica)
 			foundClaim := &corev1.PersistentVolumeClaim{}
 			err = h.GetClient().Get(ctx, types.NamespacedName{Name: cn, Namespace: storageInstance.Namespace}, foundClaim)
-			capacity := resource.MustParse(storageInstance.Spec.StorageRequest)
-			weight, _ := capacity.AsInt64()
-			if err == nil {
-				if foundClaim.Status.Phase != corev1.ClaimBound {
-					err = fmt.Errorf("PVC %s found, but not bound yet (%s). Requeueing", cn, foundClaim.Status.Phase)
-					return "", "", err // requeueing
-				}
-				capacity := foundClaim.Status.Capacity[corev1.ResourceStorage]
-				weight, _ = capacity.AsInt64()
-			} else {
-				h.GetLogger().Info(fmt.Sprintf("Did not find PVC %s, assuming %s as capacity", cn, storageInstance.Spec.StorageRequest))
+			if err != nil {
+				return "", "", err // requeueing
 			}
+
+			if foundClaim.Status.Phase != corev1.ClaimBound {
+				err = fmt.Errorf("PersistentVolumeClaim %s found, but not bound yet (%s). Requeueing", cn, foundClaim.Status.Phase)
+				return "", "", err // requeueing
+			}
+			capacity := foundClaim.Status.Capacity[corev1.ResourceStorage]
+			weight, _ := capacity.AsInt64()
 			weight = weight / (1000 * 1000 * 1000) // 10GiB gets a weight of 10 etc.
 			// CSV: region,zone,hostname,devicename,weight
 			devices = append(devices, fmt.Sprintf("1 1 %s-%d.%s %s %d\n", storageInstance.Name, replica, storageInstance.Name, "d1", weight))
