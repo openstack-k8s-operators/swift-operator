@@ -16,10 +16,15 @@ limitations under the License.
 package swift
 
 import (
+	"context"
+	"math/rand"
+	"strings"
+
 	"github.com/openstack-k8s-operators/lib-common/modules/common"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/affinity"
+	helper "github.com/openstack-k8s-operators/lib-common/modules/common/helper"
 	corev1 "k8s.io/api/core/v1"
-	"math/rand"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func GetSecurityContext() corev1.SecurityContext {
@@ -68,4 +73,20 @@ func GetPodAffinity(componentName string) *corev1.Affinity {
 		},
 		corev1.LabelHostname,
 	)
+}
+
+// GetBindIP - Returns bind ip for services for ipv4 and ipv6.
+func GetBindIP(helper *helper.Helper) (string, error) {
+	nodes, err := helper.GetKClient().CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		return "0.0.0.0", err
+	}
+	for _, node := range nodes.Items {
+		for _, address := range node.Status.Addresses {
+			if address.Type == "InternalIP" && strings.Contains(address.Address, ":") {
+				return "::", nil
+			}
+		}
+	}
+	return "0.0.0.0", nil
 }

@@ -61,7 +61,6 @@ var (
 	k8sClient client.Client
 	testEnv   *envtest.Environment
 	th        *TestHelper
-	ctx       context.Context
 	cancel    context.CancelFunc
 	logger    logr.Logger
 )
