@@ -70,7 +70,7 @@ func DeviceList(ctx context.Context, h *helper.Helper, instance *swiftv1beta1.Sw
 				h.GetLogger().Info(fmt.Sprintf("Did not find PVC %s, assuming %s as capacity", cn, storageInstance.Spec.StorageRequest))
 			}
 			weight = weight / (1000 * 1000 * 1000) // 10GiB gets a weight of 10 etc.
-			// CSV: region,zone,hostname,devicename,weight
+			// Format: region zone hostname devicename weight
 			devices = append(devices, fmt.Sprintf("1 1 %s-%d.%s %s %d\n", storageInstance.Name, replica, storageInstance.Name, "d1", weight))
 		}
 	}
@@ -87,30 +87,27 @@ func DeviceList(ctx context.Context, h *helper.Helper, instance *swiftv1beta1.Sw
 			if service == "swift" {
 				// Get the global disk vars first that are used for all
 				// nodes if not set otherwise per-node
-				globalDisks := make(map[string]swiftv1beta1.SwiftDisk)
+				var globalDisks []swiftv1beta1.SwiftDisk
 				if edpmSwiftDisks, found := nodeSet.Spec.NodeTemplate.Ansible.AnsibleVars[DataplaneDisks]; found {
-					var swiftDisks []swiftv1beta1.SwiftDisk
-					if err := json.Unmarshal(edpmSwiftDisks, &swiftDisks); err == nil {
-						for _, disk := range swiftDisks {
-							globalDisks[disk.Path] = disk
-						}
+					err = json.Unmarshal(edpmSwiftDisks, &globalDisks)
+					if err != nil {
+						return "", "", err
 					}
 				}
 
 				for _, node := range nodeSet.Spec.Nodes {
 					hostName := fmt.Sprintf("%s.%s", node.HostName, DataplaneDomain)
-					hostDisks := make(map[string]swiftv1beta1.SwiftDisk)
-					for k, v := range globalDisks {
-						hostDisks[k] = v
-					}
+					hostDisks := make([]swiftv1beta1.SwiftDisk, len(globalDisks))
+					copy(hostDisks, globalDisks)
+
 					// These overwrite the global vars if set
 					if edpmSwiftDisks, found := node.Ansible.AnsibleVars[DataplaneDisks]; found {
-						var swiftDisks []swiftv1beta1.SwiftDisk
-						if err := json.Unmarshal(edpmSwiftDisks, &swiftDisks); err == nil {
-							for _, disk := range swiftDisks {
-								hostDisks[disk.Path] = disk
-							}
+						hostDisks = nil // clear global disks, per-node settings prevail
+						err = json.Unmarshal(edpmSwiftDisks, &hostDisks)
+						if err != nil {
+							return "", "", err
 						}
+
 					}
 					for _, disk := range hostDisks {
 						devices = append(devices, fmt.Sprintf("%d %d %s %s %d\n", disk.Region, disk.Zone, hostName, filepath.Base(disk.Path), disk.Weight))
