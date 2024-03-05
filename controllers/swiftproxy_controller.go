@@ -79,6 +79,7 @@ type SwiftProxyReconciler struct {
 //+kubebuilder:rbac:groups=k8s.cni.cncf.io,resources=network-attachment-definitions,verbs=get;list;watch
 //+kubebuilder:rbac:groups=memcached.openstack.org,resources=memcacheds,verbs=get;list;watch;
 //+kubebuilder:rbac:groups=barbican.openstack.org,resources=barbicanapis,verbs=get;list;watch
+//+kubebuilder:rbac:groups=core,resources=nodes,verbs=get;list
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -455,7 +456,10 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	}
 
 	instance.Status.Conditions.MarkTrue(condition.InputReadyCondition, condition.InputReadyMessage)
-
+	bindIP, err := swift.GetBindIP(helper)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
 	// Create a Secret populated with content from templates/
 	tpl := swiftproxy.SecretTemplates(
 		instance,
@@ -464,6 +468,7 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		keystoneInternalURL,
 		password,
 		instance.Spec.MemcachedServers,
+		bindIP,
 		secretRef,
 	)
 	err = secret.EnsureSecrets(ctx, helper, instance, tpl, &envVars)

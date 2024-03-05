@@ -41,6 +41,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
+	"github.com/openstack-k8s-operators/swift-operator/pkg/swift"
 	"github.com/openstack-k8s-operators/swift-operator/pkg/swiftstorage"
 
 	"github.com/openstack-k8s-operators/lib-common/modules/common/condition"
@@ -76,6 +77,7 @@ type Netconfig struct {
 //+kubebuilder:rbac:groups=k8s.cni.cncf.io,resources=network-attachment-definitions,verbs=get;list;watch
 //+kubebuilder:rbac:groups=memcached.openstack.org,resources=memcacheds,verbs=get;list;watch;
 //+kubebuilder:rbac:groups=network.openstack.org,resources=dnsdata,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=core,resources=nodes,verbs=get;list
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -167,8 +169,12 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	serviceLabels := swiftstorage.Labels()
 	envVars := make(map[string]env.Setter)
 
+	bindIP, err := swift.GetBindIP(helper)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
 	// Create a ConfigMap populated with content from templates/
-	tpl := swiftstorage.ConfigMapTemplates(instance, serviceLabels, instance.Spec.MemcachedServers)
+	tpl := swiftstorage.ConfigMapTemplates(instance, serviceLabels, instance.Spec.MemcachedServers, bindIP)
 	err = configmap.EnsureConfigMaps(ctx, helper, instance, tpl, &envVars)
 	if err != nil {
 		return ctrl.Result{}, err
@@ -338,7 +344,8 @@ func getPodIPInNetwork(swiftPod corev1.Pod, namespace string, networkAttachment 
 	networkName := fmt.Sprintf("%s/%s", namespace, networkAttachment)
 	netStat, err := networkattachment.GetNetworkStatusFromAnnotation(swiftPod.Annotations)
 	if err != nil {
-		err = fmt.Errorf("Error while getting the Network Status for pod %s: %v", swiftPod.Name, err)
+		err = fmt.Errorf("Error while getting the Network Status for pod %s: %w",
+			swiftPod.Name, err)
 		return "", err
 	}
 	for _, net := range netStat {
