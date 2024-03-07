@@ -250,29 +250,35 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		return ctrlResult, nil
 	}
 
-	// verify if network attachment matches expectations
-	networkReady, networkAttachmentStatus, err := networkattachment.VerifyNetworkStatusFromAnnotation(ctx, helper, instance.Spec.NetworkAttachments, serviceLabels, instance.Status.ReadyCount)
-	if err != nil {
-		return ctrl.Result{}, err
-	}
+	// replicas=0 is a common setting before dataplane adoption. However,
+	// networkReady will never become true in that case and status will
+	// report an error where none is
+	if *instance.Spec.Replicas > 0 {
+		// verify if network attachment matches expectations
+		networkReady, networkAttachmentStatus, err := networkattachment.VerifyNetworkStatusFromAnnotation(ctx, helper, instance.Spec.NetworkAttachments, serviceLabels, instance.Status.ReadyCount)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
 
-	instance.Status.NetworkAttachments = networkAttachmentStatus
-	if networkReady {
-		instance.Status.Conditions.MarkTrue(condition.NetworkAttachmentsReadyCondition, condition.NetworkAttachmentsReadyMessage)
-	} else {
-		err := fmt.Errorf("not all pods have interfaces with ips as configured in NetworkAttachments: %s", instance.Spec.NetworkAttachments)
-		instance.Status.Conditions.Set(condition.FalseCondition(
-			condition.NetworkAttachmentsReadyCondition,
-			condition.ErrorReason,
-			condition.SeverityWarning,
-			condition.NetworkAttachmentsReadyErrorMessage,
-			err.Error()))
+		instance.Status.NetworkAttachments = networkAttachmentStatus
+		if networkReady {
+			instance.Status.Conditions.MarkTrue(condition.NetworkAttachmentsReadyCondition, condition.NetworkAttachmentsReadyMessage)
+		} else {
+			err := fmt.Errorf("not all pods have interfaces with ips as configured in NetworkAttachments: %s", instance.Spec.NetworkAttachments)
+			instance.Status.Conditions.Set(condition.FalseCondition(
+				condition.NetworkAttachmentsReadyCondition,
+				condition.ErrorReason,
+				condition.SeverityWarning,
+				condition.NetworkAttachmentsReadyErrorMessage,
+				err.Error()))
 
-		return ctrl.Result{}, err
+			return ctrl.Result{}, err
+		}
 	}
 
 	instance.Status.ReadyCount = sset.GetStatefulSet().Status.ReadyReplicas
 	if instance.Status.ReadyCount == *instance.Spec.Replicas {
+
 		// When the cluster is attached to an external network, create DNS record for every
 		// cluster member so it can be resolved from outside cluster (edpm nodes)
 		podList, err := pod.GetPodListWithLabel(ctx, helper, instance.Namespace, serviceLabels)
