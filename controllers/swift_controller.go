@@ -238,8 +238,9 @@ func (r *SwiftReconciler) reconcileNormal(ctx context.Context, instance *swiftv1
 				condition.RequestedReason,
 				condition.SeverityInfo,
 				condition.MemcachedReadyWaitingMessage))
-			r.Log.Error(err, "memcached not found")
+			r.Log.Info(fmt.Sprintf("%s... requeueing", condition.MemcachedReadyWaitingMessage))
 			return ctrl.Result{RequeueAfter: time.Duration(10) * time.Second}, nil
+
 		}
 		instance.Status.Conditions.Set(condition.FalseCondition(
 			condition.MemcachedReadyCondition,
@@ -256,7 +257,7 @@ func (r *SwiftReconciler) reconcileNormal(ctx context.Context, instance *swiftv1
 			condition.RequestedReason,
 			condition.SeverityInfo,
 			condition.MemcachedReadyWaitingMessage))
-		r.Log.Error(err, "memcached is not ready")
+		r.Log.Info(fmt.Sprintf("%s... requeueing", condition.MemcachedReadyWaitingMessage))
 		return ctrl.Result{RequeueAfter: time.Duration(10) * time.Second}, nil
 	}
 	// Mark the Memcached Service as Ready if we get to this point with no errors
