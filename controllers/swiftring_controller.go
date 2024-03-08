@@ -166,6 +166,10 @@ func (r *SwiftRingReconciler) reconcileNormal(ctx context.Context, instance *swi
 			condition.SeverityWarning,
 			swiftv1beta1.SwiftRingReadyErrorMessage,
 			err.Error()))
+		if apierrors.IsNotFound(err) {
+			r.Log.Info(fmt.Sprintf("%s... requeueing", err.Error()))
+			return ctrl.Result{RequeueAfter: time.Duration(5) * time.Second}, nil
+		}
 		return ctrl.Result{}, err
 	}
 
