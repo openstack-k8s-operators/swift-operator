@@ -386,6 +386,10 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	if err != nil {
 		return ctrl.Result{}, err
 	}
+	if !keystoneAPI.IsReady() {
+		r.Log.Info("Keystone API is not yet ready... requeueing")
+		return ctrl.Result{RequeueAfter: time.Duration(10) * time.Second}, nil
+	}
 	keystonePublicURL, err := keystoneAPI.GetEndpoint(endpoint.EndpointPublic)
 	if err != nil {
 		return ctrl.Result{}, err
