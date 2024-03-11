@@ -19,7 +19,6 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -29,7 +28,6 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -230,7 +228,7 @@ func (r *SwiftReconciler) reconcileNormal(ctx context.Context, instance *swiftv1
 	//
 	// Check for required memcached used for caching
 	//
-	memcached, err := r.getSwiftMemcached(ctx, helper, instance)
+	memcached, err := memcachedv1.GetMemcachedByName(ctx, helper, instance.Spec.MemcachedInstance, instance.Namespace)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			instance.Status.Conditions.Set(condition.FalseCondition(
@@ -264,7 +262,7 @@ func (r *SwiftReconciler) reconcileNormal(ctx context.Context, instance *swiftv1
 		condition.MemcachedReadyCondition, condition.MemcachedReadyMessage)
 	// run check memcached - end
 
-	memcachedServers := strings.Join(memcached.Status.ServerList, ",")
+	memcachedServers := memcached.GetMemcachedServerListString()
 
 	// create or update Swift storage
 	swiftStorage, op, err := r.storageCreateOrUpdate(ctx, instance, memcachedServers)
@@ -463,24 +461,4 @@ func (r *SwiftReconciler) proxyCreateOrUpdate(ctx context.Context, instance *swi
 	})
 
 	return deployment, op, err
-}
-
-// getSwiftMemcached - gets the Memcached instance used for Swift cache backend
-func (r *SwiftReconciler) getSwiftMemcached(
-	ctx context.Context,
-	h *helper.Helper,
-	instance *swiftv1.Swift,
-) (*memcachedv1.Memcached, error) {
-	memcached := &memcachedv1.Memcached{}
-	err := h.GetClient().Get(
-		ctx,
-		types.NamespacedName{
-			Name:      instance.Spec.MemcachedInstance,
-			Namespace: instance.Namespace,
-		},
-		memcached)
-	if err != nil {
-		return nil, err
-	}
-	return memcached, err
 }
