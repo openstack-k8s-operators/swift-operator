@@ -395,8 +395,12 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return ctrl.Result{}, err
 	}
 
-	// Create OpenStack roles for Swift RBAC
+	// Create common and RBAC OpenStack roles
 	os, _, err := keystonev1.GetAdminServiceClient(ctx, helper, keystoneAPI)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+	_, err = os.CreateRole(r.Log, "swiftoperator")
 	if err != nil {
 		return ctrl.Result{}, err
 	}
