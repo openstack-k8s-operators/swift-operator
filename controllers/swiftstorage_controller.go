@@ -250,11 +250,8 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		return ctrlResult, nil
 	}
 
-	// replicas=0 is a common setting before dataplane adoption. However,
-	// networkReady will never become true in that case and status will
-	// report an error where none is
-	if *instance.Spec.Replicas > 0 {
-		// verify if network attachment matches expectations
+	instance.Status.ReadyCount = sset.GetStatefulSet().Status.ReadyReplicas
+	if instance.Status.ReadyCount == *instance.Spec.Replicas {
 		networkReady, networkAttachmentStatus, err := networkattachment.VerifyNetworkStatusFromAnnotation(ctx, helper, instance.Spec.NetworkAttachments, serviceLabels, instance.Status.ReadyCount)
 		if err != nil {
 			return ctrl.Result{}, err
@@ -274,10 +271,6 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 
 			return ctrl.Result{}, err
 		}
-	}
-
-	instance.Status.ReadyCount = sset.GetStatefulSet().Status.ReadyReplicas
-	if instance.Status.ReadyCount == *instance.Spec.Replicas {
 
 		// When the cluster is attached to an external network, create DNS record for every
 		// cluster member so it can be resolved from outside cluster (edpm nodes)
