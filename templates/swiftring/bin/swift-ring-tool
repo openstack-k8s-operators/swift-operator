@@ -81,6 +81,20 @@ function forced_rebalance() {
 }
 
 
+function drain() {
+    for f in *.builder; do
+        swift-ring-builder $f set_weight --ip $1 0 --yes
+    done
+}
+
+
+function remove() {
+    for f in *.builder; do
+        swift-ring-builder $f remove $1
+    done
+}
+
+
 function push() {
     # Tar up all the ring data and either create or update the SwiftRing ConfigMap
     BINARY_DATA=`tar --totals -cz *.builder *.ring.gz backups/*.builder | /usr/bin/base64 -w 0`
@@ -130,6 +144,8 @@ function usage() {
     echo "get        Fetch rings from ConfigMap ${CM_NAME}"
     echo "init       Create new .builder files if not existing"
     echo "update     Update rings using input from ${DEVICESFILE}"
+    echo "drain      Set weight of all node devices to 0"
+    echo "remove     Remove node from all rings"
     echo "rebalance  Rebalance rings"
     echo "push       Push rings to ConfigMap ${CM_NAME}"
     echo "all        All above operations in sequence"
@@ -156,6 +172,14 @@ case $1 in
 
     "update")
         update
+    ;;
+
+    "drain")
+        drain $2
+    ;;
+
+    "remove")
+        remove $2
     ;;
 
     "rebalance")
