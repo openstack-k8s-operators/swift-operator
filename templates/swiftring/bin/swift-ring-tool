@@ -18,14 +18,15 @@ function get() {
         -H "Authorization: Bearer $TOKEN" \
         -o "${CM_NAME}.json" \
         -w "%{http_code}" \
-        -X GET "${URL}" 2>/dev/null)
+        --silent --show-error --fail \
+        -X GET "${URL}")
 
     case $HTTP_CODE in
         "200")
             # Configmap was found
             # Get JSON keyvalue without jq
             grep -e '"swiftrings.tar.gz": ".*"' "${CM_NAME}.json"  | cut -f 4 -d '"' | base64 -d > $TARFILE
-            [ -e $TARFILE ] && tar -xzvf $TARFILE
+            [ -e $TARFILE ] && tar --totals -xzf $TARFILE
         ;;
 
         "404")
@@ -82,7 +83,7 @@ function forced_rebalance() {
 
 function push() {
     # Tar up all the ring data and either create or update the SwiftRing ConfigMap
-    BINARY_DATA=`tar cvz *.builder *.ring.gz backups/*.builder | /usr/bin/base64 -w 0`
+    BINARY_DATA=`tar --totals -cz *.builder *.ring.gz backups/*.builder | /usr/bin/base64 -w 0`
 
     if [ ! -e "${CM_NAME}.json" ]; then
         METHOD="POST"
@@ -118,6 +119,7 @@ function push() {
         -H "Authorization: Bearer $TOKEN" \
         --data-binary "${CONFIGMAP_JSON}" \
         -H 'Content-Type: application/json' \
+        -o /dev/null --silent --show-error --fail \
         -X "${METHOD}" "${URL}"
 }
 
