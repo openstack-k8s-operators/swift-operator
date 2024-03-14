@@ -1,0 +1,21 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: swift-storage-0
+status:
+  phase: Running
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: swift-storage-1
+status:
+  phase: Running
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: swift-storage-2
+status:
+  phase: Running
