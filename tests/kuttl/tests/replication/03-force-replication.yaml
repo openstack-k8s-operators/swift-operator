@@ -1,0 +1,6 @@
+---
+apiVersion: kuttl.dev/v1beta1
+kind: TestStep
+commands:
+  - script: |
+      oc rsh -n $NAMESPACE pod/swift-storage-0 /bin/sh -c 'rm -rf /srv/node/d1/* || true'
