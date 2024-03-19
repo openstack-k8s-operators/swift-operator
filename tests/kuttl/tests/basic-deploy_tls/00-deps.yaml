@@ -1,7 +1,1 @@
-apiVersion: kuttl.dev/v1beta1
-kind: TestStep
-commands:
-  - script: |
-      if ! [[ `oc get crd openstackdataplanenodesets.dataplane.openstack.org` ]]; then
-        oc apply -f ../../deps/dataplane.openstack.org_openstackdataplanenodesets.yaml
-      fi
+../../common/00-deps.yaml

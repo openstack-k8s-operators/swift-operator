@@ -1,3 +1,4 @@
+---
 apiVersion: swift.openstack.org/v1beta1
 kind: Swift
 metadata:
@@ -50,3 +51,93 @@ status:
     reason: Ready
     status: "True"
     type: SwiftStorageReady
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    component: swift-proxy
+    service: swift
+status:
+  containerStatuses:
+    - name: proxy-httpd
+      ready: true
+      started: true
+    - name: proxy-server
+      ready: true
+      started: true
+    - name: ring-sync
+      ready: true
+      started: true
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    component: swift-storage
+    service: swift
+  name: swift-storage-0
+status:
+  containerStatuses:
+    - name: account-auditor
+      ready: true
+      started: true
+    - name: account-reaper
+      ready: true
+      started: true
+    - name: account-replicator
+      ready: true
+      started: true
+    - name: account-server
+      ready: true
+      started: true
+    - name: container-auditor
+      ready: true
+      started: true
+    - name: container-replicator
+      ready: true
+      started: true
+    - name: container-server
+      ready: true
+      started: true
+    - name: container-updater
+      ready: true
+      started: true
+    - name: object-auditor
+      ready: true
+      started: true
+    - name: object-expirer
+      ready: true
+      started: true
+    - name: object-replicator
+      ready: true
+      started: true
+    - name: object-server
+      ready: true
+      started: true
+    - name: object-updater
+      ready: true
+      started: true
+    - name: ring-sync
+      ready: true
+      started: true
+    - name: rsync
+      ready: true
+      started: true
+    - name: swift-recon-cron
+      ready: true
+      started: true
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  labels:
+    job-name: swift-ring-rebalance
+  name: swift-ring-rebalance
+status:
+  succeeded: 1
+---
+apiVersion: kuttl.dev/v1beta1
+kind: TestAssert
+commands:
+  - script: $SWIFT_KUTTL_DIR/../common/scripts/check_ring_rebalance_output.sh
