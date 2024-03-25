@@ -15,7 +15,7 @@ for s in account-server \
     object-server \
     object-expirer \
     proxy-server; do
-    if [ -e /var/lib/config-data/default/*${s}*.conf ]; then
+    if $(ls -1 /var/lib/config-data/default/ | grep -q "${s}"); then
         [ ! -d  /etc/swift/${s}.conf.d ] && mkdir /etc/swift/${s}.conf.d
         cp -t /etc/swift/${s}.conf.d/ /var/lib/config-data/default/*${s}*.conf
     fi

@@ -141,3 +141,11 @@ apiVersion: kuttl.dev/v1beta1
 kind: TestAssert
 commands:
   - script: $SWIFT_KUTTL_DIR/../common/scripts/check_ring_rebalance_output.sh
+---
+apiVersion: kuttl.dev/v1beta1
+kind: TestAssert
+commands:
+  - script: |
+      podname=$(oc get pod -n $NAMESPACE -l component=swift-proxy | grep Running | cut -f 1 -d " ")
+      files=$(oc rsh -n $NAMESPACE -c proxy-server "$podname" /bin/sh -c "ls -1 /etc/swift/proxy-server.conf.d/")
+      echo "$files" | grep -ze "00-proxy-server.conf.*01-proxy-server.conf"
