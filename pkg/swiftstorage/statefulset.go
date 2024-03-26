@@ -22,6 +22,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	env "github.com/openstack-k8s-operators/lib-common/modules/common/env"
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
 	"github.com/openstack-k8s-operators/swift-operator/pkg/swift"
 )
@@ -35,7 +36,7 @@ func getPorts(port int32, name string) []corev1.ContainerPort {
 	}
 }
 
-func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.Container {
+func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage, env []corev1.EnvVar) []corev1.Container {
 	securityContext := swift.GetSecurityContext()
 
 	containers := []corev1.Container{
@@ -55,6 +56,7 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.Cont
 			Ports:           getPorts(swift.AccountServerPort, "account"),
 			VolumeMounts:    getStorageVolumeMounts(),
 			Command:         []string{"/usr/bin/swift-account-server", "/etc/swift/account-server.conf.d", "-v"},
+			Env:             env,
 		},
 		{
 			Name:            "account-replicator",
@@ -63,6 +65,7 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.Cont
 			SecurityContext: &securityContext,
 			VolumeMounts:    getStorageVolumeMounts(),
 			Command:         []string{"/usr/bin/swift-account-replicator", "/etc/swift/account-server.conf.d", "-v"},
+			Env:             env,
 		},
 		{
 			Name:            "account-auditor",
@@ -71,6 +74,7 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.Cont
 			SecurityContext: &securityContext,
 			VolumeMounts:    getStorageVolumeMounts(),
 			Command:         []string{"/usr/bin/swift-account-auditor", "/etc/swift/account-server.conf.d", "-v"},
+			Env:             env,
 		},
 		{
 			Name:            "account-reaper",
@@ -79,6 +83,7 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.Cont
 			SecurityContext: &securityContext,
 			VolumeMounts:    getStorageVolumeMounts(),
 			Command:         []string{"/usr/bin/swift-account-reaper", "/etc/swift/account-server.conf.d", "-v"},
+			Env:             env,
 		},
 		{
 			Name:            "container-server",
@@ -88,6 +93,7 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.Cont
 			Ports:           getPorts(swift.ContainerServerPort, "container"),
 			VolumeMounts:    getStorageVolumeMounts(),
 			Command:         []string{"/usr/bin/swift-container-server", "/etc/swift/container-server.conf.d", "-v"},
+			Env:             env,
 		},
 		{
 			Name:            "container-replicator",
@@ -96,6 +102,7 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.Cont
 			SecurityContext: &securityContext,
 			VolumeMounts:    getStorageVolumeMounts(),
 			Command:         []string{"/usr/bin/swift-container-replicator", "/etc/swift/container-server.conf.d", "-v"},
+			Env:             env,
 		},
 		{
 			Name:            "container-auditor",
@@ -104,6 +111,7 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.Cont
 			SecurityContext: &securityContext,
 			VolumeMounts:    getStorageVolumeMounts(),
 			Command:         []string{"/usr/bin/swift-container-replicator", "/etc/swift/container-server.conf.d", "-v"},
+			Env:             env,
 		},
 		{
 			Name:            "container-updater",
@@ -112,6 +120,7 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.Cont
 			SecurityContext: &securityContext,
 			VolumeMounts:    getStorageVolumeMounts(),
 			Command:         []string{"/usr/bin/swift-container-replicator", "/etc/swift/container-server.conf.d", "-v"},
+			Env:             env,
 		},
 		{
 			Name:            "object-server",
@@ -121,6 +130,7 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.Cont
 			Ports:           getPorts(swift.ObjectServerPort, "object"),
 			VolumeMounts:    getStorageVolumeMounts(),
 			Command:         []string{"/usr/bin/swift-object-server", "/etc/swift/object-server.conf.d", "-v"},
+			Env:             env,
 		},
 		{
 			Name:            "object-replicator",
@@ -129,6 +139,7 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.Cont
 			SecurityContext: &securityContext,
 			VolumeMounts:    getStorageVolumeMounts(),
 			Command:         []string{"/usr/bin/swift-object-replicator", "/etc/swift/object-server.conf.d", "-v"},
+			Env:             env,
 		},
 		{
 			Name:            "object-auditor",
@@ -137,6 +148,7 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.Cont
 			SecurityContext: &securityContext,
 			VolumeMounts:    getStorageVolumeMounts(),
 			Command:         []string{"/usr/bin/swift-object-replicator", "/etc/swift/object-server.conf.d", "-v"},
+			Env:             env,
 		},
 		{
 			Name:            "object-updater",
@@ -145,6 +157,7 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.Cont
 			SecurityContext: &securityContext,
 			VolumeMounts:    getStorageVolumeMounts(),
 			Command:         []string{"/usr/bin/swift-object-replicator", "/etc/swift/object-server.conf.d", "-v"},
+			Env:             env,
 		},
 		{
 			Name:            "object-expirer",
@@ -153,6 +166,7 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.Cont
 			SecurityContext: &securityContext,
 			VolumeMounts:    getStorageVolumeMounts(),
 			Command:         []string{"/usr/bin/swift-object-expirer", "/etc/swift/object-expirer.conf.d", "-v"},
+			Env:             env,
 		},
 		{
 			Name:            "rsync",
@@ -162,6 +176,7 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.Cont
 			Ports:           getPorts(swift.RsyncPort, "rsync"),
 			VolumeMounts:    getStorageVolumeMounts(),
 			Command:         []string{"/usr/bin/rsync", "--daemon", "--no-detach", "--config=/etc/swift/rsyncd.conf", "--log-file=/dev/stdout"},
+			Env:             env,
 		},
 		{
 			Name:            "swift-recon-cron",
@@ -170,6 +185,7 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.Cont
 			SecurityContext: &securityContext,
 			VolumeMounts:    getStorageVolumeMounts(),
 			Command:         []string{"sh", "-c", "while true; do /usr/bin/swift-recon-cron /etc/swift/object-server.conf.d -v; sleep 300; done"},
+			Env:             env,
 		},
 	}
 
@@ -181,6 +197,7 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.Cont
 			SecurityContext: &securityContext,
 			VolumeMounts:    getStorageVolumeMounts(),
 			Command:         []string{"/usr/bin/swift-container-sharder", "/etc/swift/container-server.conf.d", "-v"},
+			Env:             env,
 		})
 	}
 
@@ -188,11 +205,15 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.Cont
 }
 
 func StatefulSet(
-	swiftstorage *swiftv1beta1.SwiftStorage, labels map[string]string, annotations map[string]string) *appsv1.StatefulSet {
+	swiftstorage *swiftv1beta1.SwiftStorage, labels map[string]string, annotations map[string]string, configHash string) *appsv1.StatefulSet {
 
 	trueVal := true
 	OnRootMismatch := corev1.FSGroupChangeOnRootMismatch
 	user := int64(swift.RunAsUser)
+
+	envVars := map[string]env.Setter{}
+	envVars["CONFIG_HASH"] = env.SetValue(configHash)
+	env := env.MergeEnvs([]corev1.EnvVar{}, envVars)
 
 	return &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
@@ -227,7 +248,7 @@ func StatefulSet(
 						},
 					},
 					Volumes:    getStorageVolumes(swiftstorage),
-					Containers: getStorageContainers(swiftstorage),
+					Containers: getStorageContainers(swiftstorage, env),
 					Affinity:   swift.GetPodAffinity(ComponentName),
 				},
 			},
