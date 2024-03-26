@@ -102,31 +102,33 @@ function push() {
     if [ ! -e "${CM_NAME}.json" ]; then
         METHOD="POST"
         URL="${BASE_URL}"
-
-        CONFIGMAP_JSON='{
-            "apiVersion":"v1",
-            "kind":"ConfigMap",
-            "metadata":{
-                "name":"'${CM_NAME}'",
-                "namespace":"'${NAMESPACE}'",
-                "finalizers": ["swift-ring/finalizer"],
-                "ownerReferences": [
-                    {
-                        "apiVersion": "'${OWNER_APIVERSION}'",
-                        "kind": "'${OWNER_KIND}'",
-                        "name": "'${OWNER_NAME}'",
-                        "uid": "'${OWNER_UID}'"
-                    }
-                ]
-            },
-            "binaryData":{
-                "swiftrings.tar.gz": "'${BINARY_DATA}'"
-            }
-        }'
+        VERSION=""
     else
         METHOD="PUT"
-        CONFIGMAP_JSON=$(cat "${CM_NAME}.json" | sed -e 's#\"swiftrings.tar.gz\": \".*\"#\"swiftrings.tar.gz\": \"'${BINARY_DATA}'\"#g')
+        VERSION="$(grep -oP '"resourceVersion": ".*"' "${CM_NAME}.json"),"
     fi
+
+    CONFIGMAP_JSON='{
+        "apiVersion":"v1",
+        "kind":"ConfigMap",
+        "metadata":{
+            '${VERSION}'
+            "name":"'${CM_NAME}'",
+            "namespace":"'${NAMESPACE}'",
+            "finalizers": ["swift-ring/finalizer"],
+            "ownerReferences": [
+                {
+                    "apiVersion": "'${OWNER_APIVERSION}'",
+                    "kind": "'${OWNER_KIND}'",
+                    "name": "'${OWNER_NAME}'",
+                    "uid": "'${OWNER_UID}'"
+                }
+            ]
+        },
+        "binaryData":{
+            "swiftrings.tar.gz": "'${BINARY_DATA}'",
+        }
+    }'
 
     # https://kubernetes.io/docs/reference/kubernetes-api/config-and-storage-resources/config-map-v1/#update-replace-the-specified-configmap
     /usr/bin/curl \
