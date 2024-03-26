@@ -28,7 +28,7 @@ while true; do
     if [ -e $TARFILE ] ; then
         _MTIME=$(stat -L --printf "%Y" $TARFILE)
         if [ $MTIME != $_MTIME ]; then
-            tar -xzf $TARFILE -C etc/swift/
+            cp /var/lib/config-data/rings/*.ring.gz /etc/swift/.
             find /etc/swift/ -type f -ls
             echo
         fi

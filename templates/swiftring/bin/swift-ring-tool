@@ -27,6 +27,9 @@ function get() {
             # Get JSON keyvalue without jq
             grep -e '"swiftrings.tar.gz": ".*"' "${CM_NAME}.json"  | cut -f 4 -d '"' | base64 -d > $TARFILE
             [ -e $TARFILE ] && tar --totals -xzf $TARFILE
+            grep -e '"account.ring.gz": ".*"' "${CM_NAME}.json"  | cut -f 4 -d '"' | base64 -d > account.ring.gz
+            grep -e '"container.ring.gz": ".*"' "${CM_NAME}.json"  | cut -f 4 -d '"' | base64 -d > container.ring.gz
+            grep -e '"object.ring.gz": ".*"' "${CM_NAME}.json"  | cut -f 4 -d '"' | base64 -d > object.ring.gz
         ;;
 
         "404")
@@ -98,6 +101,9 @@ function remove() {
 function push() {
     # Tar up all the ring data and either create or update the SwiftRing ConfigMap
     BINARY_DATA=`tar --totals -cz *.builder *.ring.gz backups/*.builder | /usr/bin/base64 -w 0`
+    ACCOUNT_RING_GZ=`base64 -w 0 account.ring.gz`
+    CONTAINER_RING_GZ=`base64 -w 0 container.ring.gz`
+    OBJECT_RING_GZ=`base64 -w 0 object.ring.gz`
 
     if [ ! -e "${CM_NAME}.json" ]; then
         METHOD="POST"
@@ -127,6 +133,9 @@ function push() {
         },
         "binaryData":{
             "swiftrings.tar.gz": "'${BINARY_DATA}'",
+            "account.ring.gz": "'${ACCOUNT_RING_GZ}'",
+            "container.ring.gz": "'${CONTAINER_RING_GZ}'",
+            "object.ring.gz": "'${OBJECT_RING_GZ}'"
         }
     }'
 
