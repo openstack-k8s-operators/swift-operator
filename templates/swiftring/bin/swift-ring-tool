@@ -155,11 +155,12 @@ function usage() {
     echo "get        Fetch rings from ConfigMap ${CM_NAME}"
     echo "init       Create new .builder files if not existing"
     echo "update     Update rings using input from ${DEVICESFILE}"
-    echo "drain      Set weight of all node devices to 0"
-    echo "remove     Remove node from all rings"
     echo "rebalance  Rebalance rings"
     echo "push       Push rings to ConfigMap ${CM_NAME}"
     echo "all        All above operations in sequence"
+    echo
+    echo "drain      Set weight of all node devices to 0"
+    echo "remove     Remove node from all rings"
     echo
 }
 
