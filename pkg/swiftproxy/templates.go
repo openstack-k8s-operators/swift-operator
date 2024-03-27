@@ -74,13 +74,5 @@ func SecretTemplates(
 			Labels:        labels,
 			CustomData:    customData,
 		},
-		{
-			Name:               fmt.Sprintf("%s-scripts", instance.Name),
-			Namespace:          instance.Namespace,
-			Type:               util.TemplateTypeScripts,
-			AdditionalTemplate: map[string]string{"ring-sync.sh": "/common/ring-sync.sh"},
-			InstanceType:       instance.Kind,
-			Labels:             labels,
-		},
 	}
 }

@@ -66,9 +66,6 @@ status:
     - name: proxy-server
       ready: true
       started: true
-    - name: ring-sync
-      ready: true
-      started: true
 ---
 apiVersion: v1
 kind: Pod
@@ -118,9 +115,6 @@ status:
     - name: object-updater
       ready: true
       started: true
-    - name: ring-sync
-      ready: true
-      started: true
     - name: rsync
       ready: true
       started: true
@@ -147,5 +141,4 @@ kind: TestAssert
 commands:
   - script: |
       podname=$(oc get pod -n $NAMESPACE -l component=swift-proxy | grep Running | cut -f 1 -d " ")
-      files=$(oc rsh -n $NAMESPACE -c proxy-server "$podname" /bin/sh -c "ls -1 /etc/swift/proxy-server.conf.d/")
-      echo "$files" | grep -ze "00-proxy-server.conf.*01-proxy-server.conf"
+      oc rsh -n $NAMESPACE -c proxy-server "$podname" /bin/sh -c "grep 'Additional proxy config' /etc/swift/proxy-server.conf.d/01-proxy-server.conf"

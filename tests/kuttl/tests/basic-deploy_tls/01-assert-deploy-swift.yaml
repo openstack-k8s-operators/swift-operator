@@ -125,34 +125,6 @@ spec:
   template:
     spec:
       containers:
-      - command:
-        - /usr/local/bin/container-scripts/ring-sync.sh
-        livenessProbe:
-          httpGet:
-            scheme: HTTPS
-        name: ring-sync
-        readinessProbe:
-          httpGet:
-            scheme: HTTPS
-        volumeMounts:
-        - mountPath: /var/lib/config-data/default
-          name: config-data
-          readOnly: true
-        - mountPath: /var/lib/config-data/swiftconf
-          name: swiftconf
-          readOnly: true
-        - mountPath: /var/lib/config-data/rings
-          name: ring-data
-          readOnly: true
-        - mountPath: /etc/swift
-          name: config-data-merged
-        - mountPath: /usr/local/bin/container-scripts
-          name: scripts
-          readOnly: true
-        - mountPath: /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem
-          name: combined-ca-bundle
-          readOnly: true
-          subPath: tls-ca-bundle.pem
       - args:
         - -DFOREGROUND
         command:
@@ -165,20 +137,8 @@ spec:
           httpGet:
             scheme: HTTPS
         volumeMounts:
-        - mountPath: /var/lib/config-data/default
-          name: config-data
-          readOnly: true
-        - mountPath: /var/lib/config-data/swiftconf
-          name: swiftconf
-          readOnly: true
-        - mountPath: /var/lib/config-data/rings
-          name: ring-data
-          readOnly: true
         - mountPath: /etc/swift
-          name: config-data-merged
-        - mountPath: /usr/local/bin/container-scripts
-          name: scripts
-          readOnly: true
+          name: etc-swift
         - mountPath: /etc/httpd/conf/httpd.conf
           name: config-data
           readOnly: true
@@ -223,20 +183,8 @@ spec:
           httpGet:
             scheme: HTTPS
         volumeMounts:
-        - mountPath: /var/lib/config-data/default
-          name: config-data
-          readOnly: true
-        - mountPath: /var/lib/config-data/swiftconf
-          name: swiftconf
-          readOnly: true
-        - mountPath: /var/lib/config-data/rings
-          name: ring-data
-          readOnly: true
         - mountPath: /etc/swift
-          name: config-data-merged
-        - mountPath: /usr/local/bin/container-scripts
-          name: scripts
-          readOnly: true
+          name: etc-swift
         - mountPath: /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem
           name: combined-ca-bundle
           readOnly: true
@@ -248,20 +196,25 @@ spec:
         secret:
           defaultMode: 420
           secretName: swift-proxy-config-data
-      - name: swiftconf
-        secret:
+      - name: etc-swift
+        projected:
           defaultMode: 420
-          secretName: swift-conf
-      - configMap:
-          defaultMode: 420
-          name: swift-ring-files
-        name: ring-data
-      - emptyDir: {}
-        name: config-data-merged
-      - name: scripts
-        secret:
-          defaultMode: 493
-          secretName: swift-proxy-scripts
+          sources:
+          - configMap:
+              name: swift-ring-files
+          - secret:
+              items:
+              - key: 00-proxy-server.conf
+                path: proxy-server.conf.d/00-proxy-server.conf
+              - key: 01-proxy-server.conf
+                path: proxy-server.conf.d/01-proxy-server.conf
+              - key: dispersion.conf
+                path: dispersion.conf
+              - key: keymaster.conf
+                path: keymaster.conf
+              name: swift-proxy-config-data
+          - secret:
+              name: swift-conf
       - emptyDir: {}
         name: run-httpd
       - emptyDir: {}
