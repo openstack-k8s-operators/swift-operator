@@ -124,7 +124,7 @@ func getStorageVolumeMounts() []corev1.VolumeMount {
 	return []corev1.VolumeMount{
 		{
 			Name:      swift.ClaimName,
-			MountPath: "/srv/node/d1",
+			MountPath: "/srv/node/pv",
 			ReadOnly:  false,
 		},
 		{

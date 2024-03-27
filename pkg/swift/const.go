@@ -30,8 +30,7 @@ const (
 	ServiceAccount     = "swift-swift"
 	ServiceDescription = "Swift Object Storage"
 
-	ClaimName = "srv"
+	ClaimName = "swift"
 
-	RingConfigMapName   = "swift-ring-files"
-	DeviceConfigMapName = "swift-storage-devices"
+	RingConfigMapName = "swift-ring-files"
 )

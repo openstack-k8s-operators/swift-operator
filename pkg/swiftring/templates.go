@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/util"
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
-	"github.com/openstack-k8s-operators/swift-operator/pkg/swift"
 )
 
 func ConfigMapTemplates(instance *swiftv1beta1.SwiftRing, labels map[string]string, devices string) []util.Template {
@@ -29,7 +28,7 @@ func ConfigMapTemplates(instance *swiftv1beta1.SwiftRing, labels map[string]stri
 
 	return []util.Template{
 		{
-			Name:         swift.DeviceConfigMapName,
+			Name:         fmt.Sprintf("%s-config-data", instance.Name),
 			Namespace:    instance.Namespace,
 			Type:         util.TemplateTypeNone,
 			InstanceType: instance.Kind,
