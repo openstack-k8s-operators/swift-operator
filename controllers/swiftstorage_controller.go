@@ -44,11 +44,13 @@ import (
 	"github.com/openstack-k8s-operators/swift-operator/pkg/swift"
 	"github.com/openstack-k8s-operators/swift-operator/pkg/swiftstorage"
 
+	"github.com/openstack-k8s-operators/lib-common/modules/common"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/condition"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/configmap"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/env"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/networkattachment"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/pod"
+	"github.com/openstack-k8s-operators/lib-common/modules/common/util"
 )
 
 // SwiftStorageReconciler reconciles a SwiftStorage object
@@ -241,8 +243,19 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		return ctrlResult, nil
 	}
 
+	// create hash over all the different input resources to identify if any those changed
+	// and a restart/recreate is required.
+	inputHash, hashChanged, err := r.createHashOfInputHashes(instance, envVars)
+	if err != nil {
+		return ctrl.Result{}, err
+	} else if hashChanged {
+		// Hash changed and instance status should be updated (which will be done by main defer func),
+		// so we need to return and reconcile again
+		return ctrl.Result{}, nil
+	}
+
 	// Statefulset with all backend containers
-	sset := statefulset.NewStatefulSet(swiftstorage.StatefulSet(instance, serviceLabels, serviceAnnotations), 5*time.Second)
+	sset := statefulset.NewStatefulSet(swiftstorage.StatefulSet(instance, serviceLabels, serviceAnnotations, inputHash), 5*time.Second)
 	ctrlResult, err = sset.CreateOrPatch(ctx, helper)
 	if err != nil {
 		return ctrlResult, err
@@ -343,6 +356,27 @@ func (r *SwiftStorageReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Owns(&corev1.Service{}).
 		Owns(&networkingv1.NetworkPolicy{}).
 		Complete(r)
+}
+
+// createHashOfInputHashes - creates a hash of hashes which gets added to the resources which requires a restart
+// if any of the input resources change, like configs, passwords, ...
+//
+// returns the hash, whether the hash changed (as a bool) and any error
+func (r *SwiftStorageReconciler) createHashOfInputHashes(
+	instance *swiftv1beta1.SwiftStorage,
+	envVars map[string]env.Setter,
+) (string, bool, error) {
+	var hashMap map[string]string
+	changed := false
+	mergedMapVars := env.MergeEnvs([]corev1.EnvVar{}, envVars)
+	hash, err := util.ObjectHash(mergedMapVars)
+	if err != nil {
+		return hash, changed, err
+	}
+	if hashMap, changed = util.SetHash(instance.Status.Hash, common.InputHashName, hash); changed {
+		instance.Status.Hash = hashMap
+	}
+	return hash, changed, nil
 }
 
 func getPodIPInNetwork(swiftPod corev1.Pod, namespace string, networkAttachment string) (string, error) {
