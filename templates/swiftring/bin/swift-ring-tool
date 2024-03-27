@@ -26,7 +26,7 @@ function get() {
             # Configmap was found
             # Get JSON keyvalue without jq
             grep -e '"swiftrings.tar.gz": ".*"' "${CM_NAME}.json"  | cut -f 4 -d '"' | base64 -d > $TARFILE
-            [ -e $TARFILE ] && tar --totals -xzf $TARFILE
+            [ -s $TARFILE ] && tar --totals -xzf $TARFILE
             grep -e '"account.ring.gz": ".*"' "${CM_NAME}.json"  | cut -f 4 -d '"' | base64 -d > account.ring.gz
             grep -e '"container.ring.gz": ".*"' "${CM_NAME}.json"  | cut -f 4 -d '"' | base64 -d > container.ring.gz
             grep -e '"object.ring.gz": ".*"' "${CM_NAME}.json"  | cut -f 4 -d '"' | base64 -d > object.ring.gz
@@ -45,8 +45,9 @@ function get() {
 
 function init() {
     # Create new rings if not existing
-    for f in account.builder container.builder object.builder; do
-        [ ! -e $f ] && swift-ring-builder $f create ${SWIFT_PART_POWER} ${SWIFT_REPLICAS} ${SWIFT_MIN_PART_HOURS} || true
+    for f in account container object; do
+        [ ! -e ${f}.builder ] && [ -s ${f}.ring.gz ] && { echo "${f}.ring.gz file found without ${f}.builder - exiting" ; exit 0; }
+        [ ! -e ${f}.builder ] && swift-ring-builder ${f}.builder create ${SWIFT_PART_POWER} ${SWIFT_REPLICAS} ${SWIFT_MIN_PART_HOURS} || true
     done
 }
 
