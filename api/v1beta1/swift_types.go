@@ -67,11 +67,6 @@ type SwiftSpecCore struct {
 // SwiftSpecBase -
 type SwiftSpecBase struct {
 
-	// +kubebuilder:validation:Required
-	// +kubebuilder:default=swift-conf
-	// Name of Secret containing swift.conf
-	SwiftConfSecret string `json:"swiftConfSecret"`
-
 	// Storage class. This is passed to SwiftStorage unless
 	// storageClass is explicitly set for the SwiftStorage.
 	// +kubebuilder:validation:Required

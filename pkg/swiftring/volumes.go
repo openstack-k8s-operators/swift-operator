@@ -18,6 +18,7 @@ package swiftring
 
 import (
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
+	"github.com/openstack-k8s-operators/swift-operator/pkg/swift"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -46,7 +47,7 @@ func getRingVolumes(instance *swiftv1beta1.SwiftRing) []corev1.Volume {
 			Name: "swiftconf",
 			VolumeSource: corev1.VolumeSource{
 				Secret: &corev1.SecretVolumeSource{
-					SecretName: instance.Spec.SwiftConfSecret,
+					SecretName: swift.SwiftConfSecretName,
 					Items: []corev1.KeyToPath{
 						{
 							Key:  "swift.conf",

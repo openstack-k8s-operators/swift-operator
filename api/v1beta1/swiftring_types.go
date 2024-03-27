@@ -63,11 +63,6 @@ type SwiftRingSpecCore struct {
 	// Minimum numbeir of hours to restrict moving a partition more than once
 	MinPartHours *int64 `json:"minPartHours"`
 
-	// +kubebuilder:validation:Required
-	// +kubebuilder:default=swift-conf
-	// Name of Secret containing swift.conf
-	SwiftConfSecret string `json:"swiftConfSecret"`
-
 	// +kubebuilder:validation:Optional
 	// +operator-sdk:csv:customresourcedefinitions:type=spec
 	// TLS - Parameters related to the TLS

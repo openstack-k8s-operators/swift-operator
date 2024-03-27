@@ -32,5 +32,8 @@ const (
 
 	ClaimName = "swift"
 
-	RingConfigMapName = "swift-ring-files"
+	// Must match with settings in the dataplane-operator
+	// and adoption docs/tests
+	SwiftConfSecretName = "swift-conf"
+	RingConfigMapName   = "swift-ring-files"
 )
