@@ -24,7 +24,6 @@ import (
 )
 
 func getStorageVolumes(instance *swiftv1beta1.SwiftStorage) []corev1.Volume {
-	var scriptsVolumeDefaultMode int32 = 0755
 	return []corev1.Volume{
 		{
 			Name: swift.ClaimName,
@@ -34,55 +33,82 @@ func getStorageVolumes(instance *swiftv1beta1.SwiftStorage) []corev1.Volume {
 				},
 			},
 		},
+
 		{
-			Name: "config-data",
+			Name: "etc-swift",
 			VolumeSource: corev1.VolumeSource{
-				ConfigMap: &corev1.ConfigMapVolumeSource{
-					LocalObjectReference: corev1.LocalObjectReference{
-						Name: instance.Name + "-config-data",
+				Projected: &corev1.ProjectedVolumeSource{
+					Sources: []corev1.VolumeProjection{
+						{
+							ConfigMap: &corev1.ConfigMapProjection{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: swift.RingConfigMapName,
+								},
+							}},
+						{
+							ConfigMap: &corev1.ConfigMapProjection{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: instance.Name + "-config-data",
+								},
+								Items: []corev1.KeyToPath{
+									{
+										Key:  "00-account-server.conf",
+										Path: "account-server.conf.d/00-account-server.conf",
+									},
+									{
+										Key:  "01-account-server.conf",
+										Path: "account-server.conf.d/01-account-server.conf",
+									},
+									{
+										Key:  "00-container-server.conf",
+										Path: "container-server.conf.d/00-container-server.conf",
+									},
+									{
+										Key:  "01-container-server.conf",
+										Path: "container-server.conf.d/01-container-server.conf",
+									},
+									{
+										Key:  "00-object-server.conf",
+										Path: "object-server.conf.d/00-object-server.conf",
+									},
+									{
+										Key:  "01-object-server.conf",
+										Path: "object-server.conf.d/01-object-server.conf",
+									},
+									{
+										Key:  "00-object-expirer.conf",
+										Path: "object-expirer.conf.d/00-object-expirer.conf",
+									},
+									{
+										Key:  "01-object-expirer.conf",
+										Path: "object-expirer.conf.d/01-object-expirer.conf",
+									},
+									{
+										Key:  "internal-client.conf",
+										Path: "internal-client.conf",
+									},
+									{
+										Key:  "rsyncd.conf",
+										Path: "rsyncd.conf",
+									},
+								},
+							},
+						},
+						{
+							Secret: &corev1.SecretProjection{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: instance.Spec.SwiftConfSecret,
+								},
+							},
+						},
 					},
 				},
-			},
-		},
-		{
-			Name: "swiftconf",
-			VolumeSource: corev1.VolumeSource{
-				Secret: &corev1.SecretVolumeSource{
-					SecretName: instance.Spec.SwiftConfSecret,
-				},
-			},
-		},
-		{
-			Name: "ring-data",
-			VolumeSource: corev1.VolumeSource{
-				ConfigMap: &corev1.ConfigMapVolumeSource{
-					LocalObjectReference: corev1.LocalObjectReference{
-						Name: swift.RingConfigMapName,
-					},
-				},
-			},
-		},
-		{
-			Name: "config-data-merged",
-			VolumeSource: corev1.VolumeSource{
-				EmptyDir: &corev1.EmptyDirVolumeSource{Medium: ""},
 			},
 		},
 		{
 			Name: "cache",
 			VolumeSource: corev1.VolumeSource{
 				EmptyDir: &corev1.EmptyDirVolumeSource{Medium: ""},
-			},
-		},
-		{
-			Name: "scripts",
-			VolumeSource: corev1.VolumeSource{
-				ConfigMap: &corev1.ConfigMapVolumeSource{
-					DefaultMode: &scriptsVolumeDefaultMode,
-					LocalObjectReference: corev1.LocalObjectReference{
-						Name: instance.Name + "-scripts",
-					},
-				},
 			},
 		},
 		{
@@ -102,22 +128,7 @@ func getStorageVolumeMounts() []corev1.VolumeMount {
 			ReadOnly:  false,
 		},
 		{
-			Name:      "config-data",
-			MountPath: "/var/lib/config-data/default",
-			ReadOnly:  true,
-		},
-		{
-			Name:      "swiftconf",
-			MountPath: "/var/lib/config-data/swiftconf",
-			ReadOnly:  true,
-		},
-		{
-			Name:      "ring-data",
-			MountPath: "/var/lib/config-data/rings",
-			ReadOnly:  true,
-		},
-		{
-			Name:      "config-data-merged",
+			Name:      "etc-swift",
 			MountPath: "/etc/swift",
 			ReadOnly:  false,
 		},
@@ -125,11 +136,6 @@ func getStorageVolumeMounts() []corev1.VolumeMount {
 			Name:      "cache",
 			MountPath: "/var/cache/swift",
 			ReadOnly:  false,
-		},
-		{
-			Name:      "scripts",
-			MountPath: "/usr/local/bin/container-scripts",
-			ReadOnly:  true,
 		},
 		{
 			Name:      "lock",

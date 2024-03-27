@@ -138,16 +138,6 @@ func Deployment(
 					Affinity: swift.GetPodAffinity(ComponentName),
 					Containers: []corev1.Container{
 						{
-							Name:            "ring-sync",
-							Image:           instance.Spec.ContainerImageProxy,
-							ImagePullPolicy: corev1.PullIfNotPresent,
-							SecurityContext: &securityContext,
-							ReadinessProbe:  readinessProbe,
-							LivenessProbe:   livenessProbe,
-							VolumeMounts:    volumeMounts,
-							Command:         []string{"/usr/local/bin/container-scripts/ring-sync.sh"},
-						},
-						{
 							Image:           instance.Spec.ContainerImageProxy,
 							Name:            "proxy-httpd",
 							ImagePullPolicy: corev1.PullIfNotPresent,

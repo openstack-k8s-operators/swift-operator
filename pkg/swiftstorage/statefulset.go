@@ -40,14 +40,6 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage) []corev1.Cont
 
 	containers := []corev1.Container{
 		{
-			Name:            "ring-sync",
-			Image:           swiftstorage.Spec.ContainerImageProxy,
-			ImagePullPolicy: corev1.PullIfNotPresent,
-			SecurityContext: &securityContext,
-			VolumeMounts:    getStorageVolumeMounts(),
-			Command:         []string{"/usr/local/bin/container-scripts/ring-sync.sh"},
-		},
-		{
 			Name:            "account-server",
 			Image:           swiftstorage.Spec.ContainerImageAccount,
 			ImagePullPolicy: corev1.PullIfNotPresent,

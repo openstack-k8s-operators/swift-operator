@@ -23,7 +23,6 @@ import (
 )
 
 func getProxyVolumes(instance *swiftv1beta1.SwiftProxy) []corev1.Volume {
-	var scriptsVolumeDefaultMode int32 = 0755
 	return []corev1.Volume{
 		{
 			Name: "config-data",
@@ -34,35 +33,49 @@ func getProxyVolumes(instance *swiftv1beta1.SwiftProxy) []corev1.Volume {
 			},
 		},
 		{
-			Name: "swiftconf",
+			Name: "etc-swift",
 			VolumeSource: corev1.VolumeSource{
-				Secret: &corev1.SecretVolumeSource{
-					SecretName: instance.Spec.SwiftConfSecret,
-				},
-			},
-		},
-		{
-			Name: "ring-data",
-			VolumeSource: corev1.VolumeSource{
-				ConfigMap: &corev1.ConfigMapVolumeSource{
-					LocalObjectReference: corev1.LocalObjectReference{
-						Name: swift.RingConfigMapName,
+				Projected: &corev1.ProjectedVolumeSource{
+					Sources: []corev1.VolumeProjection{
+						{
+							ConfigMap: &corev1.ConfigMapProjection{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: swift.RingConfigMapName,
+								},
+							}},
+						{
+							Secret: &corev1.SecretProjection{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: instance.Name + "-config-data",
+								},
+								Items: []corev1.KeyToPath{
+									{
+										Key:  "00-proxy-server.conf",
+										Path: "proxy-server.conf.d/00-proxy-server.conf",
+									},
+									{
+										Key:  "01-proxy-server.conf",
+										Path: "proxy-server.conf.d/01-proxy-server.conf",
+									},
+									{
+										Key:  "dispersion.conf",
+										Path: "dispersion.conf",
+									},
+									{
+										Key:  "keymaster.conf",
+										Path: "keymaster.conf",
+									},
+								},
+							},
+						},
+						{
+							Secret: &corev1.SecretProjection{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: instance.Spec.SwiftConfSecret,
+								},
+							},
+						},
 					},
-				},
-			},
-		},
-		{
-			Name: "config-data-merged",
-			VolumeSource: corev1.VolumeSource{
-				EmptyDir: &corev1.EmptyDirVolumeSource{Medium: ""},
-			},
-		},
-		{
-			Name: "scripts",
-			VolumeSource: corev1.VolumeSource{
-				Secret: &corev1.SecretVolumeSource{
-					DefaultMode: &scriptsVolumeDefaultMode,
-					SecretName:  instance.Name + "-scripts",
 				},
 			},
 		},
@@ -84,29 +97,9 @@ func getProxyVolumes(instance *swiftv1beta1.SwiftProxy) []corev1.Volume {
 func getProxyVolumeMounts() []corev1.VolumeMount {
 	return []corev1.VolumeMount{
 		{
-			Name:      "config-data",
-			MountPath: "/var/lib/config-data/default",
-			ReadOnly:  true,
-		},
-		{
-			Name:      "swiftconf",
-			MountPath: "/var/lib/config-data/swiftconf",
-			ReadOnly:  true,
-		},
-		{
-			Name:      "ring-data",
-			MountPath: "/var/lib/config-data/rings",
-			ReadOnly:  true,
-		},
-		{
-			Name:      "config-data-merged",
+			Name:      "etc-swift",
 			MountPath: "/etc/swift",
 			ReadOnly:  false,
-		},
-		{
-			Name:      "scripts",
-			MountPath: "/usr/local/bin/container-scripts",
-			ReadOnly:  true,
 		},
 	}
 }
