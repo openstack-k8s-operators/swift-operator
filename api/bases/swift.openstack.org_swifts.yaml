@@ -63,10 +63,6 @@ spec:
                 description: Storage class. This is passed to SwiftStorage unless
                   storageClass is explicitly set for the SwiftStorage.
                 type: string
-              swiftConfSecret:
-                default: swift-conf
-                description: Name of Secret containing swift.conf
-                type: string
               swiftProxy:
                 description: SwiftProxy - Spec definition for the Proxy service of
                   this Swift deployment
@@ -304,10 +300,6 @@ spec:
                     description: ServiceUser - optional username used for this service
                       to register in Swift
                     type: string
-                  swiftConfSecret:
-                    default: swift-conf
-                    description: Name of Secret containing swift.conf
-                    type: string
                   tls:
                     description: TLS - Parameters related to the TLS
                     properties:
@@ -344,7 +336,6 @@ spec:
                 - replicas
                 - secret
                 - serviceUser
-                - swiftConfSecret
                 type: object
               swiftRing:
                 description: SwiftRing - Spec definition for the Ring service of this
@@ -372,10 +363,6 @@ spec:
                     format: int64
                     minimum: 1
                     type: integer
-                  swiftConfSecret:
-                    default: swift-conf
-                    description: Name of Secret containing swift.conf
-                    type: string
                   tls:
                     description: TLS - Parameters related to the TLS
                     properties:
@@ -389,7 +376,6 @@ spec:
                 - minPartHours
                 - partPower
                 - ringReplicas
-                - swiftConfSecret
                 type: object
               swiftStorage:
                 description: SwiftStorage - Spec definition for the Storage service
@@ -440,10 +426,6 @@ spec:
                     default: 10Gi
                     description: Minimum size for Swift PVs
                     type: string
-                  swiftConfSecret:
-                    default: swift-conf
-                    description: Name of Secret containing swift.conf
-                    type: string
                 required:
                 - containerImageAccount
                 - containerImageContainer
@@ -453,12 +435,10 @@ spec:
                 - replicas
                 - storageClass
                 - storageRequest
-                - swiftConfSecret
                 type: object
             required:
             - memcachedInstance
             - storageClass
-            - swiftConfSecret
             - swiftProxy
             - swiftRing
             - swiftStorage

@@ -4,4 +4,3 @@ metadata:
   name: swift-ring
 spec:
   ringReplicas: 1
-  swiftConfSecret: swift-conf

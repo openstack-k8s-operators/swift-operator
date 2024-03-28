@@ -197,7 +197,7 @@ func (r *SwiftReconciler) reconcileNormal(ctx context.Context, instance *swiftv1
 	// Create a Secret populated with content from templates/, but only if
 	// it does not exist yet. Human operators might create a Secret in
 	// advance if migrating from an existing deployment
-	_, _, err = secret.GetSecret(ctx, helper, instance.Spec.SwiftConfSecret, instance.Namespace)
+	_, _, err = secret.GetSecret(ctx, helper, swift.SwiftConfSecretName, instance.Namespace)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			envVars := make(map[string]env.Setter)
@@ -360,9 +360,8 @@ func (r *SwiftReconciler) ringCreateOrUpdate(ctx context.Context, instance *swif
 	swiftRingSpec := swiftv1.SwiftRingSpec{
 		ContainerImage: instance.Spec.SwiftRing.ContainerImage,
 		SwiftRingSpecCore: swiftv1.SwiftRingSpecCore{
-			RingReplicas:    instance.Spec.SwiftRing.RingReplicas,
-			SwiftConfSecret: instance.Spec.SwiftConfSecret,
-			TLS:             instance.Spec.SwiftProxy.TLS.Ca,
+			RingReplicas: instance.Spec.SwiftRing.RingReplicas,
+			TLS:          instance.Spec.SwiftProxy.TLS.Ca,
 		},
 	}
 
@@ -397,7 +396,6 @@ func (r *SwiftReconciler) storageCreateOrUpdate(ctx context.Context, instance *s
 			Replicas:                instance.Spec.SwiftStorage.Replicas,
 			StorageClass:            instance.Spec.SwiftStorage.StorageClass,
 			StorageRequest:          instance.Spec.SwiftStorage.StorageRequest,
-			SwiftConfSecret:         instance.Spec.SwiftConfSecret,
 			NetworkAttachments:      instance.Spec.SwiftStorage.NetworkAttachments,
 			MemcachedServers:        memcachedServers,
 			ContainerSharderEnabled: instance.Spec.SwiftStorage.ContainerSharderEnabled,
@@ -434,7 +432,6 @@ func (r *SwiftReconciler) proxyCreateOrUpdate(ctx context.Context, instance *swi
 			Secret:                 instance.Spec.SwiftProxy.Secret,
 			ServiceUser:            instance.Spec.SwiftProxy.ServiceUser,
 			PasswordSelectors:      instance.Spec.SwiftProxy.PasswordSelectors,
-			SwiftConfSecret:        instance.Spec.SwiftConfSecret,
 			Override:               instance.Spec.SwiftProxy.Override,
 			NetworkAttachments:     instance.Spec.SwiftProxy.NetworkAttachments,
 			MemcachedServers:       memcachedServers,

@@ -30,8 +30,10 @@ const (
 	ServiceAccount     = "swift-swift"
 	ServiceDescription = "Swift Object Storage"
 
-	ClaimName = "srv"
+	ClaimName = "swift"
 
+	// Must match with settings in the dataplane-operator
+	// and adoption docs/tests
+	SwiftConfSecretName = "swift-conf"
 	RingConfigMapName   = "swift-ring-files"
-	DeviceConfigMapName = "swift-storage-devices"
 )

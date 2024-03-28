@@ -97,7 +97,7 @@ func getStorageVolumes(instance *swiftv1beta1.SwiftStorage) []corev1.Volume {
 						{
 							Secret: &corev1.SecretProjection{
 								LocalObjectReference: corev1.LocalObjectReference{
-									Name: instance.Spec.SwiftConfSecret,
+									Name: swift.SwiftConfSecretName,
 								},
 							},
 						},
@@ -124,7 +124,7 @@ func getStorageVolumeMounts() []corev1.VolumeMount {
 	return []corev1.VolumeMount{
 		{
 			Name:      swift.ClaimName,
-			MountPath: "/srv/node/d1",
+			MountPath: "/srv/node/pv",
 			ReadOnly:  false,
 		},
 		{

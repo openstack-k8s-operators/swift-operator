@@ -65,11 +65,6 @@ type SwiftProxySpecCore struct {
 	// PasswordSelector - Selector to choose the Swift user password from the Secret
 	PasswordSelectors PasswordSelector `json:"passwordSelectors"`
 
-	// +kubebuilder:validation:Required
-	// +kubebuilder:default=swift-conf
-	// Name of Secret containing swift.conf
-	SwiftConfSecret string `json:"swiftConfSecret"`
-
 	// +kubebuilder:validation:Optional
 	// Override, provides the ability to override the generated manifest of several child resources.
 	Override ProxyOverrideSpec `json:"override,omitempty"`

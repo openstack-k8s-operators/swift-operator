@@ -47,7 +47,7 @@ func getRingVolumes(instance *swiftv1beta1.SwiftRing) []corev1.Volume {
 			Name: "swiftconf",
 			VolumeSource: corev1.VolumeSource{
 				Secret: &corev1.SecretVolumeSource{
-					SecretName: instance.Spec.SwiftConfSecret,
+					SecretName: swift.SwiftConfSecretName,
 					Items: []corev1.KeyToPath{
 						{
 							Key:  "swift.conf",
@@ -68,7 +68,7 @@ func getRingVolumes(instance *swiftv1beta1.SwiftRing) []corev1.Volume {
 			VolumeSource: corev1.VolumeSource{
 				ConfigMap: &corev1.ConfigMapVolumeSource{
 					LocalObjectReference: corev1.LocalObjectReference{
-						Name: swift.DeviceConfigMapName,
+						Name: instance.Name + "-config-data",
 					},
 				},
 			},

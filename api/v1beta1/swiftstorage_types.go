@@ -62,11 +62,6 @@ type SwiftStorageSpecCore struct {
 	// Minimum size for Swift PVs
 	StorageRequest string `json:"storageRequest"`
 
-	// +kubebuilder:validation:Required
-	// +kubebuilder:default=swift-conf
-	// Name of Secret containing swift.conf
-	SwiftConfSecret string `json:"swiftConfSecret"`
-
 	// +kubebuilder:validation:Optional
 	// NetworkAttachments is a list of NetworkAttachment resource names to expose the services to the given network
 	NetworkAttachments []string `json:"networkAttachments,omitempty"`

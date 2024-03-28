@@ -28,7 +28,7 @@ func SecretTemplates(instance *swiftv1beta1.Swift, serviceLabels map[string]stri
 
 	return []util.Template{
 		{
-			Name:          instance.Spec.SwiftConfSecret,
+			Name:          SwiftConfSecretName,
 			Namespace:     instance.Namespace,
 			Type:          util.TemplateTypeConfig,
 			InstanceType:  instance.Kind,

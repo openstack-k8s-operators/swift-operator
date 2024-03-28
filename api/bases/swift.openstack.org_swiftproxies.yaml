@@ -273,10 +273,6 @@ spec:
                 description: ServiceUser - optional username used for this service
                   to register in Swift
                 type: string
-              swiftConfSecret:
-                default: swift-conf
-                description: Name of Secret containing swift.conf
-                type: string
               tls:
                 description: TLS - Parameters related to the TLS
                 properties:
@@ -313,7 +309,6 @@ spec:
             - replicas
             - secret
             - serviceUser
-            - swiftConfSecret
             type: object
           status:
             description: SwiftProxyStatus defines the observed state of SwiftProxy

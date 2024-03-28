@@ -71,7 +71,7 @@ func getProxyVolumes(instance *swiftv1beta1.SwiftProxy) []corev1.Volume {
 						{
 							Secret: &corev1.SecretProjection{
 								LocalObjectReference: corev1.LocalObjectReference{
-									Name: instance.Spec.SwiftConfSecret,
+									Name: swift.SwiftConfSecretName,
 								},
 							},
 						},

@@ -6,4 +6,3 @@ spec:
   storageClass: local-storage
   storageRequest: 10G
   replicas: 1
-  swiftConfSecret: swift-conf
