@@ -100,17 +100,23 @@ func (r *SwiftReconciler) Reconcile(ctx context.Context, req ctrl.Request) (resu
 		return ctrl.Result{}, err
 	}
 
-	// Always patch the instance status when exiting this function so we can persist any changes.
+	// initialize status if Conditions is nil, but do not reset if it already
+	// exists
+	isNewInstance := instance.Status.Conditions == nil
+	if isNewInstance {
+		instance.Status.Conditions = condition.Conditions{}
+	}
+
+	// Save a copy of the condtions so that we can restore the LastTransitionTime
+	// when a condition's state doesn't change.
+	savedConditions := instance.Status.Conditions.DeepCopy()
+
+	// Always patch the instance status when exiting this function so we can
+	// persist any changes.
 	defer func() {
-		// update the Ready condition based on the sub conditions
-		if instance.Status.Conditions.AllSubConditionIsTrue() {
-			instance.Status.Conditions.MarkTrue(
-				condition.ReadyCondition, condition.ReadyMessage)
-		} else {
-			// something is not ready so reset the Ready condition
-			instance.Status.Conditions.MarkUnknown(
-				condition.ReadyCondition, condition.InitReason, condition.ReadyInitMessage)
-			// and recalculate it based on the state of the rest of the conditions
+		condition.RestoreLastTransitionTimes(
+			&instance.Status.Conditions, savedConditions)
+		if instance.Status.Conditions.IsUnknown(condition.ReadyCondition) {
 			instance.Status.Conditions.Set(
 				instance.Status.Conditions.Mirror(condition.ReadyCondition))
 		}
@@ -121,32 +127,31 @@ func (r *SwiftReconciler) Reconcile(ctx context.Context, req ctrl.Request) (resu
 		}
 	}()
 
-	// If we're not deleting this and the service object doesn't have our finalizer, add it.
-	if instance.DeletionTimestamp.IsZero() && controllerutil.AddFinalizer(instance, helper.GetFinalizer()) {
-		return ctrl.Result{}, nil
-	}
-
 	// initialize status
 
-	if instance.Status.Conditions == nil {
-		instance.Status.Conditions = condition.Conditions{}
-		// initialize conditions used later as Status=Unknown
-		cl := condition.CreateList(
-			condition.UnknownCondition(condition.ServiceConfigReadyCondition, condition.InitReason, condition.ServiceConfigReadyInitMessage),
-			condition.UnknownCondition(swiftv1.SwiftProxyReadyCondition, condition.InitReason, swiftv1.SwiftProxyReadyInitMessage),
-			condition.UnknownCondition(swiftv1.SwiftRingReadyCondition, condition.InitReason, swiftv1.SwiftRingReadyInitMessage),
-			condition.UnknownCondition(swiftv1.SwiftStorageReadyCondition, condition.InitReason, swiftv1.SwiftStorageReadyInitMessage),
-			// service account, role, rolebinding conditions
-			condition.UnknownCondition(condition.ServiceAccountReadyCondition, condition.InitReason, condition.ServiceAccountReadyInitMessage),
-			condition.UnknownCondition(condition.RoleReadyCondition, condition.InitReason, condition.RoleReadyInitMessage),
-			condition.UnknownCondition(condition.RoleBindingReadyCondition, condition.InitReason, condition.RoleBindingReadyInitMessage),
-			condition.UnknownCondition(condition.MemcachedReadyCondition, condition.InitReason, condition.MemcachedReadyInitMessage),
-		)
+	// initialize conditions used later as Status=Unknown
+	cl := condition.CreateList(
+		// Mark ReadyCondition as Unknown from the beginning, because the
+		// Reconcile function is in progress. If this condition is not marked
+		// as True and is still in the "Unknown" state, we `Mirror(` the actual
+		// failure/in-progress operation
+		condition.UnknownCondition(condition.ReadyCondition, condition.InitReason, condition.ReadyInitMessage),
+		condition.UnknownCondition(condition.ServiceConfigReadyCondition, condition.InitReason, condition.ServiceConfigReadyInitMessage),
+		condition.UnknownCondition(swiftv1.SwiftProxyReadyCondition, condition.InitReason, swiftv1.SwiftProxyReadyInitMessage),
+		condition.UnknownCondition(swiftv1.SwiftRingReadyCondition, condition.InitReason, swiftv1.SwiftRingReadyInitMessage),
+		condition.UnknownCondition(swiftv1.SwiftStorageReadyCondition, condition.InitReason, swiftv1.SwiftStorageReadyInitMessage),
+		// service account, role, rolebinding conditions
+		condition.UnknownCondition(condition.ServiceAccountReadyCondition, condition.InitReason, condition.ServiceAccountReadyInitMessage),
+		condition.UnknownCondition(condition.RoleReadyCondition, condition.InitReason, condition.RoleReadyInitMessage),
+		condition.UnknownCondition(condition.RoleBindingReadyCondition, condition.InitReason, condition.RoleBindingReadyInitMessage),
+		condition.UnknownCondition(condition.MemcachedReadyCondition, condition.InitReason, condition.MemcachedReadyInitMessage),
+	)
 
-		instance.Status.Conditions.Init(&cl)
+	instance.Status.Conditions.Init(&cl)
 
-		// Register overall status immediately to have an early feedback e.g. in the cli
-		return ctrl.Result{}, err
+	// If we're not deleting this and the service object doesn't have our finalizer, add it.
+	if instance.DeletionTimestamp.IsZero() && controllerutil.AddFinalizer(instance, helper.GetFinalizer()) || isNewInstance {
+		return ctrl.Result{}, nil
 	}
 
 	// Handle service delete
@@ -329,6 +334,15 @@ func (r *SwiftReconciler) reconcileNormal(ctx context.Context, instance *swiftv1
 	}
 
 	r.Log.Info(fmt.Sprintf("Reconciled Service '%s' successfully", instance.Name))
+
+	// Update the lastObserved generation before evaluating conditions
+	instance.Status.ObservedGeneration = instance.Generation
+	// We reached the end of the Reconcile, update the Ready condition based on
+	// the sub conditions
+	if instance.Status.Conditions.AllSubConditionIsTrue() {
+		instance.Status.Conditions.MarkTrue(
+			condition.ReadyCondition, condition.ReadyMessage)
+	}
 	return ctrl.Result{}, nil
 }
 
