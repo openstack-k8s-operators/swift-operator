@@ -197,7 +197,7 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage, env []corev1.
 }
 
 func StatefulSet(
-	swiftstorage *swiftv1beta1.SwiftStorage, labels map[string]string, annotations map[string]string, configHash string) *appsv1.StatefulSet {
+	swiftstorage *swiftv1beta1.SwiftStorage, labels map[string]string, annotations map[string]string, configHash string) (*appsv1.StatefulSet, error) {
 
 	trueVal := true
 	OnRootMismatch := corev1.FSGroupChangeOnRootMismatch
@@ -206,6 +206,12 @@ func StatefulSet(
 	envVars := map[string]env.Setter{}
 	envVars["CONFIG_HASH"] = env.SetValue(configHash)
 	env := env.MergeEnvs([]corev1.EnvVar{}, envVars)
+	// if swiftstorage.Spec.StorageRequest is not a valid k8s Quantity, return
+	// an error
+	pvcSize, err := resource.ParseQuantity(swiftstorage.Spec.StorageRequest)
+	if err != nil {
+		return nil, err
+	}
 
 	return &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
@@ -255,11 +261,11 @@ func StatefulSet(
 					},
 					Resources: corev1.ResourceRequirements{
 						Requests: corev1.ResourceList{
-							corev1.ResourceStorage: resource.MustParse(swiftstorage.Spec.StorageRequest),
+							corev1.ResourceStorage: pvcSize,
 						},
 					},
 				},
 			}},
 		},
-	}
+	}, nil
 }
