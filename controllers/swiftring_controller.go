@@ -114,11 +114,15 @@ func (r *SwiftRingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	// when a condition's state doesn't change.
 	savedConditions := instance.Status.Conditions.DeepCopy()
 
-	// Always patch the instance status when exiting this function so we can persist any changes.
+	// Always patch the instance status when exiting this function so we can
+	// persist any changes.
 	defer func() {
-		// Always mirror the Condition from the sub level CRs
-		instance.Status.Conditions.Set(instance.Status.Conditions.Mirror(condition.ReadyCondition))
-		condition.RestoreLastTransitionTimes(&instance.Status.Conditions, savedConditions)
+		condition.RestoreLastTransitionTimes(
+			&instance.Status.Conditions, savedConditions)
+		if instance.Status.Conditions.IsUnknown(condition.ReadyCondition) {
+			instance.Status.Conditions.Set(
+				instance.Status.Conditions.Mirror(condition.ReadyCondition))
+		}
 		err := helper.PatchInstance(ctx, instance)
 		if err != nil {
 			_err = err
@@ -127,6 +131,10 @@ func (r *SwiftRingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}()
 
 	cl := condition.CreateList(
+		// Mark ReadyCondition as Unknown from the beginning, because the
+		// Reconcile function is in progress. If this condition is not marked
+		// as True and is still in the "Unknown" state, we `Mirror(` the actual
+		// failure/in-progress operation
 		condition.UnknownCondition(condition.ReadyCondition, condition.InitReason, condition.ReadyInitMessage),
 		condition.UnknownCondition(swiftv1beta1.SwiftRingReadyCondition, condition.InitReason, condition.ReadyInitMessage),
 	)
