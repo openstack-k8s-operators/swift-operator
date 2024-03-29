@@ -269,7 +269,16 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	}
 
 	// Statefulset with all backend containers
-	sset := statefulset.NewStatefulSet(swiftstorage.StatefulSet(instance, serviceLabels, serviceAnnotations, inputHash), 5*time.Second)
+	sspec, err := swiftstorage.StatefulSet(instance, serviceLabels, serviceAnnotations, inputHash)
+	if err != nil {
+		instance.Status.Conditions.Set(condition.FalseCondition(
+			swiftv1beta1.SwiftStorageReadyCondition,
+			condition.RequestedReason,
+			condition.SeverityInfo,
+			condition.DeploymentReadyRunningMessage))
+		return ctrl.Result{}, err
+	}
+	sset := statefulset.NewStatefulSet(sspec, 5*time.Second)
 	ctrlResult, err = sset.CreateOrPatch(ctx, helper)
 	if err != nil {
 		return ctrlResult, err
