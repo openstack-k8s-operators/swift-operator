@@ -63,17 +63,33 @@ make openstack_deploy
 popd
 ```
 
-### Run swiftclient inside the cluster
-If you want to use the `swift` CLI inside the cluster, deploy another pod:
+### Accessing Swift using the CLI
+
+You can use the `openstackclient` CLI to access the Swift deployment directly,
+for example:
 
 ```sh
-oc apply -f https://raw.githubusercontent.com/openstack-k8s-operators/swift-operator/main/config/samples/swiftclient.yaml
+$ oc rsh openstackclient
+$ openstack container create test
+$ openstack object save test obj
 ```
 
-Now you can run regular `swift` CLI commands within the cluster:
+If you want to use the `swift` CLI instead, use the openstackclient pod and set the required OS_ env variables:
 
 ```sh
-$ oc rsh openstackclient swift stat -v
+$ oc rsh openstackclient
+
+$ export OS_AUTH_URL=$(grep -o 'https.*' ~/.config/openstack/clouds.yaml)
+$ export OS_USERNAME=$(grep -Po '(?<=username: ).*' ~/.config/openstack/clouds.yaml)
+$ export OS_PROJECT_NAME=$(grep -Po '(?<=project_name: ).*' ~/.config/openstack/clouds.yaml)
+$ export OS_PASSWORD=$(grep -Po '(?<=password: ").*(?=")' ~/.config/openstack/secure.yaml)
+$ export OS_AUTH_VERSION=3
+```
+
+You can now use the `swift` command directly, for example:
+
+```sh
+$ swift stat -v
             StorageURL: http://swift-public-openstack.apps-crc.testing/v1/AUTH_ebc5...
             Auth Token: gAAAAABklVH8utLpwDdfR_2_vDd-aYasUFzjoca7yo_YME8RUbiwyqhK6qp...
                Account: AUTH_ebc5787630474735905073de1fcd675f
