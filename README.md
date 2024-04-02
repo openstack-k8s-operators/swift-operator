@@ -106,17 +106,6 @@ X-Openstack-Request-Id: txbb13222da0d94527a7101-00649551fc
          Cache-Control: private
 ```
 
-
-## TODO
-
-- [ ] Improve reconciliation
-- [ ] Fix hashes and status conditions
-- [ ] Add node/pod affinity to ensure storage pods are running on different nodes
-- [ ] Use more than one PV per storage pod
-- [ ] Replace simple rebalance script with a smarter Python-based tool
-- [ ] Refactor conf file copying, Secret and ConfigMap usage
-- [ ] Use Kolla
-
 ## License
 
 Copyright 2022.
