@@ -48,6 +48,11 @@ spec:
           spec:
             description: SwiftProxySpec defines the desired state of SwiftProxy
             properties:
+              ceilometerEnabled:
+                default: false
+                description: Enables ceilometer in the swift proxy and creates required
+                  resources
+                type: boolean
               containerImageProxy:
                 description: Swift Proxy Container Image URL
                 type: string
@@ -257,6 +262,11 @@ spec:
                       from the Secret
                     type: string
                 type: object
+              rabbitMqClusterName:
+                default: rabbitmq
+                description: RabbitMQ instance name to request a transportURL for
+                  Ceilometer middleware
+                type: string
               replicas:
                 default: 1
                 description: Replicas of Swift Proxy
@@ -306,6 +316,7 @@ spec:
             required:
             - containerImageProxy
             - memcachedServers
+            - rabbitMqClusterName
             - replicas
             - secret
             - serviceUser
@@ -372,6 +383,9 @@ spec:
                 description: ReadyCount of SwiftProxy instances
                 format: int32
                 type: integer
+              transportURLSecret:
+                description: TransportURLSecret - Secret containing RabbitMQ transportURL
+                type: string
             type: object
         type: object
     served: true

@@ -39,6 +39,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	"github.com/openstack-k8s-operators/lib-common/modules/common"
@@ -54,6 +55,7 @@ import (
 	"github.com/openstack-k8s-operators/lib-common/modules/common/tls"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/util"
 
+	rabbitmqv1 "github.com/openstack-k8s-operators/infra-operator/apis/rabbitmq/v1beta1"
 	keystonev1 "github.com/openstack-k8s-operators/keystone-operator/api/v1beta1"
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
 	"github.com/openstack-k8s-operators/swift-operator/pkg/swift"
@@ -80,6 +82,7 @@ type SwiftProxyReconciler struct {
 //+kubebuilder:rbac:groups=memcached.openstack.org,resources=memcacheds,verbs=get;list;watch;
 //+kubebuilder:rbac:groups=barbican.openstack.org,resources=barbicanapis,verbs=get;list;watch
 //+kubebuilder:rbac:groups=core,resources=nodes,verbs=get;list
+//+kubebuilder:rbac:groups=rabbitmq.openstack.org,resources=transporturls,verbs=get;list;watch;create;update;patch;delete
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -242,6 +245,42 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 
 	// all cert input checks out so report InputReady
 	instance.Status.Conditions.MarkTrue(condition.TLSInputReadyCondition, condition.InputReadyMessage)
+
+	transportURLString := ""
+	if instance.Spec.CeilometerEnabled {
+		//
+		// create RabbitMQ transportURL CR and get the actual URL from the associated secret that is created
+		//
+
+		transportURL, op, err := r.transportURLCreateOrUpdate(ctx, instance, serviceLabels)
+		if err != nil {
+			instance.Status.Conditions.Set(condition.FalseCondition(
+				condition.InputReadyCondition,
+				condition.ErrorReason,
+				condition.SeverityWarning,
+				condition.RabbitMqTransportURLReadyErrorMessage,
+				err.Error()))
+			return ctrl.Result{}, err
+		}
+
+		if op != controllerutil.OperationResultNone {
+			r.Log.Info(fmt.Sprintf("TransportURL %s successfully reconciled - operation: %s", transportURL.Name, string(op)))
+		}
+
+		instance.Status.TransportURLSecret = transportURL.Status.SecretName
+
+		if instance.Status.TransportURLSecret == "" {
+			r.Log.Info(fmt.Sprintf("Waiting for TransportURL %s secret to be created", transportURL.Name))
+			return ctrl.Result{RequeueAfter: time.Duration(10) * time.Second}, nil
+		}
+
+		transportURLSecret, _, err := secret.GetSecret(ctx, helper, instance.Status.TransportURLSecret, instance.Namespace)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+		transportURLString = string(transportURLSecret.Data["transport_url"])
+		// end transportURL
+	}
 
 	// Create a Service and endpoints for the proxy
 	swiftPorts := map[service.Endpoint]endpoint.Data{
@@ -493,6 +532,7 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	if err != nil {
 		return ctrl.Result{}, err
 	}
+
 	// Create a Secret populated with content from templates/
 	tpl := swiftproxy.SecretTemplates(
 		instance,
@@ -503,6 +543,8 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		instance.Spec.MemcachedServers,
 		bindIP,
 		secretRef,
+		os.GetRegion(),
+		transportURLString,
 	)
 	err = secret.EnsureSecrets(ctx, helper, instance, tpl, &envVars)
 	if err != nil {
@@ -792,4 +834,27 @@ func (r *SwiftProxyReconciler) createHashOfInputHashes(
 		instance.Status.Hash = hashMap
 	}
 	return hash, changed, nil
+}
+
+func (r *SwiftProxyReconciler) transportURLCreateOrUpdate(
+	ctx context.Context,
+	instance *swiftv1beta1.SwiftProxy,
+	serviceLabels map[string]string,
+) (*rabbitmqv1.TransportURL, controllerutil.OperationResult, error) {
+	transportURL := &rabbitmqv1.TransportURL{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      fmt.Sprintf("%s-swift-transport", instance.Name),
+			Namespace: instance.Namespace,
+			Labels:    serviceLabels,
+		},
+	}
+
+	op, err := controllerutil.CreateOrUpdate(ctx, r.Client, transportURL, func() error {
+		transportURL.Spec.RabbitmqClusterName = instance.Spec.RabbitMqClusterName
+
+		err := controllerutil.SetControllerReference(instance, transportURL, r.Scheme)
+		return err
+	})
+
+	return transportURL, op, err
 }
