@@ -452,6 +452,8 @@ func (r *SwiftReconciler) proxyCreateOrUpdate(ctx context.Context, instance *swi
 			TLS:                    instance.Spec.SwiftProxy.TLS,
 			DefaultConfigOverwrite: instance.Spec.SwiftProxy.DefaultConfigOverwrite,
 			EncryptionEnabled:      instance.Spec.SwiftProxy.EncryptionEnabled,
+			RabbitMqClusterName:    instance.Spec.SwiftProxy.RabbitMqClusterName,
+			CeilometerEnabled:      instance.Spec.SwiftProxy.CeilometerEnabled,
 		},
 	}
 

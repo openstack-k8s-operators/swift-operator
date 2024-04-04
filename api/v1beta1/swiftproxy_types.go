@@ -78,6 +78,11 @@ type SwiftProxySpecCore struct {
 	// List of memcached servers.
 	MemcachedServers string `json:"memcachedServers"`
 
+	// +kubebuilder:validation:Required
+	// +kubebuilder:default=rabbitmq
+	// RabbitMQ instance name to request a transportURL for Ceilometer middleware
+	RabbitMqClusterName string `json:"rabbitMqClusterName"`
+
 	// +kubebuilder:validation:Optional
 	// +operator-sdk:csv:customresourcedefinitions:type=spec
 	// TLS - Parameters related to the TLS
@@ -91,6 +96,11 @@ type SwiftProxySpecCore struct {
 	// +kubebuilder:default=false
 	// Encrypts new objects at rest
 	EncryptionEnabled bool `json:"encryptionEnabled"`
+
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default=false
+	// Enables ceilometer in the swift proxy and creates required resources
+	CeilometerEnabled bool `json:"ceilometerEnabled"`
 }
 
 // ProxyOverrideSpec to override the generated manifest of several child resources.
@@ -113,6 +123,9 @@ type SwiftProxyStatus struct {
 
 	// Map of hashes to track e.g. job status
 	Hash map[string]string `json:"hash,omitempty"`
+
+	// TransportURLSecret - Secret containing RabbitMQ transportURL
+	TransportURLSecret string `json:"transportURLSecret,omitempty"`
 }
 
 //+kubebuilder:object:root=true

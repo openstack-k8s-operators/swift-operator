@@ -35,6 +35,8 @@ func SecretTemplates(
 	memcachedServers string,
 	bindIP string,
 	secretRef string,
+	keystoneRegion string,
+	transportURL string,
 ) []util.Template {
 	templateParameters := make(map[string]interface{})
 	templateParameters["ServiceUser"] = instance.Spec.ServiceUser
@@ -44,6 +46,8 @@ func SecretTemplates(
 	templateParameters["MemcachedServers"] = memcachedServers
 	templateParameters["BindIP"] = bindIP
 	templateParameters["SecretRef"] = secretRef
+	templateParameters["KeystoneRegion"] = keystoneRegion
+	templateParameters["TransportURL"] = transportURL
 
 	// create httpd  vhost template parameters
 	httpdVhostConfig := map[string]interface{}{}
