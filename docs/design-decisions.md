@@ -32,8 +32,30 @@ if the pod name is `swift-storage-0` and the SwiftStorage instance is named
 This makes it easily usable within the Swift rings, and IP changes are now
 transparent and don't require an update of the rings.
 
+### PodManagementPolicy
+From
+[https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#parallel-pod-management](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#parallel-pod-management)
 
-### NetworkPolicy & Labels
+>Parallel pod management tells the StatefulSet controller to launch or
+>terminate all Pods in parallel, and to not wait for Pods to become Running and
+>Ready or completely terminated prior to launching or terminating another Pod.
+>This option only affects the behavior for scaling operations. Updates are not
+>affected.
+
+This is required to scale by more than one (including new deployments with more
+than one replica). It is required to create all pods at the same time,
+otherwise there will be PVCs that are not bound and the Swift rings can't be
+created, eventually blocking the start of these pods.
+
+## Affinity
+Storage pods should be distributed to different nodes to avoid single points of
+failure. A podAntiAffinity rule with
+preferredDuringSchedulingIgnoredDuringExecution is used to distribute pods to
+different nodes if possible. Using a separate storageClass and
+PersistentVolumes that are located on different nodes can be used to enforce
+further distribution.
+
+## NetworkPolicy & Labels
 
 Swift backend services must only be accessible by other backend services and
 the Swift proxy. To limit access, a NetworkPolicy is added to allow only
@@ -43,40 +65,33 @@ all pods must use the same label to allow access. This is also the reason why
 the swift-operator is not using labels from
 [lib-common](https://github.com/openstack-k8s-operators/lib-common) (yet).
 
-
 ## Swift rings
 
-Swift services require information about the disks to use, and this includes
-sizes (weights) and hostnames (or IPs). However, the sizes are not known when
-starting the StatefulSet - but the StatefulSet requires rings to actually scale
-up to the request size. It's basically a chicken-and-egg problem.
+Swift rings require information about the disks to use, and this includes
+sizes (weights) and hostnames (or IPs). Sizes are not known when starting the
+StatefulSet using PVCs - the size requirement is a lower limit, but the actual
+PVs might be way bigger.
 
-To solve this, an initial list of devices and their requested size will be
-used. This CSV list of devices is then stored in a ConfigMap, and the ConfigMap
-itself is watched by the SwiftRing instance. Once it is available (or changed),
-it will trigger a rebalance job.
-
-### Rebalance script
-
-Rebalancing Swift rings requires the `swift-ring-builder` to be executed. Right
-now this is done via a shell script; however this is just a dumb implementation
-for now, as there is no check between current state and requested state. All
-devices (PVs) are simply added every time it runs (ignoring existing ones),
-and weights are simply set every time for every device.
-
-A follow up refactoring will implement this in Python, directly using Swift
-ringbuilder functions as well as python-requests to retrieve and update
-ConfigMaps.
+However, StatefulSets do create PVCs before the ConfigMaps are available and
+simply wait starting the pods until these become available. The SwiftRing
+reconciler is watching the SwiftStorage instances and iterates over PVCs
+to get actual information about the used disks. Once these are bound the size
+is known, and the swift-ring-rebalance job creates the Swift rings and
+eventually the ConfigMap. After the ConfigMap becomes available, StatefulSets
+will start the service pods.
 
 ### Ring synchronization
 
-Rings are stored in ConfigMaps, and these are mounted within the SwiftProxy and
-SwiftStorage instances. An updated ConfigMap will also update these files and
-they become available at their mountpoints.
-However, all ring and builder files are stored in a tar file
-`swiftrings.tar.gz`, and this needs to be unpacked and copied over to
-`/etc/swift`. There is one container per SwiftProxy and SwiftStorage pod named
-`ring-sync`, which actually copies over these files if the mtime did change.
+Rings are stored in a ConfigMap mounted by the SwiftProxy and SwiftStorage
+instances using projected volumes. This makes it possible to mount all required
+files (rings, storage/proxy config files as well as some global files like
+swift.conf) at the same place, without merging these from other places. Updated
+ConfigMaps will update these files, and these changes are are detected by the
+Swift services eventually reloading these.
 
-This will also be improved to watch the ConfigMaps directly and only trigger an
-update if there are changes.
+## Customizing configurations
+Some operators are using the `customServiceConfig` option to customize
+settings. However, the SwiftRing instance deploys multiple backend services,
+and each of these requires specific files to be customized. Therefore only
+`defaultConfigOverwrite` using specific keys as filenames is supported when
+using the swift-operator.
