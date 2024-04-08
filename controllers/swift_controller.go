@@ -268,10 +268,8 @@ func (r *SwiftReconciler) reconcileNormal(ctx context.Context, instance *swiftv1
 		condition.MemcachedReadyCondition, condition.MemcachedReadyMessage)
 	// run check memcached - end
 
-	memcachedServers := memcached.GetMemcachedServerListString()
-
 	// create or update Swift storage
-	swiftStorage, op, err := r.storageCreateOrUpdate(ctx, instance, memcachedServers)
+	swiftStorage, op, err := r.storageCreateOrUpdate(ctx, instance)
 	if err != nil {
 		instance.Status.Conditions.Set(condition.FalseCondition(
 			swiftv1.SwiftStorageReadyCondition,
@@ -313,7 +311,7 @@ func (r *SwiftReconciler) reconcileNormal(ctx context.Context, instance *swiftv1
 	}
 
 	// create or update Swift proxy
-	swiftProxy, op, err := r.proxyCreateOrUpdate(ctx, instance, memcachedServers)
+	swiftProxy, op, err := r.proxyCreateOrUpdate(ctx, instance)
 	if err != nil {
 		instance.Status.Conditions.Set(condition.FalseCondition(
 			swiftv1.SwiftProxyReadyCondition,
@@ -399,7 +397,7 @@ func (r *SwiftReconciler) ringCreateOrUpdate(ctx context.Context, instance *swif
 	return deployment, op, err
 }
 
-func (r *SwiftReconciler) storageCreateOrUpdate(ctx context.Context, instance *swiftv1.Swift, memcachedServers string) (*swiftv1.SwiftStorage, controllerutil.OperationResult, error) {
+func (r *SwiftReconciler) storageCreateOrUpdate(ctx context.Context, instance *swiftv1.Swift) (*swiftv1.SwiftStorage, controllerutil.OperationResult, error) {
 
 	swiftStorageSpec := swiftv1.SwiftStorageSpec{
 		ContainerImageAccount:   instance.Spec.SwiftStorage.ContainerImageAccount,
@@ -411,7 +409,7 @@ func (r *SwiftReconciler) storageCreateOrUpdate(ctx context.Context, instance *s
 			StorageClass:            instance.Spec.SwiftStorage.StorageClass,
 			StorageRequest:          instance.Spec.SwiftStorage.StorageRequest,
 			NetworkAttachments:      instance.Spec.SwiftStorage.NetworkAttachments,
-			MemcachedServers:        memcachedServers,
+			MemcachedInstance:       instance.Spec.MemcachedInstance,
 			ContainerSharderEnabled: instance.Spec.SwiftStorage.ContainerSharderEnabled,
 			DefaultConfigOverwrite:  instance.Spec.SwiftStorage.DefaultConfigOverwrite,
 		},
@@ -437,7 +435,7 @@ func (r *SwiftReconciler) storageCreateOrUpdate(ctx context.Context, instance *s
 	return deployment, op, err
 }
 
-func (r *SwiftReconciler) proxyCreateOrUpdate(ctx context.Context, instance *swiftv1.Swift, memcachedServers string) (*swiftv1.SwiftProxy, controllerutil.OperationResult, error) {
+func (r *SwiftReconciler) proxyCreateOrUpdate(ctx context.Context, instance *swiftv1.Swift) (*swiftv1.SwiftProxy, controllerutil.OperationResult, error) {
 
 	swiftProxySpec := swiftv1.SwiftProxySpec{
 		ContainerImageProxy: instance.Spec.SwiftProxy.ContainerImageProxy,
@@ -448,7 +446,7 @@ func (r *SwiftReconciler) proxyCreateOrUpdate(ctx context.Context, instance *swi
 			PasswordSelectors:      instance.Spec.SwiftProxy.PasswordSelectors,
 			Override:               instance.Spec.SwiftProxy.Override,
 			NetworkAttachments:     instance.Spec.SwiftProxy.NetworkAttachments,
-			MemcachedServers:       memcachedServers,
+			MemcachedInstance:      instance.Spec.MemcachedInstance,
 			TLS:                    instance.Spec.SwiftProxy.TLS,
 			DefaultConfigOverwrite: instance.Spec.SwiftProxy.DefaultConfigOverwrite,
 			EncryptionEnabled:      instance.Spec.SwiftProxy.EncryptionEnabled,
