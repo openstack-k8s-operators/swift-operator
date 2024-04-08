@@ -19,6 +19,7 @@ package swiftproxy
 import (
 	"fmt"
 
+	memcachedv1 "github.com/openstack-k8s-operators/infra-operator/apis/memcached/v1beta1"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/service"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/util"
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
@@ -32,7 +33,7 @@ func SecretTemplates(
 	keystonePublicURL string,
 	keystoneInternalURL string,
 	password string,
-	memcachedServers string,
+	mc *memcachedv1.Memcached,
 	bindIP string,
 	secretRef string,
 	keystoneRegion string,
@@ -43,7 +44,8 @@ func SecretTemplates(
 	templateParameters["ServicePassword"] = password
 	templateParameters["KeystonePublicURL"] = keystonePublicURL
 	templateParameters["KeystoneInternalURL"] = keystoneInternalURL
-	templateParameters["MemcachedServers"] = memcachedServers
+	templateParameters["MemcachedServers"] = mc.GetMemcachedServerListString()
+	templateParameters["MemcachedTLS"] = mc.GetMemcachedTLSSupport()
 	templateParameters["BindIP"] = bindIP
 	templateParameters["SecretRef"] = secretRef
 	templateParameters["KeystoneRegion"] = keystoneRegion

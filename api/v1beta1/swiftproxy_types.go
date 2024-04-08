@@ -74,9 +74,9 @@ type SwiftProxySpecCore struct {
 	NetworkAttachments []string `json:"networkAttachments,omitempty"`
 
 	// +kubebuilder:validation:Required
-	// +kubebuilder:default=""
-	// List of memcached servers.
-	MemcachedServers string `json:"memcachedServers"`
+	// +kubebuilder:default=memcached
+	// Memcached instance name.
+	MemcachedInstance string `json:"memcachedInstance"`
 
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default=rabbitmq

@@ -66,9 +66,9 @@ spec:
                 default: false
                 description: Encrypts new objects at rest
                 type: boolean
-              memcachedServers:
-                default: ""
-                description: List of memcached servers.
+              memcachedInstance:
+                default: memcached
+                description: Memcached instance name.
                 type: string
               networkAttachments:
                 description: NetworkAttachments is a list of NetworkAttachment resource
@@ -315,7 +315,7 @@ spec:
                 type: object
             required:
             - containerImageProxy
-            - memcachedServers
+            - memcachedInstance
             - rabbitMqClusterName
             - replicas
             - secret

@@ -29,6 +29,8 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	helper "github.com/openstack-k8s-operators/lib-common/modules/common/helper"
 	service "github.com/openstack-k8s-operators/lib-common/modules/common/service"
@@ -40,6 +42,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/kubernetes"
 
+	memcachedv1 "github.com/openstack-k8s-operators/infra-operator/apis/memcached/v1beta1"
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
 	"github.com/openstack-k8s-operators/swift-operator/pkg/swift"
 	"github.com/openstack-k8s-operators/swift-operator/pkg/swiftstorage"
@@ -189,8 +192,31 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	if err != nil {
 		return ctrl.Result{}, err
 	}
+
+	//
+	// Check for required memcached used for caching
+	//
+	memcached, err := memcachedv1.GetMemcachedByName(ctx, helper, instance.Spec.MemcachedInstance, instance.Namespace)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			instance.Status.Conditions.Set(condition.FalseCondition(
+				condition.MemcachedReadyCondition,
+				condition.RequestedReason,
+				condition.SeverityInfo,
+				condition.MemcachedReadyWaitingMessage))
+			return ctrl.Result{RequeueAfter: 10 * time.Second}, fmt.Errorf("memcached %s not found", instance.Spec.MemcachedInstance)
+		}
+		instance.Status.Conditions.Set(condition.FalseCondition(
+			condition.MemcachedReadyCondition,
+			condition.ErrorReason,
+			condition.SeverityWarning,
+			condition.MemcachedReadyErrorMessage,
+			err.Error()))
+		return ctrl.Result{}, err
+	}
+
 	// Create a ConfigMap populated with content from templates/
-	tpl := swiftstorage.ConfigMapTemplates(instance, serviceLabels, instance.Spec.MemcachedServers, bindIP)
+	tpl := swiftstorage.ConfigMapTemplates(instance, serviceLabels, memcached, bindIP)
 	err = configmap.EnsureConfigMaps(ctx, helper, instance, tpl, &envVars)
 	if err != nil {
 		return ctrl.Result{}, err
@@ -378,12 +404,45 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *SwiftStorageReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	logger := mgr.GetLogger()
+
+	memcachedFn := func(ctx context.Context, o client.Object) []reconcile.Request {
+		result := []reconcile.Request{}
+
+		// get all SwiftStorage CRs
+		crList := &swiftv1beta1.SwiftStorageList{}
+		listOpts := []client.ListOption{
+			client.InNamespace(o.GetNamespace()),
+		}
+		if err := r.Client.List(context.Background(), crList, listOpts...); err != nil {
+			logger.Error(err, "Unable to retrieve SwiftStorage CRs %w")
+			return nil
+		}
+
+		for _, cr := range crList.Items {
+			if o.GetName() == cr.Spec.MemcachedInstance {
+				name := client.ObjectKey{
+					Namespace: o.GetNamespace(),
+					Name:      cr.Name,
+				}
+				logger.Info(fmt.Sprintf("Memcached %s is used by SwiftStorage CR %s", o.GetName(), cr.Name))
+				result = append(result, reconcile.Request{NamespacedName: name})
+			}
+		}
+		if len(result) > 0 {
+			return result
+		}
+		return nil
+	}
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&swiftv1beta1.SwiftStorage{}).
 		Owns(&corev1.ConfigMap{}).
 		Owns(&appsv1.StatefulSet{}).
 		Owns(&corev1.Service{}).
 		Owns(&networkingv1.NetworkPolicy{}).
+		Watches(&memcachedv1.Memcached{},
+			handler.EnqueueRequestsFromMapFunc(memcachedFn)).
 		Complete(r)
 }
 

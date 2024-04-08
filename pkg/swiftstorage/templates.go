@@ -19,16 +19,18 @@ package swiftstorage
 import (
 	"fmt"
 
+	memcachedv1 "github.com/openstack-k8s-operators/infra-operator/apis/memcached/v1beta1"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/util"
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
 )
 
 func ConfigMapTemplates(instance *swiftv1beta1.SwiftStorage,
 	labels map[string]string,
-	memcachedServers string,
+	mc *memcachedv1.Memcached,
 	bindIP string) []util.Template {
 	templateParameters := make(map[string]interface{})
-	templateParameters["MemcachedServers"] = memcachedServers
+	templateParameters["MemcachedServers"] = mc.GetMemcachedServerListString()
+	templateParameters["MemcachedTLS"] = mc.GetMemcachedTLSSupport()
 	templateParameters["BindIP"] = bindIP
 
 	customData := map[string]string{}
