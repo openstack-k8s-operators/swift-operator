@@ -3,64 +3,25 @@ The swift-operator is an OpenShift Operator built using the
 [Operator Framework for Go](https://github.com/operator-framework) and provides
 an easy way to install and manage an OpenStack Swift installation on OpenShift.
 
-Some useful information about the implementation might be found in the [Design
-Decisisons](docs/design-decisions.md).
+## Available documentation
+- [Configuration](docs/config.md)
+- [Adoption](https://openstack-k8s-operators.github.io/data-plane-adoption/)
+- [Design Decisisons](docs/design-decisions.md)
 
 ## Getting Started
-You’ll need an OpenShift cluster to run against, for example [Red Hat CodeReady Containers](https://access.redhat.com/documentation/en-us/red_hat_codeready_containers/2.0/html/getting_started_guide/index).
+The easiest way is to deploy using the openstack-operator and [install_yamls](https://github.com/openstack-k8s-operators/install_yamls).
 
-You also need a running Keystone instance and a few PersistentVolumes. There
-are two simple ways to test this, both are using [install_yamls](https://github.com/openstack-k8s-operators/install_yamls).
-
-
-### Setup CRC
+### Deploy using the openstack-operator
 ```sh
-git clone https://github.com/openstack-k8s-operators/install_yamls
-pushd install_yaml/devsetup
+git clone https://github.com/openstack-k8s-operators/install_yamls.git ~/install_yamls/
+
+cd ~/install_yamls/devsetup/
+make download_tools
 CPUS=12 MEMORY=25600 DISK=100 make crc
-eval $(crc oc-env)
 make crc_attach_default_interface
-popd
-```
 
-### Deploy Swift
-There are multiple ways to deploy Swift, one running only Keystone, MariaDB and
-Swift and another one running a full OpenStack deployment using the
-openstack-operator.
-
-#### Deploy without using the openstack-operator
-```sh
-pushd install_yaml
-# Setup PVs and deploy the operators
-make crc_storage mariadb keystone swift
-# Once operators are ready, deploy services
-make mariadb_deploy keystone_deploy swift_deploy
-popd
-```
-
-Once everything is ready a couple of pods should run including Swift:
-```sh
-$ oc get pods
-NAME                           READY   STATUS      RESTARTS   AGE
-keystone-6c76bbbd67-ctk6p      1/1     Running     0          69s
-keystone-bootstrap-5x7r2       0/1     Completed   0          78s
-keystone-db-create-lk5zv       0/1     Completed   0          99s
-keystone-db-sync-ncntj         0/1     Completed   0          89s
-mariadb-openstack              1/1     Running     0          100s
-openstack-db-init-z8vgs        0/1     Completed   0          2m
-swift-proxy-749fffd9f9-zjf57   3/3     Running     0          77s
-swift-ring-rebalance-46vnr     0/1     Completed   0          93s
-swift-storage-0                16/16   Running     0          2m2s
-```
-
-#### Deploy using the openstack-operator
-```sh
-pushd install_yaml
-# Setup PVs and deploy the operators
-make crc_storage input openstack
-# Once operators are ready, deploy services
-make openstack_deploy
-popd
+cd ~/install_yamls
+make crc_storage input openstack_wait openstack_wait_deploy
 ```
 
 ### Accessing Swift using the CLI
