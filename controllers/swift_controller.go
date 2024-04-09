@@ -148,6 +148,8 @@ func (r *SwiftReconciler) Reconcile(ctx context.Context, req ctrl.Request) (resu
 	)
 
 	instance.Status.Conditions.Init(&cl)
+	// Update the lastObserved generation before evaluating conditions
+	instance.Status.ObservedGeneration = instance.Generation
 
 	// If we're not deleting this and the service object doesn't have our finalizer, add it.
 	if instance.DeletionTimestamp.IsZero() && controllerutil.AddFinalizer(instance, helper.GetFinalizer()) || isNewInstance {
@@ -333,8 +335,6 @@ func (r *SwiftReconciler) reconcileNormal(ctx context.Context, instance *swiftv1
 
 	r.Log.Info(fmt.Sprintf("Reconciled Service '%s' successfully", instance.Name))
 
-	// Update the lastObserved generation before evaluating conditions
-	instance.Status.ObservedGeneration = instance.Generation
 	// We reached the end of the Reconcile, update the Ready condition based on
 	// the sub conditions
 	if instance.Status.Conditions.AllSubConditionIsTrue() {
