@@ -276,14 +276,32 @@ func (r *SwiftReconciler) reconcileNormal(ctx context.Context, instance *swiftv1
 			err.Error()))
 		return ctrl.Result{}, err
 	}
-	if op != controllerutil.OperationResultNone {
-		r.Log.Info(fmt.Sprintf("Deployment %s successfully reconciled - operation: %s", instance.Name, string(op)))
+	// make sure the controller is watching the last generation of the subCR
+	stg, err := r.checkSwiftStorageGeneration(instance)
+	if err != nil {
+		instance.Status.Conditions.Set(condition.FalseCondition(
+			swiftv1.SwiftStorageReadyCondition,
+			condition.ErrorReason,
+			condition.SeverityWarning,
+			swiftv1.SwiftStorageReadyErrorMessage,
+			err.Error()))
+		return ctrl.Result{}, err
 	}
-
-	// Mirror SwiftStorage's condition status
-	c := swiftStorage.Status.Conditions.Mirror(swiftv1.SwiftStorageReadyCondition)
-	if c != nil {
-		instance.Status.Conditions.Set(c)
+	if !stg {
+		instance.Status.Conditions.Set(condition.UnknownCondition(
+			swiftv1.SwiftStorageReadyCondition,
+			condition.InitReason,
+			swiftv1.SwiftStorageReadyInitMessage,
+		))
+	} else {
+		// Mirror SwiftStorage's condition status
+		c := swiftStorage.Status.Conditions.Mirror(swiftv1.SwiftStorageReadyCondition)
+		if c != nil {
+			instance.Status.Conditions.Set(c)
+		}
+	}
+	if op != controllerutil.OperationResultNone && stg {
+		r.Log.Info(fmt.Sprintf("Deployment %s successfully reconciled - operation: %s", instance.Name, string(op)))
 	}
 
 	// create or update Swift rings
@@ -297,14 +315,33 @@ func (r *SwiftReconciler) reconcileNormal(ctx context.Context, instance *swiftv1
 			err.Error()))
 		return ctrl.Result{}, err
 	}
-	if op != controllerutil.OperationResultNone {
-		r.Log.Info(fmt.Sprintf("Deployment %s successfully reconciled - operation: %s", instance.Name, string(op)))
-	}
 
-	// Mirror SwiftRing's condition status
-	c = swiftRing.Status.Conditions.Mirror(swiftv1.SwiftRingReadyCondition)
-	if c != nil {
-		instance.Status.Conditions.Set(c)
+	// make sure the controller is watching the last generation of the subCR
+	ring, err := r.checkSwiftRingGeneration(instance)
+	if err != nil {
+		instance.Status.Conditions.Set(condition.FalseCondition(
+			swiftv1.SwiftRingReadyCondition,
+			condition.ErrorReason,
+			condition.SeverityWarning,
+			swiftv1.SwiftRingReadyErrorMessage,
+			err.Error()))
+		return ctrl.Result{}, err
+	}
+	if !ring {
+		instance.Status.Conditions.Set(condition.UnknownCondition(
+			swiftv1.SwiftRingReadyCondition,
+			condition.InitReason,
+			swiftv1.SwiftRingReadyInitMessage,
+		))
+	} else {
+		// Mirror SwiftRing's condition status
+		c := swiftRing.Status.Conditions.Mirror(swiftv1.SwiftRingReadyCondition)
+		if c != nil {
+			instance.Status.Conditions.Set(c)
+		}
+	}
+	if op != controllerutil.OperationResultNone && ring {
+		r.Log.Info(fmt.Sprintf("Deployment %s successfully reconciled - operation: %s", instance.Name, string(op)))
 	}
 
 	// create or update Swift proxy
@@ -318,17 +355,32 @@ func (r *SwiftReconciler) reconcileNormal(ctx context.Context, instance *swiftv1
 			err.Error()))
 		return ctrl.Result{}, err
 	}
-	if op != controllerutil.OperationResultNone {
+	sst, err := r.checkSwiftProxyGeneration(instance)
+	if err != nil {
+		instance.Status.Conditions.Set(condition.FalseCondition(
+			swiftv1.SwiftProxyReadyCondition,
+			condition.ErrorReason,
+			condition.SeverityWarning,
+			swiftv1.SwiftProxyReadyErrorMessage,
+			err.Error()))
+		return ctrl.Result{}, err
+	}
+	if !sst {
+		instance.Status.Conditions.Set(condition.UnknownCondition(
+			swiftv1.SwiftProxyReadyCondition,
+			condition.InitReason,
+			swiftv1.SwiftProxyReadyInitMessage,
+		))
+	} else {
+		// Mirror SwiftProxy's condition status
+		c := swiftProxy.Status.Conditions.Mirror(swiftv1.SwiftProxyReadyCondition)
+		if c != nil {
+			instance.Status.Conditions.Set(c)
+		}
+	}
+	if op != controllerutil.OperationResultNone && sst {
 		r.Log.Info(fmt.Sprintf("Deployment %s successfully reconciled - operation: %s", instance.Name, string(op)))
 	}
-
-	// Mirror SwiftProxy's condition status
-	c = swiftProxy.Status.Conditions.Mirror(swiftv1.SwiftProxyReadyCondition)
-	if c != nil {
-		instance.Status.Conditions.Set(c)
-	}
-
-	r.Log.Info(fmt.Sprintf("Reconciled Service '%s' successfully", instance.Name))
 
 	// We reached the end of the Reconcile, update the Ready condition based on
 	// the sub conditions
@@ -336,6 +388,7 @@ func (r *SwiftReconciler) reconcileNormal(ctx context.Context, instance *swiftv1
 		instance.Status.Conditions.MarkTrue(
 			condition.ReadyCondition, condition.ReadyMessage)
 	}
+	r.Log.Info(fmt.Sprintf("Reconciled Service '%s' successfully", instance.Name))
 	return ctrl.Result{}, nil
 }
 
@@ -470,4 +523,64 @@ func (r *SwiftReconciler) proxyCreateOrUpdate(ctx context.Context, instance *swi
 	})
 
 	return deployment, op, err
+}
+
+// checkSwiftProxyGeneration -
+func (r *SwiftReconciler) checkSwiftProxyGeneration(
+	instance *swiftv1.Swift,
+) (bool, error) {
+	proxy := &swiftv1.SwiftProxyList{}
+	listOpts := []client.ListOption{
+		client.InNamespace(instance.Namespace),
+	}
+	if err := r.Client.List(context.Background(), proxy, listOpts...); err != nil {
+		r.Log.Error(err, "Unable to retrieve SwiftProxy %w")
+		return false, err
+	}
+	for _, item := range proxy.Items {
+		if item.Generation != item.Status.ObservedGeneration {
+			return false, nil
+		}
+	}
+	return true, nil
+}
+
+// checkSwiftStorageGeneration -
+func (r *SwiftReconciler) checkSwiftStorageGeneration(
+	instance *swiftv1.Swift,
+) (bool, error) {
+	sst := &swiftv1.SwiftStorageList{}
+	listOpts := []client.ListOption{
+		client.InNamespace(instance.Namespace),
+	}
+	if err := r.Client.List(context.Background(), sst, listOpts...); err != nil {
+		r.Log.Error(err, "Unable to retrieve SwiftStorage %w")
+		return false, err
+	}
+	for _, item := range sst.Items {
+		if item.Generation != item.Status.ObservedGeneration {
+			return false, nil
+		}
+	}
+	return true, nil
+}
+
+// checkSwiftRingGeneration -
+func (r *SwiftReconciler) checkSwiftRingGeneration(
+	instance *swiftv1.Swift,
+) (bool, error) {
+	rings := &swiftv1.SwiftRingList{}
+	listOpts := []client.ListOption{
+		client.InNamespace(instance.Namespace),
+	}
+	if err := r.Client.List(context.Background(), rings, listOpts...); err != nil {
+		r.Log.Error(err, "Unable to retrieve SwiftRing %w")
+		return false, err
+	}
+	for _, item := range rings.Items {
+		if item.Generation != item.Status.ObservedGeneration {
+			return false, nil
+		}
+	}
+	return true, nil
 }

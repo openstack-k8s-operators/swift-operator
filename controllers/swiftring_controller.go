@@ -137,6 +137,8 @@ func (r *SwiftRingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	)
 
 	instance.Status.Conditions.Init(&cl)
+	// Update the lastObserved generation before evaluating conditions
+	instance.Status.ObservedGeneration = instance.Generation
 
 	// If we're not deleting this and the service object doesn't have our finalizer, add it.
 	if instance.DeletionTimestamp.IsZero() && controllerutil.AddFinalizer(instance, helper.GetFinalizer()) || isNewInstance {

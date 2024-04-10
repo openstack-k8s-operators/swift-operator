@@ -164,6 +164,8 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	)
 
 	instance.Status.Conditions.Init(&cl)
+	// Update the lastObserved generation before evaluating conditions
+	instance.Status.ObservedGeneration = instance.Generation
 
 	// If we're not deleting this and the service object doesn't have our finalizer, add it.
 	if instance.DeletionTimestamp.IsZero() && controllerutil.AddFinalizer(instance, helper.GetFinalizer()) || isNewInstance {
@@ -654,7 +656,8 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 
 	instance.Status.ReadyCount = depl.GetDeployment().Status.ReadyReplicas
 
-	if instance.Status.ReadyCount == *instance.Spec.Replicas {
+	if instance.Status.ReadyCount == *instance.Spec.Replicas &&
+		depl.GetDeployment().Generation == depl.GetDeployment().Status.ObservedGeneration {
 
 		// verify if network attachment matches expectations
 		networkReady, networkAttachmentStatus, err := nad.VerifyNetworkStatusFromAnnotation(ctx, helper, instance.Spec.NetworkAttachments, serviceLabels, instance.Status.ReadyCount)
@@ -676,7 +679,6 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 
 			return ctrl.Result{}, err
 		}
-
 		instance.Status.Conditions.MarkTrue(swiftv1beta1.SwiftProxyReadyCondition, condition.ReadyMessage)
 	} else {
 		instance.Status.Conditions.Set(condition.FalseCondition(
