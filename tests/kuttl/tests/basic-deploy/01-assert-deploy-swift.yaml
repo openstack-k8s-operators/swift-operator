@@ -140,5 +140,6 @@ apiVersion: kuttl.dev/v1beta1
 kind: TestAssert
 commands:
   - script: |
+      oc rollout status deployment -n $NAMESPACE swift-proxy
       podname=$(oc get pod -n $NAMESPACE -l component=swift-proxy | grep Running | cut -f 1 -d " ")
       oc rsh -n $NAMESPACE -c proxy-server "$podname" /bin/sh -c "grep 'Additional proxy config' /etc/swift/proxy-server.conf.d/01-proxy-server.conf"
