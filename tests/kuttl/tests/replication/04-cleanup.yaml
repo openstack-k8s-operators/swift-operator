@@ -9,3 +9,4 @@ commands:
     oc delete --ignore-not-found=true -n $NAMESPACE pvc swift-swift-storage-0
     oc delete --ignore-not-found=true -n $NAMESPACE pvc swift-swift-storage-1
     oc delete --ignore-not-found=true -n $NAMESPACE pvc swift-swift-storage-2
+    for pv in $(oc get pv | grep "Released.*swift" | cut -f 1 -d " "); do oc patch pv $pv -p '{"spec":{"claimRef": null}}'; done
