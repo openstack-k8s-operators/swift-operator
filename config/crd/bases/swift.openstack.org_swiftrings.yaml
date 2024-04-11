@@ -49,7 +49,7 @@ spec:
                 type: string
               minPartHours:
                 default: 1
-                description: Minimum numbeir of hours to restrict moving a partition
+                description: Minimum number of hours to restrict moving a partition
                   more than once
                 format: int64
                 minimum: 1

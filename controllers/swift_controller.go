@@ -373,6 +373,8 @@ func (r *SwiftReconciler) ringCreateOrUpdate(ctx context.Context, instance *swif
 		ContainerImage: instance.Spec.SwiftRing.ContainerImage,
 		SwiftRingSpecCore: swiftv1.SwiftRingSpecCore{
 			RingReplicas: instance.Spec.SwiftRing.RingReplicas,
+			PartPower:    instance.Spec.SwiftRing.PartPower,
+			MinPartHours: instance.Spec.SwiftRing.MinPartHours,
 			TLS:          instance.Spec.SwiftProxy.TLS.Ca,
 		},
 	}
