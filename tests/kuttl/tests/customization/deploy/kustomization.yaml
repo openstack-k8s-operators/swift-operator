@@ -16,5 +16,23 @@ patches:
     - op: replace
       path: /spec/swiftStorage/containerSharderEnabled
       value: true
+    - op: add
+      path: /spec/swiftProxy/defaultConfigOverwrite
+      value:
+        01-proxy-server.conf: |
+          [DEFAULT]
+          workers = 3
+    - op: add
+      path: /spec/swiftStorage/defaultConfigOverwrite
+      value:
+        01-account-server.conf: |
+          [DEFAULT]
+          workers = 3
+        01-container-server.conf: |
+          [DEFAULT]
+          workers = 3
+        01-object-server.conf: |
+          [DEFAULT]
+          workers = 3
   target:
     kind: Swift

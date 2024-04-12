@@ -1,0 +1,13 @@
+---
+apiVersion: kuttl.dev/v1beta1
+kind: TestAssert
+commands:
+  - script: |
+      oc rsh -n $NAMESPACE -c account-server swift-storage-0 /bin/sh -c "ps --no-headers -C swift-account-server" | [ `wc -l` -eq 4 ]
+  - script: |
+      oc rsh -n $NAMESPACE -c container-server swift-storage-0 /bin/sh -c "ps --no-headers -C swift-container-server" | [ `wc -l` -eq 4 ]
+  - script: |
+      oc rsh -n $NAMESPACE -c object-server swift-storage-0 /bin/sh -c "ps --no-headers -C swift-object-server" | [ `wc -l` -eq 4 ]
+  - script: |
+      podname=$(oc get pod -n $NAMESPACE -l component=swift-proxy | grep Running | cut -f 1 -d " ")
+      oc rsh -n $NAMESPACE -c proxy-server $podname /bin/sh -c "ps --no-headers -C swift-proxy-server" | [ `wc -l` -eq 4 ]

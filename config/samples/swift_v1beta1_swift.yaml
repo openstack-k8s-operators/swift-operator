@@ -12,6 +12,3 @@ spec:
     replicas: 1
     passwordSelectors:
       service: SwiftPassword
-    defaultConfigOverwrite:
-      01-proxy-server.conf: |
-        # Additional proxy config
