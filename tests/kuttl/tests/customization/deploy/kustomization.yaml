@@ -8,6 +8,9 @@ patches:
       path: /spec/swiftRing/partPower
       value: 2
     - op: replace
+      path: /spec/swiftRing/minPartHours
+      value: 2
+    - op: replace
       path: /spec/swiftProxy/ceilometerEnabled
       value: true
     - op: replace
