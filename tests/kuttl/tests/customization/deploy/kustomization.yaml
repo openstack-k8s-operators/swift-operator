@@ -10,5 +10,8 @@ patches:
     - op: replace
       path: /spec/swiftProxy/ceilometerEnabled
       value: true
+    - op: replace
+      path: /spec/swiftProxy/encryptionEnabled
+      value: true
   target:
     kind: Swift
