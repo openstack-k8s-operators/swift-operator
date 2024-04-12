@@ -13,5 +13,8 @@ patches:
     - op: replace
       path: /spec/swiftProxy/encryptionEnabled
       value: true
+    - op: replace
+      path: /spec/swiftStorage/containerSharderEnabled
+      value: true
   target:
     kind: Swift
