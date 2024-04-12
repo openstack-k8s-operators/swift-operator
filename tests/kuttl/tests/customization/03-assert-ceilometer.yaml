@@ -1,0 +1,6 @@
+---
+apiVersion: kuttl.dev/v1beta1
+kind: TestAssert
+commands:
+  - script: |
+      oc -n $NAMESPACE rsh rabbitmq-server-0 /bin/sh -c "rabbitmqadmin get queue=notifications.info" | grep swift
