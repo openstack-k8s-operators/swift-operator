@@ -1,0 +1,11 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestStep
+delete:
+- apiVersion: swift.openstack.org/v1beta1
+  kind: Swift
+  name: swift
+commands:
+- script: |
+    oc delete --ignore-not-found=true -n $NAMESPACE secret swift-conf
+    oc delete --ignore-not-found=true -n $NAMESPACE pvc swift-swift-storage-0
+    for pv in $(oc get pv | grep "Released.*swift" | cut -f 1 -d " "); do oc patch pv $pv -p '{"spec":{"claimRef": null}}'; done

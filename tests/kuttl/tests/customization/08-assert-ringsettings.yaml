@@ -1,0 +1,8 @@
+---
+apiVersion: kuttl.dev/v1beta1
+kind: TestAssert
+commands:
+  - script: |
+      oc wait --for=condition=Ready -n $NAMESPACE Swift swift
+  - script: |
+      oc debug -n $NAMESPACE --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c "/usr/local/bin/swift-ring-tool get && swift-ring-builder object.builder" | grep -z "4 partitions.*reassigned is 2"

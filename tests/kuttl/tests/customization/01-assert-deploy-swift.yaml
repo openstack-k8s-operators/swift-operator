@@ -1,0 +1,43 @@
+---
+apiVersion: swift.openstack.org/v1beta1
+kind: Swift
+metadata:
+  name: swift
+status:
+  conditions:
+  - message: Setup complete
+    reason: Ready
+    status: "True"
+    type: Ready
+  - message: " Memcached instance has been provisioned"
+    reason: Ready
+    status: "True"
+    type: MemcachedReady
+  - message: RoleBinding created
+    reason: Ready
+    status: "True"
+    type: RoleBindingReady
+  - message: Role created
+    reason: Ready
+    status: "True"
+    type: RoleReady
+  - message: ServiceAccount created
+    reason: Ready
+    status: "True"
+    type: ServiceAccountReady
+  - message: Service config create completed
+    reason: Ready
+    status: "True"
+    type: ServiceConfigReady
+  - message: Setup complete
+    reason: Ready
+    status: "True"
+    type: SwiftProxyReady
+  - message: Setup complete
+    reason: Ready
+    status: "True"
+    type: SwiftRingReady
+  - message: Setup complete
+    reason: Ready
+    status: "True"
+    type: SwiftStorageReady

@@ -1,0 +1,7 @@
+---
+apiVersion: kuttl.dev/v1beta1
+kind: TestAssert
+commands:
+  - script: |
+      # Ensure objects are not saved in plaintext
+      oc -n $NAMESPACE rsh -c object-server swift-storage-0 /bin/sh -c "! grep -r dispersion /srv/node/pv/objects/*"

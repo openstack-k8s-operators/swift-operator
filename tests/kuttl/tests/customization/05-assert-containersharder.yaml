@@ -1,72 +1,4 @@
 ---
-apiVersion: swift.openstack.org/v1beta1
-kind: Swift
-metadata:
-  name: swift
-spec:
-  swiftRing:
-    ringReplicas: 1
-  swiftStorage:
-    storageClass: local-storage
-    replicas: 1
-  swiftProxy:
-    replicas: 1
-    passwordSelectors:
-      service: SwiftPassword
-status:
-  conditions:
-  - message: Setup complete
-    reason: Ready
-    status: "True"
-    type: Ready
-  - message: " Memcached instance has been provisioned"
-    reason: Ready
-    status: "True"
-    type: MemcachedReady
-  - message: RoleBinding created
-    reason: Ready
-    status: "True"
-    type: RoleBindingReady
-  - message: Role created
-    reason: Ready
-    status: "True"
-    type: RoleReady
-  - message: ServiceAccount created
-    reason: Ready
-    status: "True"
-    type: ServiceAccountReady
-  - message: Service config create completed
-    reason: Ready
-    status: "True"
-    type: ServiceConfigReady
-  - message: Setup complete
-    reason: Ready
-    status: "True"
-    type: SwiftProxyReady
-  - message: Setup complete
-    reason: Ready
-    status: "True"
-    type: SwiftRingReady
-  - message: Setup complete
-    reason: Ready
-    status: "True"
-    type: SwiftStorageReady
----
-apiVersion: v1
-kind: Pod
-metadata:
-  labels:
-    component: swift-proxy
-    service: swift
-status:
-  containerStatuses:
-    - name: proxy-httpd
-      ready: true
-      started: true
-    - name: proxy-server
-      ready: true
-      started: true
----
 apiVersion: v1
 kind: Pod
 metadata:
@@ -154,6 +86,11 @@ spec:
     - while true; do /usr/bin/swift-recon-cron /etc/swift/object-server.conf.d
       -v; sleep 300; done
     name: swift-recon-cron
+  - command:
+    - /usr/bin/swift-container-sharder
+    - /etc/swift/container-server.conf.d
+    - -v
+    name: container-sharder
 status:
   containerStatuses:
     - name: account-auditor
@@ -175,6 +112,9 @@ status:
       ready: true
       started: true
     - name: container-server
+      ready: true
+      started: true
+    - name: container-sharder
       ready: true
       started: true
     - name: container-updater
@@ -201,17 +141,3 @@ status:
     - name: swift-recon-cron
       ready: true
       started: true
----
-apiVersion: batch/v1
-kind: Job
-metadata:
-  labels:
-    job-name: swift-ring-rebalance
-  name: swift-ring-rebalance
-status:
-  succeeded: 1
----
-apiVersion: kuttl.dev/v1beta1
-kind: TestAssert
-commands:
-  - script: $SWIFT_KUTTL_DIR/../common/scripts/check_ring_rebalance_output.sh
