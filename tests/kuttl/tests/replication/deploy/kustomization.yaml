@@ -8,6 +8,9 @@ patches:
       path: /spec/swiftRing/ringReplicas
       value: 3
     - op: replace
+      path: /spec/swiftRing/partPower
+      value: 2
+    - op: replace
       path: /spec/swiftStorage/replicas
       value: 3
   target:
