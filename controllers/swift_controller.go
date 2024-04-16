@@ -178,18 +178,14 @@ func (r *SwiftReconciler) reconcileNormal(ctx context.Context, instance *swiftv1
 		},
 		{
 			APIGroups: []string{""},
-			Resources: []string{"pods"},
-			Verbs:     []string{"create", "get", "list", "watch", "update", "patch", "delete"},
-		},
-		{
-			APIGroups: []string{""},
 			Resources: []string{"configmaps"},
-			Verbs:     []string{"create", "get", "update", "delete"},
+			Verbs:     []string{"create"},
 		},
 		{
-			APIGroups: []string{""},
-			Resources: []string{"persistentvolumeclaims"},
-			Verbs:     []string{"get", "list", "watch"},
+			APIGroups:     []string{""},
+			Resources:     []string{"configmaps"},
+			ResourceNames: []string{"swift-ring-files"},
+			Verbs:         []string{"get", "update"},
 		},
 	}
 	rbacResult, err := common_rbac.ReconcileRbac(ctx, helper, instance, rbacRules)
