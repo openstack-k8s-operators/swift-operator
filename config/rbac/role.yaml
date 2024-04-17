@@ -10,13 +10,8 @@ rules:
   resources:
   - pods
   verbs:
-  - create
-  - delete
   - get
   - list
-  - patch
-  - update
-  - watch
 - apiGroups:
   - ""
   resources:
@@ -229,30 +224,6 @@ rules:
 - apiGroups:
   - rbac.authorization.k8s.io
   resources:
-  - clusterrolebindings
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - rbac.authorization.k8s.io
-  resources:
-  - clusterroles
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - rbac.authorization.k8s.io
-  resources:
   - rolebindings
   verbs:
   - create
@@ -273,8 +244,7 @@ rules:
 - apiGroups:
   - security.openshift.io
   resourceNames:
-  - anyuid
-  - privileged
+  - nonroot-v2
   resources:
   - securitycontextconstraints
   verbs:
