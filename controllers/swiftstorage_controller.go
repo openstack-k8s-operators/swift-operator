@@ -165,6 +165,8 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	)
 
 	instance.Status.Conditions.Init(&cl)
+	// Update the lastObserved generation before evaluating conditions
+	instance.Status.ObservedGeneration = instance.Generation
 
 	// If we're not deleting this and the service object doesn't have our finalizer, add it.
 	if instance.DeletionTimestamp.IsZero() && controllerutil.AddFinalizer(instance, helper.GetFinalizer()) || isNewInstance {
@@ -314,7 +316,8 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	}
 
 	instance.Status.ReadyCount = sset.GetStatefulSet().Status.ReadyReplicas
-	if instance.Status.ReadyCount == *instance.Spec.Replicas {
+	if instance.Status.ReadyCount == *instance.Spec.Replicas &&
+		sset.GetStatefulSet().Generation == sset.GetStatefulSet().Status.ObservedGeneration {
 		networkReady, networkAttachmentStatus, err := networkattachment.VerifyNetworkStatusFromAnnotation(ctx, helper, instance.Spec.NetworkAttachments, serviceLabels, instance.Status.ReadyCount)
 		if err != nil {
 			return ctrl.Result{}, err
