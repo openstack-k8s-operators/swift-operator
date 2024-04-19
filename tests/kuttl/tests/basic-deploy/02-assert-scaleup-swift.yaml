@@ -19,3 +19,11 @@ metadata:
   name: swift-storage-2
 status:
   phase: Running
+---
+apiVersion: kuttl.dev/v1beta1
+kind: TestAssert
+commands:
+  - script: |
+      oc wait -n $NAMESPACE --for=condition=Ready Swift swift
+  - script: |
+      oc debug -n $NAMESPACE --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c "/usr/local/bin/swift-ring-tool get && swift-ring-builder object.builder" | grep -z "3 devices"
