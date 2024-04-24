@@ -584,7 +584,7 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 
 	// create hash over all the different input resources to identify if any those changed
 	// and a restart/recreate is required.
-	inputHash, hashChanged, err := r.createHashOfInputHashes(ctx, instance, envVars)
+	inputHash, hashChanged, err := r.createHashOfInputHashes(instance, envVars)
 	if err != nil {
 		return ctrl.Result{}, err
 	} else if hashChanged {
@@ -799,7 +799,7 @@ func (r *SwiftProxyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 func (r *SwiftProxyReconciler) findObjectsForSrc(ctx context.Context, src client.Object) []reconcile.Request {
 	requests := []reconcile.Request{}
 
-	l := log.FromContext(context.Background()).WithName("Controllers").WithName("SwiftProxy")
+	l := log.FromContext(ctx).WithName("Controllers").WithName("SwiftProxy")
 
 	for _, field := range swiftProxyWatchFields {
 		crList := &swiftv1beta1.SwiftProxyList{}
@@ -807,7 +807,7 @@ func (r *SwiftProxyReconciler) findObjectsForSrc(ctx context.Context, src client
 			FieldSelector: fields.OneTermEqualSelector(field, src.GetName()),
 			Namespace:     src.GetNamespace(),
 		}
-		err := r.List(context.TODO(), crList, listOps)
+		err := r.List(ctx, crList, listOps)
 		if err != nil {
 			return []reconcile.Request{}
 		}
@@ -877,7 +877,6 @@ func (r *SwiftProxyReconciler) reconcileDelete(ctx context.Context, instance *sw
 //
 // returns the hash, whether the hash changed (as a bool) and any error
 func (r *SwiftProxyReconciler) createHashOfInputHashes(
-	ctx context.Context,
 	instance *swiftv1beta1.SwiftProxy,
 	envVars map[string]env.Setter,
 ) (string, bool, error) {

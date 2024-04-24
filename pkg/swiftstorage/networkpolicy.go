@@ -130,7 +130,6 @@ type NetworkPolicyStruct struct {
 // NewNetworkPolicy returns an initialized NetworkPolicy.
 func NewNetworkPolicy(
 	networkPolicy *networkingv1.NetworkPolicy,
-	labels map[string]string,
 	timeout time.Duration,
 ) *NetworkPolicyStruct {
 	return &NetworkPolicyStruct{
