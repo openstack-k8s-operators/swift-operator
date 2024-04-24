@@ -278,7 +278,7 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	}
 
 	// Limit internal storage traffic to Swift services
-	np := swiftstorage.NewNetworkPolicy(swiftstorage.NetworkPolicy(instance, storageNetworkRange), serviceLabels, 5*time.Second)
+	np := swiftstorage.NewNetworkPolicy(swiftstorage.NetworkPolicy(instance, storageNetworkRange), 5*time.Second)
 	ctrlResult, err = np.CreateOrPatch(ctx, helper)
 	if err != nil {
 		return ctrlResult, err
@@ -374,7 +374,6 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 				helper,
 				hostName,
 				dnsIP,
-				instance,
 				swiftPod,
 				serviceLabels,
 			)

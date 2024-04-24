@@ -6,7 +6,6 @@ import (
 
 	infranetworkv1 "github.com/openstack-k8s-operators/infra-operator/apis/network/v1beta1"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/helper"
-	swiftv1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -18,7 +17,6 @@ func DNSData(
 	helper *helper.Helper,
 	hostName string,
 	ip string,
-	instance *swiftv1.SwiftStorage,
 	swiftPod corev1.Pod,
 	serviceLabels map[string]string,
 ) error {
