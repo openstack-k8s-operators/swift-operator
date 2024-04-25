@@ -172,12 +172,6 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return ctrl.Result{}, nil
 	}
 
-	if isNewInstance {
-		if err := r.Status().Update(ctx, instance); err != nil {
-			return ctrl.Result{}, err
-		}
-	}
-
 	if instance.Status.NetworkAttachments == nil {
 		instance.Status.NetworkAttachments = map[string][]string{}
 	}

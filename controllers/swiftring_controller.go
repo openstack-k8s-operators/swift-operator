@@ -145,12 +145,6 @@ func (r *SwiftRingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, nil
 	}
 
-	if isNewInstance {
-		if err := r.Status().Update(ctx, instance); err != nil {
-			return ctrl.Result{}, err
-		}
-	}
-
 	if !instance.DeletionTimestamp.IsZero() {
 		return r.reconcileDelete(ctx, instance, helper)
 	}
@@ -210,9 +204,6 @@ func (r *SwiftRingReconciler) reconcileNormal(ctx context.Context, instance *swi
 
 		instance.Status.Hash[swiftv1beta1.RingCreateHash] = ""
 		instance.Status.Hash[swiftv1beta1.DeviceListHash] = deviceListHash
-		if err := r.Status().Update(ctx, instance); err != nil {
-			return ctrl.Result{}, err
-		}
 	}
 
 	ringCreateJob := job.NewJob(swiftring.GetRingJob(instance, serviceLabels), "rebalance", true, 5*time.Second, instance.Status.Hash[swiftv1beta1.RingCreateHash])
@@ -231,24 +222,15 @@ func (r *SwiftRingReconciler) reconcileNormal(ctx context.Context, instance *swi
 			condition.ErrorReason,
 			condition.SeverityWarning,
 			err.Error()))
-		if err := r.Status().Update(ctx, instance); err != nil {
-			return ctrl.Result{}, err
-		}
 		return ctrl.Result{}, err
 	}
 
 	if ringCreateJob.HasChanged() {
 		instance.Status.Hash[swiftv1beta1.RingCreateHash] = ringCreateJob.GetHash()
-		if err := r.Status().Update(ctx, instance); err != nil {
-			return ctrl.Result{}, err
-		}
 	}
 
 	instance.Status.Conditions.MarkTrue(condition.ReadyCondition, condition.ReadyMessage)
 	instance.Status.Conditions.MarkTrue(swiftv1beta1.SwiftRingReadyCondition, condition.ReadyMessage)
-	if err := r.Status().Update(ctx, instance); err != nil {
-		return ctrl.Result{}, err
-	}
 	// Swift ring init job - end
 
 	// We reached the end of the Reconcile, update the Ready condition based on
