@@ -75,6 +75,10 @@ func DeviceList(ctx context.Context, h *helper.Helper, instance *swiftv1beta1.Sw
 				err = fmt.Errorf("Pod %s not found", podName)
 				return "", "", err
 			}
+			if foundPod.Spec.NodeName == "" {
+				err = fmt.Errorf("Pod %s found, but NodeName not yet set. Requeueing", podName)
+				return "", "", err // requeueing
+			}
 
 			// Format: region zone hostname devicename weight nodename
 			devices = append(devices, fmt.Sprintf("1 1 %s-%d.%s.%s.svc pv %d %s\n", storageInstance.Name, replica, storageInstance.Name, storageInstance.Namespace, weight, foundPod.Spec.NodeName))
