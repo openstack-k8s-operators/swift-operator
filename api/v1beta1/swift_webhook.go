@@ -19,6 +19,7 @@ package v1beta1
 import (
 	"fmt"
 
+	"github.com/openstack-k8s-operators/lib-common/modules/common/service"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -114,8 +115,43 @@ var _ webhook.Validator = &Swift{}
 func (r *Swift) ValidateCreate() (admission.Warnings, error) {
 	swiftlog.Info("validate create", "name", r.Name)
 
-	// TODO(user): fill in your validation logic upon object creation.
+	var allErrs field.ErrorList
+	basePath := field.NewPath("spec")
+	if err := r.Spec.ValidateCreate(basePath); err != nil {
+		allErrs = append(allErrs, err...)
+	}
+
+	if len(allErrs) != 0 {
+		return nil, apierrors.NewInvalid(
+			schema.GroupKind{Group: "swift.openstack.org", Kind: "Swift"},
+			r.Name, allErrs)
+	}
+
 	return nil, nil
+}
+
+// ValidateCreate - Exported function wrapping non-exported validate functions,
+// this function can be called externally to validate an swift spec.
+func (r *SwiftSpec) ValidateCreate(basePath *field.Path) field.ErrorList {
+	var allErrs field.ErrorList
+
+	// validate the service override key is valid
+	allErrs = append(allErrs, service.ValidateRoutedOverrides(
+		basePath.Child("swiftProxy").Child("override").Child("service"),
+		r.SwiftProxy.Override.Service)...)
+
+	return allErrs
+}
+
+func (r *SwiftSpecCore) ValidateCreate(basePath *field.Path) field.ErrorList {
+	var allErrs field.ErrorList
+
+	// validate the service override key is valid
+	allErrs = append(allErrs, service.ValidateRoutedOverrides(
+		basePath.Child("swiftProxy").Child("override").Child("service"),
+		r.SwiftProxy.Override.Service)...)
+
+	return allErrs
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
@@ -127,22 +163,58 @@ func (r *Swift) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
 		return nil, apierrors.NewInternalError(fmt.Errorf("unable to convert existing object"))
 	}
 
-	if *r.Spec.SwiftStorage.Replicas < *oldSwift.Spec.SwiftStorage.Replicas {
-		return nil, apierrors.NewForbidden(
-			schema.GroupResource{
-				Group:    GroupVersion.WithKind("Swift").Group,
-				Resource: GroupVersion.WithKind("Swift").Kind,
-			},
-			r.GetName(),
-			field.Invalid(
-				field.NewPath("spec").Child("swiftStorage").Child("replicas"),
-				*r.Spec.SwiftStorage.Replicas,
-				"SwiftStorage does not support scale-in",
-			),
-		)
+	var allErrs field.ErrorList
+	basePath := field.NewPath("spec")
+
+	if err := r.Spec.ValidateUpdate(oldSwift.Spec, basePath); err != nil {
+		allErrs = append(allErrs, err...)
+	}
+
+	if len(allErrs) != 0 {
+		return nil, apierrors.NewInvalid(
+			schema.GroupKind{Group: "swift.openstack.org", Kind: "Swift"},
+			r.Name, allErrs)
 	}
 
 	return nil, nil
+}
+
+// ValidateUpdate - Exported function wrapping non-exported validate functions,
+// this function can be called externally to validate an swift spec.
+func (r *SwiftSpec) ValidateUpdate(old SwiftSpec, basePath *field.Path) field.ErrorList {
+	var allErrs field.ErrorList
+
+	if *r.SwiftStorage.Replicas < *old.SwiftStorage.Replicas {
+		allErrs = append(allErrs, field.Invalid(
+			basePath.Child("swiftStorage").Child("replicas"),
+			*r.SwiftStorage.Replicas,
+			"SwiftStorage does not support scale-in"))
+	}
+
+	// validate the service override key is valid
+	allErrs = append(allErrs, service.ValidateRoutedOverrides(
+		basePath.Child("swiftProxy").Child("override").Child("service"),
+		r.SwiftProxy.Override.Service)...)
+
+	return allErrs
+}
+
+func (r *SwiftSpecCore) ValidateUpdate(old SwiftSpecCore, basePath *field.Path) field.ErrorList {
+	var allErrs field.ErrorList
+
+	if *r.SwiftStorage.Replicas < *old.SwiftStorage.Replicas {
+		allErrs = append(allErrs, field.Invalid(
+			basePath.Child("swiftStorage").Child("replicas"),
+			*r.SwiftStorage.Replicas,
+			"SwiftStorage does not support scale-in"))
+	}
+
+	// validate the service override key is valid
+	allErrs = append(allErrs, service.ValidateRoutedOverrides(
+		basePath.Child("swiftProxy").Child("override").Child("service"),
+		r.SwiftProxy.Override.Service)...)
+
+	return allErrs
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
