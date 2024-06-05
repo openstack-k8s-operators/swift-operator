@@ -184,13 +184,6 @@ func (r *Swift) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
 func (r *SwiftSpec) ValidateUpdate(old SwiftSpec, basePath *field.Path) field.ErrorList {
 	var allErrs field.ErrorList
 
-	if *r.SwiftStorage.Replicas < *old.SwiftStorage.Replicas {
-		allErrs = append(allErrs, field.Invalid(
-			basePath.Child("swiftStorage").Child("replicas"),
-			*r.SwiftStorage.Replicas,
-			"SwiftStorage does not support scale-in"))
-	}
-
 	// validate the service override key is valid
 	allErrs = append(allErrs, service.ValidateRoutedOverrides(
 		basePath.Child("swiftProxy").Child("override").Child("service"),
@@ -201,13 +194,6 @@ func (r *SwiftSpec) ValidateUpdate(old SwiftSpec, basePath *field.Path) field.Er
 
 func (r *SwiftSpecCore) ValidateUpdate(old SwiftSpecCore, basePath *field.Path) field.ErrorList {
 	var allErrs field.ErrorList
-
-	if *r.SwiftStorage.Replicas < *old.SwiftStorage.Replicas {
-		allErrs = append(allErrs, field.Invalid(
-			basePath.Child("swiftStorage").Child("replicas"),
-			*r.SwiftStorage.Replicas,
-			"SwiftStorage does not support scale-in"))
-	}
 
 	// validate the service override key is valid
 	allErrs = append(allErrs, service.ValidateRoutedOverrides(
