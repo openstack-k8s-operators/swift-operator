@@ -131,14 +131,6 @@ rules:
   - update
   - watch
 - apiGroups:
-  - dataplane.openstack.org
-  resources:
-  - openstackdataplanenodesets
-  verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
   - k8s.cni.cncf.io
   resources:
   - network-attachment-definitions

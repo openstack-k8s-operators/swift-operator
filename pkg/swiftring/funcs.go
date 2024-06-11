@@ -23,21 +23,22 @@ import (
 	"sort"
 	"strings"
 
+	"golang.org/x/exp/slices"
+
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/openstack-k8s-operators/lib-common/modules/ansible"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/helper"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/util"
 
-	dataplanev1 "github.com/openstack-k8s-operators/dataplane-operator/api/v1beta1"
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
 	"github.com/openstack-k8s-operators/swift-operator/pkg/swift"
 )
 
 //+kubebuilder:rbac:groups=core,resources=persistentvolumeclaims,verbs=get;list;watch
-//+kubebuilder:rbac:groups=dataplane.openstack.org,resources=openstackdataplanenodesets,verbs=get;list;watch
 
 func DeviceList(ctx context.Context, h *helper.Helper, instance *swiftv1beta1.SwiftRing) (string, string, error) {
 	// Returns a list of devices as CSV
@@ -85,46 +86,66 @@ func DeviceList(ctx context.Context, h *helper.Helper, instance *swiftv1beta1.Sw
 		}
 	}
 
-	// Get all OpenStackDataPlaneNodeSets that deploy the Swift service and
+	// Get all DataPlaneNodeSet inventories that deploy the Swift service and
 	// their used Swift disks
-	nodeSets := &dataplanev1.OpenStackDataPlaneNodeSetList{}
-	err = h.GetClient().List(context.Background(), nodeSets, listOpts...)
+	secrets := &corev1.SecretList{}
+	labelSelector := map[string]string{
+		"openstack.org/operator-name": "dataplane",
+		"inventory":                   "true",
+	}
+	labels := client.MatchingLabels(labelSelector)
+	listOpts = append(listOpts, labels)
+
+	err = h.GetClient().List(context.Background(), secrets, listOpts...)
 	if err != nil && !errors.IsNotFound(err) {
 		return "", "", err
 	}
-	for _, nodeSet := range nodeSets.Items {
-		for _, service := range nodeSet.Spec.Services {
-			if service == "swift" {
-				// Get the global disk vars first that are used for all
-				// nodes if not set otherwise per-node
-				var globalDisks []swiftv1beta1.SwiftDisk
-				if edpmSwiftDisks, found := nodeSet.Spec.NodeTemplate.Ansible.AnsibleVars[DataplaneDisks]; found {
-					err = json.Unmarshal(edpmSwiftDisks, &globalDisks)
+	for _, secret := range secrets.Items {
+		inventory, err := ansible.UnmarshalYAML(secret.Data["inventory"])
+		if err != nil {
+			return "", "", err
+		}
+		nodeSetGroup := inventory.Groups[secret.Labels["openstackdataplanenodeset"]]
+
+		if slices.Contains(nodeSetGroup.Vars["edpm_services"].([]interface{}), "swift") {
+			// Get the global disk vars first that are used for all
+			// nodes if not set otherwise per-node
+			var globalDisks []swiftv1beta1.SwiftDisk
+			if _, found := nodeSetGroup.Vars[DataplaneDisks]; found {
+				edpmSwiftDisks, err := json.Marshal(nodeSetGroup.Vars[DataplaneDisks])
+				if err != nil {
+					return "", "", err
+				}
+				err = json.Unmarshal(edpmSwiftDisks, &globalDisks)
+				if err != nil {
+					return "", "", err
+				}
+			}
+
+			for nodeName, host := range nodeSetGroup.Hosts {
+				hostName := fmt.Sprintf("%s.%s", nodeName, DataplaneDomain)
+				hostDisks := make([]swiftv1beta1.SwiftDisk, len(globalDisks))
+				copy(hostDisks, globalDisks)
+
+				// These overwrite the global vars if set
+				if _, found := host.Vars[DataplaneDisks]; found {
+					edpmSwiftDisks, err := json.Marshal(host.Vars[DataplaneDisks])
 					if err != nil {
 						return "", "", err
 					}
+					hostDisks = nil // clear global disks, per-node settings prevail
+					err = json.Unmarshal(edpmSwiftDisks, &hostDisks)
+					if err != nil {
+						return "", "", err
+					}
+
 				}
-
-				for _, node := range nodeSet.Spec.Nodes {
-					hostName := fmt.Sprintf("%s.%s", node.HostName, DataplaneDomain)
-					hostDisks := make([]swiftv1beta1.SwiftDisk, len(globalDisks))
-					copy(hostDisks, globalDisks)
-
-					// These overwrite the global vars if set
-					if edpmSwiftDisks, found := node.Ansible.AnsibleVars[DataplaneDisks]; found {
-						hostDisks = nil // clear global disks, per-node settings prevail
-						err = json.Unmarshal(edpmSwiftDisks, &hostDisks)
-						if err != nil {
-							return "", "", err
-						}
-
-					}
-					for _, disk := range hostDisks {
-						devices = append(devices, fmt.Sprintf("%d %d %s %s %d\n", disk.Region, disk.Zone, hostName, filepath.Base(disk.Path), disk.Weight))
-					}
+				for _, disk := range hostDisks {
+					devices = append(devices, fmt.Sprintf("%d %d %s %s %d\n", disk.Region, disk.Zone, hostName, filepath.Base(disk.Path), disk.Weight))
 				}
 			}
 		}
+
 	}
 
 	// Device list must be sorted to ensure hash does not change
