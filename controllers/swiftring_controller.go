@@ -22,11 +22,14 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	"github.com/openstack-k8s-operators/lib-common/modules/common/condition"
@@ -35,7 +38,6 @@ import (
 	"github.com/openstack-k8s-operators/lib-common/modules/common/helper"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/job"
 
-	dataplanev1 "github.com/openstack-k8s-operators/dataplane-operator/api/v1beta1"
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
 	"github.com/openstack-k8s-operators/swift-operator/pkg/swift"
 	"github.com/openstack-k8s-operators/swift-operator/pkg/swiftring"
@@ -289,11 +291,25 @@ func (r *SwiftRingReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		return result
 	}
 
+	inventoryPredicator, err := predicate.LabelSelectorPredicate(
+		metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				"openstack.org/operator-name": "dataplane",
+				"inventory":                   "true",
+			},
+		},
+	)
+	if err != nil {
+		return err
+	}
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&swiftv1beta1.SwiftRing{}).
 		Owns(&batchv1.Job{}).
 		Owns(&corev1.ConfigMap{}).
 		Watches(&swiftv1beta1.SwiftStorage{}, handler.EnqueueRequestsFromMapFunc(swiftRingFilter)).
-		Watches(&dataplanev1.OpenStackDataPlaneNodeSet{}, handler.EnqueueRequestsFromMapFunc(swiftRingFilter)).
+		Watches(&corev1.Secret{},
+			handler.EnqueueRequestsFromMapFunc(swiftRingFilter),
+			builder.WithPredicates(inventoryPredicator)).
 		Complete(r)
 }
