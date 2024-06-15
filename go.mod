@@ -11,14 +11,14 @@ require (
 	github.com/openstack-k8s-operators/barbican-operator/api v0.0.0-20240603141403-1ad477d065a2
 	github.com/openstack-k8s-operators/infra-operator/apis v0.3.1-0.20240604144138-996e41d1af19
 	github.com/openstack-k8s-operators/keystone-operator/api v0.3.1-0.20240605055850-8ee0ece70906
-	github.com/openstack-k8s-operators/lib-common/modules/ansible v0.3.1-0.20240612061748-03d1fc5e2fbe
-	github.com/openstack-k8s-operators/lib-common/modules/common v0.3.1-0.20240612061748-03d1fc5e2fbe
-	github.com/openstack-k8s-operators/lib-common/modules/openstack v0.3.1-0.20240612061748-03d1fc5e2fbe
+	github.com/openstack-k8s-operators/lib-common/modules/ansible v0.3.1-0.20240615134235-24529fcff658
+	github.com/openstack-k8s-operators/lib-common/modules/common v0.3.1-0.20240615134235-24529fcff658
+	github.com/openstack-k8s-operators/lib-common/modules/openstack v0.3.1-0.20240615134235-24529fcff658
 	github.com/openstack-k8s-operators/swift-operator/api v0.3.1-0.20240523121736-379011b2cfac
 	golang.org/x/exp v0.0.0-20240409090435-93d18d7e34b8
-	k8s.io/api v0.28.10
-	k8s.io/apimachinery v0.28.10
-	k8s.io/client-go v0.28.10
+	k8s.io/api v0.28.11
+	k8s.io/apimachinery v0.28.11
+	k8s.io/client-go v0.28.11
 	k8s.io/utils v0.0.0-20240502163921-fe8a2dddb1d0
 	sigs.k8s.io/controller-runtime v0.16.6
 )
@@ -72,8 +72,8 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/apiextensions-apiserver v0.28.10 // indirect
-	k8s.io/component-base v0.28.10 // indirect
+	k8s.io/apiextensions-apiserver v0.28.11 // indirect
+	k8s.io/component-base v0.28.11 // indirect
 	k8s.io/klog/v2 v2.120.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20240228011516-70dd3763d340 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
@@ -88,4 +88,4 @@ replace github.com/openstack-k8s-operators/swift-operator/api => ./api
 replace github.com/openshift/api => github.com/openshift/api v0.0.0-20230414143018-3367bc7e6ac7 //allow-merging
 
 // custom RabbitmqClusterSpecCore for OpenStackControlplane (v2.6.0_patches_tag)
-replace github.com/rabbitmq/cluster-operator/v2 => github.com/openstack-k8s-operators/rabbitmq-cluster-operator/v2 v2.6.1-0.20240313124519-961a0ee8bf7f //allow-merging
+replace github.com/rabbitmq/cluster-operator/v2 => github.com/openstack-k8s-operators/rabbitmq-cluster-operator/v2 v2.6.1-0.20240612145157-629e537392b3 //allow-merging
