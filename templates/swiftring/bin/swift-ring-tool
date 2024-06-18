@@ -122,7 +122,7 @@ function push() {
             '${VERSION}'
             "name":"'${CM_NAME}'",
             "namespace":"'${NAMESPACE}'",
-            "finalizers": ["swift-ring/finalizer"],
+            "finalizers": ["openstack.org/swiftring"],
             "ownerReferences": [
                 {
                     "apiVersion": "'${OWNER_APIVERSION}'",
