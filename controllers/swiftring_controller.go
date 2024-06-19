@@ -255,7 +255,7 @@ func (r *SwiftRingReconciler) reconcileDelete(ctx context.Context, instance *swi
 	if err == nil {
 		// This finalizer is directly set when creating the ConfigMap using
 		// curl within the Job
-		if controllerutil.RemoveFinalizer(ringConfigMap, "swift-ring/finalizer") {
+		if controllerutil.RemoveFinalizer(ringConfigMap, "openstack.org/swiftring") {
 			err = r.Update(ctx, ringConfigMap)
 			if err != nil && !apierrors.IsNotFound(err) {
 				return ctrl.Result{}, err
