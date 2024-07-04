@@ -21,6 +21,7 @@ rules:
   - create
   - get
   - list
+  - patch
   - update
   - watch
 - apiGroups:
@@ -222,6 +223,7 @@ rules:
   - create
   - get
   - list
+  - patch
   - update
   - watch
 - apiGroups:
@@ -232,6 +234,7 @@ rules:
   - create
   - get
   - list
+  - patch
   - update
   - watch
 - apiGroups:
@@ -259,6 +262,7 @@ rules:
   resources:
   - swiftproxies/finalizers
   verbs:
+  - patch
   - update
 - apiGroups:
   - swift.openstack.org
@@ -285,6 +289,7 @@ rules:
   resources:
   - swiftrings/finalizers
   verbs:
+  - patch
   - update
 - apiGroups:
   - swift.openstack.org
@@ -311,6 +316,7 @@ rules:
   resources:
   - swifts/finalizers
   verbs:
+  - patch
   - update
 - apiGroups:
   - swift.openstack.org
@@ -337,6 +343,7 @@ rules:
   resources:
   - swiftstorages/finalizers
   verbs:
+  - patch
   - update
 - apiGroups:
   - swift.openstack.org
