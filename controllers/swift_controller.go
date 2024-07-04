@@ -53,12 +53,12 @@ type SwiftReconciler struct {
 
 //+kubebuilder:rbac:groups=swift.openstack.org,resources=swifts,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=swift.openstack.org,resources=swifts/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=swift.openstack.org,resources=swifts/finalizers,verbs=update
+//+kubebuilder:rbac:groups=swift.openstack.org,resources=swifts/finalizers,verbs=update;patch
 
 // service account, role, rolebinding
-// +kubebuilder:rbac:groups="",resources=serviceaccounts,verbs=get;list;watch;create;update
-// +kubebuilder:rbac:groups="rbac.authorization.k8s.io",resources=roles,verbs=get;list;watch;create;update
-// +kubebuilder:rbac:groups="rbac.authorization.k8s.io",resources=rolebindings,verbs=get;list;watch;create;update
+// +kubebuilder:rbac:groups="",resources=serviceaccounts,verbs=get;list;watch;create;update;patch
+// +kubebuilder:rbac:groups="rbac.authorization.k8s.io",resources=roles,verbs=get;list;watch;create;update;patch
+// +kubebuilder:rbac:groups="rbac.authorization.k8s.io",resources=rolebindings,verbs=get;list;watch;create;update;patch
 // service account permissions that are needed to grant permission to the above
 // +kubebuilder:rbac:groups="security.openshift.io",resourceNames=nonroot-v2,resources=securitycontextconstraints,verbs=use
 
