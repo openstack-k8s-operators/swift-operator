@@ -57,7 +57,7 @@ type SwiftRingReconciler struct {
 
 //+kubebuilder:rbac:groups=swift.openstack.org,resources=swiftrings,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=swift.openstack.org,resources=swiftrings/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=swift.openstack.org,resources=swiftrings/finalizers,verbs=update
+//+kubebuilder:rbac:groups=swift.openstack.org,resources=swiftrings/finalizers,verbs=update;patch
 //+kubebuilder:rbac:groups=batch,resources=jobs,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=*,resources=configmaps,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=core,resources=secrets,verbs=get;list;watch
