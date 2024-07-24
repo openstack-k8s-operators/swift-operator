@@ -192,20 +192,23 @@ func (r *SwiftRingReconciler) reconcileNormal(ctx context.Context, instance *swi
 		// Delete a possibly still existing job that finished to re-run the job
 		j, err := job.GetJobWithName(ctx, helper, instance.Name+"-rebalance", instance.Namespace)
 		if err != nil {
-			if !apierrors.IsNotFound(err) {
+			if apierrors.IsNotFound(err) { // Job does not exist
+				instance.Status.Hash[swiftv1beta1.RingCreateHash] = ""
+				instance.Status.Hash[swiftv1beta1.DeviceListHash] = deviceListHash
+			} else {
 				return ctrl.Result{}, err
 			}
 		} else {
 			if j.Status.Active == 0 {
 				err = job.DeleteJob(ctx, helper, instance.Name+"-rebalance", instance.Namespace)
-				if err != nil {
+				if err == nil { // Job deleted successfully
+					instance.Status.Hash[swiftv1beta1.RingCreateHash] = ""
+					instance.Status.Hash[swiftv1beta1.DeviceListHash] = deviceListHash
+				} else {
 					return ctrl.Result{}, err
 				}
 			}
 		}
-
-		instance.Status.Hash[swiftv1beta1.RingCreateHash] = ""
-		instance.Status.Hash[swiftv1beta1.DeviceListHash] = deviceListHash
 	}
 
 	ringCreateJob := job.NewJob(swiftring.GetRingJob(instance, serviceLabels), "rebalance", true, 5*time.Second, instance.Status.Hash[swiftv1beta1.RingCreateHash])
