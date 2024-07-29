@@ -5,4 +5,6 @@ commands:
   - script: |
       oc wait --for=condition=Ready -n $NAMESPACE Swift swift
   - script: |
+      oc wait -n $NAMESPACE --for=condition=complete job swift-ring-rebalance
+  - script: |
       oc debug -n $NAMESPACE --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c "/usr/local/bin/swift-ring-tool get && swift-ring-builder object.builder" | grep -z "4 partitions.*reassigned is 2"

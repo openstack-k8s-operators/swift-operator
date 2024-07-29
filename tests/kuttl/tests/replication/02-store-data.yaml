@@ -3,4 +3,6 @@ apiVersion: kuttl.dev/v1beta1
 kind: TestStep
 commands:
   - script: |
+      oc wait -n $NAMESPACE --for=condition=complete job swift-ring-rebalance
+  - script: |
       oc debug -n $NAMESPACE --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c 'swift-ring-tool get && swift-dispersion-populate --object-only'

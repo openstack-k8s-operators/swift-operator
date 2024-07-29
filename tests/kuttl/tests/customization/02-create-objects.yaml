@@ -3,6 +3,8 @@ apiVersion: kuttl.dev/v1beta1
 kind: TestStep
 commands:
   - script: |
+      oc wait -n $NAMESPACE --for=condition=complete job swift-ring-rebalance
+  - script: |
       # Make sure possibly reclaimed PV does not contain any old plaintext data before creating new data
       oc -n $NAMESPACE rsh -c object-server swift-storage-0 /bin/sh -c "rm -rf /srv/node/pv/objects/*"
       oc debug -n $NAMESPACE --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c 'swift-ring-tool get && swift-dispersion-populate --object-only'
