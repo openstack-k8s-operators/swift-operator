@@ -202,8 +202,10 @@ func (r *SwiftRingReconciler) reconcileNormal(ctx context.Context, instance *swi
 					return ctrl.Result{}, err
 				}
 			}
+			return ctrl.Result{}, nil
 		}
 
+		// will only be updated if job does not exist (anymore)
 		instance.Status.Hash[swiftv1beta1.RingCreateHash] = ""
 		instance.Status.Hash[swiftv1beta1.DeviceListHash] = deviceListHash
 	}
