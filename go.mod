@@ -11,9 +11,9 @@ require (
 	github.com/openstack-k8s-operators/barbican-operator/api v0.4.1-0.20240726135110-caa4d8d97ec1
 	github.com/openstack-k8s-operators/infra-operator/apis v0.4.1-0.20240729052254-84df6dfc07a9
 	github.com/openstack-k8s-operators/keystone-operator/api v0.4.1-0.20240729093119-474d32f45d19
-	github.com/openstack-k8s-operators/lib-common/modules/ansible v0.4.1-0.20240729100530-df36d69dc4a0
-	github.com/openstack-k8s-operators/lib-common/modules/common v0.4.1-0.20240729100530-df36d69dc4a0
-	github.com/openstack-k8s-operators/lib-common/modules/openstack v0.4.1-0.20240729100530-df36d69dc4a0
+	github.com/openstack-k8s-operators/lib-common/modules/ansible v0.4.1-0.20240730142703-7fd3da600c9d
+	github.com/openstack-k8s-operators/lib-common/modules/common v0.4.1-0.20240730142703-7fd3da600c9d
+	github.com/openstack-k8s-operators/lib-common/modules/openstack v0.4.1-0.20240730142703-7fd3da600c9d
 	github.com/openstack-k8s-operators/swift-operator/api v0.3.1-0.20240523121736-379011b2cfac
 	golang.org/x/exp v0.0.0-20240409090435-93d18d7e34b8
 	k8s.io/api v0.28.12
