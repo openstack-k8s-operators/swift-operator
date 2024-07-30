@@ -4,22 +4,22 @@ go 1.20
 
 require (
 	github.com/go-logr/logr v1.4.2
-	github.com/gophercloud/gophercloud v1.12.0
+	github.com/gophercloud/gophercloud v1.14.0
 	github.com/k8snetworkplumbingwg/network-attachment-definition-client v1.4.0
 	github.com/onsi/ginkgo/v2 v2.19.0
 	github.com/onsi/gomega v1.33.1
-	github.com/openstack-k8s-operators/barbican-operator/api v0.4.1-0.20240705080032-2a515074bcea
-	github.com/openstack-k8s-operators/infra-operator/apis v0.4.1-0.20240704231227-c7ee9d3de988
-	github.com/openstack-k8s-operators/keystone-operator/api v0.4.1-0.20240704220917-e65444cf5f26
-	github.com/openstack-k8s-operators/lib-common/modules/ansible v0.4.1-0.20240709142659-5a0b4d5c6176
-	github.com/openstack-k8s-operators/lib-common/modules/common v0.4.1-0.20240709142659-5a0b4d5c6176
-	github.com/openstack-k8s-operators/lib-common/modules/openstack v0.4.1-0.20240709142659-5a0b4d5c6176
+	github.com/openstack-k8s-operators/barbican-operator/api v0.4.1-0.20240726135110-caa4d8d97ec1
+	github.com/openstack-k8s-operators/infra-operator/apis v0.4.1-0.20240729052254-84df6dfc07a9
+	github.com/openstack-k8s-operators/keystone-operator/api v0.4.1-0.20240729093119-474d32f45d19
+	github.com/openstack-k8s-operators/lib-common/modules/ansible v0.4.1-0.20240729100530-df36d69dc4a0
+	github.com/openstack-k8s-operators/lib-common/modules/common v0.4.1-0.20240729100530-df36d69dc4a0
+	github.com/openstack-k8s-operators/lib-common/modules/openstack v0.4.1-0.20240729100530-df36d69dc4a0
 	github.com/openstack-k8s-operators/swift-operator/api v0.3.1-0.20240523121736-379011b2cfac
 	golang.org/x/exp v0.0.0-20240409090435-93d18d7e34b8
-	k8s.io/api v0.28.11
-	k8s.io/apimachinery v0.28.11
-	k8s.io/client-go v0.28.11
-	k8s.io/utils v0.0.0-20240502163921-fe8a2dddb1d0
+	k8s.io/api v0.28.12
+	k8s.io/apimachinery v0.28.12
+	k8s.io/client-go v0.28.12
+	k8s.io/utils v0.0.0-20240711033017-18e509b52bc8
 	sigs.k8s.io/controller-runtime v0.16.6
 )
 
@@ -72,8 +72,8 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/apiextensions-apiserver v0.28.11 // indirect
-	k8s.io/component-base v0.28.11 // indirect
+	k8s.io/apiextensions-apiserver v0.28.12 // indirect
+	k8s.io/component-base v0.28.12 // indirect
 	k8s.io/klog/v2 v2.120.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20240228011516-70dd3763d340 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
@@ -88,4 +88,4 @@ replace github.com/openstack-k8s-operators/swift-operator/api => ./api
 replace github.com/openshift/api => github.com/openshift/api v0.0.0-20230414143018-3367bc7e6ac7 //allow-merging
 
 // custom RabbitmqClusterSpecCore for OpenStackControlplane (v2.6.0_patches_tag)
-replace github.com/rabbitmq/cluster-operator/v2 => github.com/openstack-k8s-operators/rabbitmq-cluster-operator/v2 v2.6.1-0.20240626194327-e7df1b654cb7 //allow-merging
+replace github.com/rabbitmq/cluster-operator/v2 => github.com/openstack-k8s-operators/rabbitmq-cluster-operator/v2 v2.6.1-0.20240719064129-c0201810c8f5 //allow-merging
