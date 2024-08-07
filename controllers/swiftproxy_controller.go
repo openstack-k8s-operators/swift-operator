@@ -536,12 +536,13 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	memcached, err := memcachedv1.GetMemcachedByName(ctx, helper, instance.Spec.MemcachedInstance, instance.Namespace)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
+			r.Log.Info(fmt.Sprintf("memcached %s not found", instance.Spec.MemcachedInstance))
 			instance.Status.Conditions.Set(condition.FalseCondition(
 				condition.MemcachedReadyCondition,
 				condition.RequestedReason,
 				condition.SeverityInfo,
 				condition.MemcachedReadyWaitingMessage))
-			return ctrl.Result{RequeueAfter: 10 * time.Second}, fmt.Errorf("memcached %s not found", instance.Spec.MemcachedInstance)
+			return ctrl.Result{RequeueAfter: 10 * time.Second}, nil
 		}
 		instance.Status.Conditions.Set(condition.FalseCondition(
 			condition.MemcachedReadyCondition,
