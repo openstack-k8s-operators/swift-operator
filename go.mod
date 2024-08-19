@@ -5,6 +5,7 @@ go 1.20
 require (
 	github.com/go-logr/logr v1.4.2
 	github.com/gophercloud/gophercloud v1.14.0
+	github.com/gophercloud/gophercloud/v2 v2.1.0
 	github.com/k8snetworkplumbingwg/network-attachment-definition-client v1.4.0
 	github.com/onsi/ginkgo/v2 v2.20.0
 	github.com/onsi/gomega v1.34.1
