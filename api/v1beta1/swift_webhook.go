@@ -184,10 +184,22 @@ func (r *Swift) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
 func (r *SwiftSpec) ValidateUpdate(old SwiftSpec, basePath *field.Path) field.ErrorList {
 	var allErrs field.ErrorList
 
-	if *r.SwiftStorage.Replicas < *old.SwiftStorage.Replicas {
+	zeroVal := int32(0)
+	oldReplicas := old.SwiftStorage.Replicas
+	newReplicas := r.SwiftStorage.Replicas
+
+	if oldReplicas == nil {
+		oldReplicas = &zeroVal
+	}
+
+	if newReplicas == nil {
+		newReplicas = &zeroVal
+	}
+
+	if *newReplicas < *oldReplicas {
 		allErrs = append(allErrs, field.Invalid(
 			basePath.Child("swiftStorage").Child("replicas"),
-			*r.SwiftStorage.Replicas,
+			*newReplicas,
 			"SwiftStorage does not support scale-in"))
 	}
 
@@ -202,10 +214,22 @@ func (r *SwiftSpec) ValidateUpdate(old SwiftSpec, basePath *field.Path) field.Er
 func (r *SwiftSpecCore) ValidateUpdate(old SwiftSpecCore, basePath *field.Path) field.ErrorList {
 	var allErrs field.ErrorList
 
-	if *r.SwiftStorage.Replicas < *old.SwiftStorage.Replicas {
+	zeroVal := int32(0)
+	oldReplicas := old.SwiftStorage.Replicas
+	newReplicas := r.SwiftStorage.Replicas
+
+	if oldReplicas == nil {
+		oldReplicas = &zeroVal
+	}
+
+	if newReplicas == nil {
+		newReplicas = &zeroVal
+	}
+
+	if *newReplicas < *oldReplicas {
 		allErrs = append(allErrs, field.Invalid(
 			basePath.Child("swiftStorage").Child("replicas"),
-			*r.SwiftStorage.Replicas,
+			*newReplicas,
 			"SwiftStorage does not support scale-in"))
 	}
 
