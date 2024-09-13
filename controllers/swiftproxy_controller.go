@@ -478,27 +478,26 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return ctrl.Result{}, err
 	}
 
-	// Get the service password
-	sps, hash, err := secret.GetSecret(ctx, helper, instance.Spec.Secret, instance.Namespace)
-	if err != nil {
-		if apierrors.IsNotFound(err) {
-			instance.Status.Conditions.Set(condition.FalseCondition(
-				condition.InputReadyCondition,
-				condition.RequestedReason,
-				condition.SeverityInfo,
-				condition.InputReadyWaitingMessage))
-			r.Log.Error(err, "Secret not found")
-			return ctrl.Result{RequeueAfter: time.Duration(10) * time.Second}, nil
-		}
-		instance.Status.Conditions.Set(condition.FalseCondition(
-			condition.InputReadyCondition,
-			condition.ErrorReason,
-			condition.SeverityWarning,
-			condition.InputReadyErrorMessage,
-			err.Error()))
-		return ctrl.Result{}, err
+	result, err = verifyServiceSecret(
+		ctx,
+		types.NamespacedName{Namespace: instance.Namespace, Name: instance.Spec.Secret},
+		[]string{
+			instance.Spec.PasswordSelectors.Service,
+		},
+		helper.GetClient(),
+		&instance.Status.Conditions,
+		time.Duration(10)*time.Second,
+		&envVars,
+	)
+	if (err != nil || ctrlResult != ctrl.Result{}) {
+		return ctrlResult, err
 	}
-	envVars[sps.Name] = env.SetValue(hash)
+
+	// Get the service password and pass it to the template
+	sps, _, err := secret.GetSecret(ctx, helper, instance.Spec.Secret, instance.Namespace)
+	if err != nil {
+		return ctrlResult, err
+	}
 	password := string(sps.Data[instance.Spec.PasswordSelectors.Service])
 
 	secretRef := ""

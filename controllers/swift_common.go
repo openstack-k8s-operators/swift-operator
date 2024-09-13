@@ -16,6 +16,20 @@ limitations under the License.
 
 package controllers
 
+import (
+	"context"
+	"fmt"
+	"github.com/openstack-k8s-operators/lib-common/modules/common/condition"
+	"github.com/openstack-k8s-operators/lib-common/modules/common/secret"
+	"k8s.io/apimachinery/pkg/types"
+	"time"
+
+	"github.com/openstack-k8s-operators/lib-common/modules/common/env"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/log"
+)
+
 // fields to index to reconcile when change
 const (
 	passwordSecretField     = ".spec.secret"
@@ -32,3 +46,43 @@ var (
 		tlsAPIPublicField,
 	}
 )
+
+type conditionUpdater interface {
+	Set(c *condition.Condition)
+	MarkTrue(t condition.Type, messageFormat string, messageArgs ...interface{})
+}
+
+// verifyServiceSecret - ensures that the Secret object exists and the expected
+// fields are in the Secret. It also sets a hash of the values of the expected
+// fields passed as input.
+func verifyServiceSecret(
+	ctx context.Context,
+	secretName types.NamespacedName,
+	expectedFields []string,
+	reader client.Reader,
+	conditionUpdater conditionUpdater,
+	requeueTimeout time.Duration,
+	envVars *map[string]env.Setter,
+) (ctrl.Result, error) {
+
+	hash, res, err := secret.VerifySecret(ctx, secretName, expectedFields, reader, requeueTimeout)
+	if err != nil {
+		conditionUpdater.Set(condition.FalseCondition(
+			condition.InputReadyCondition,
+			condition.ErrorReason,
+			condition.SeverityWarning,
+			condition.InputReadyErrorMessage,
+			err.Error()))
+		return res, err
+	} else if (res != ctrl.Result{}) {
+		log.FromContext(ctx).Info(fmt.Sprintf("OpenStack secret %s not found", secretName))
+		conditionUpdater.Set(condition.FalseCondition(
+			condition.InputReadyCondition,
+			condition.RequestedReason,
+			condition.SeverityInfo,
+			condition.InputReadyWaitingMessage))
+		return res, nil
+	}
+	(*envVars)[secretName.Name] = env.SetValue(hash)
+	return ctrl.Result{}, nil
+}
