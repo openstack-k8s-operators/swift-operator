@@ -9,11 +9,11 @@ require (
 	github.com/onsi/ginkgo/v2 v2.20.1
 	github.com/onsi/gomega v1.34.1
 	github.com/openstack-k8s-operators/barbican-operator/api v0.4.1-0.20240909083835-c6413c0a9d5f
-	github.com/openstack-k8s-operators/infra-operator/apis v0.4.1-0.20240909104215-a2e657dc0f27
+	github.com/openstack-k8s-operators/infra-operator/apis v0.4.1-0.20240912140341-4066f2ead41d
 	github.com/openstack-k8s-operators/keystone-operator/api v0.4.1-0.20240906103150-990fe66f2e5d
-	github.com/openstack-k8s-operators/lib-common/modules/ansible v0.4.1-0.20240905123813-174296c09ec6
-	github.com/openstack-k8s-operators/lib-common/modules/common v0.4.1-0.20240905123813-174296c09ec6
-	github.com/openstack-k8s-operators/lib-common/modules/openstack v0.4.1-0.20240905123813-174296c09ec6
+	github.com/openstack-k8s-operators/lib-common/modules/ansible v0.4.1-0.20240910122823-bdcfe881513b
+	github.com/openstack-k8s-operators/lib-common/modules/common v0.4.1-0.20240910122823-bdcfe881513b
+	github.com/openstack-k8s-operators/lib-common/modules/openstack v0.4.1-0.20240910122823-bdcfe881513b
 	github.com/openstack-k8s-operators/swift-operator/api v0.3.1-0.20240523121736-379011b2cfac
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
 	k8s.io/api v0.28.13
