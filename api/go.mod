@@ -2,8 +2,6 @@ module github.com/openstack-k8s-operators/swift-operator/api
 
 go 1.21
 
-toolchain go1.21.12
-
 require (
 	github.com/onsi/ginkgo/v2 v2.20.1
 	github.com/onsi/gomega v1.34.1

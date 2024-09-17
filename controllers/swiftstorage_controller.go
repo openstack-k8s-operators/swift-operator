@@ -401,7 +401,7 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 func (r *SwiftStorageReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	logger := mgr.GetLogger()
 
-	memcachedFn := func(ctx context.Context, o client.Object) []reconcile.Request {
+	memcachedFn := func(_ context.Context, o client.Object) []reconcile.Request {
 		result := []reconcile.Request{}
 
 		// get all SwiftStorage CRs
