@@ -55,6 +55,10 @@ DEFAULT_IMG ?= quay.io/openstack-k8s-operators/swift-operator:latest
 IMG ?= $(DEFAULT_IMG)
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.29.0
+
+# Set minimum Go version
+GOTOOLCHAIN_VERSION ?= go1.21.0
+
 GINKGO ?= $(LOCALBIN)/ginkgo
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
@@ -331,7 +335,7 @@ golint: get-ci-tools
 
 .PHONY: gowork
 gowork: ## Generate go.work file to support our multi module repository
-	test -f go.work || go work init
+	test -f go.work || GOTOOLCHAIN=$(GOTOOLCHAIN_VERSION) go work init
 	go work use .
 	go work use ./api
 	go work sync
