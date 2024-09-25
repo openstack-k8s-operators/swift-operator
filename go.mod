@@ -1,6 +1,6 @@
 module github.com/openstack-k8s-operators/swift-operator
 
-go 1.20
+go 1.21
 
 require (
 	github.com/go-logr/logr v1.4.2
@@ -16,11 +16,11 @@ require (
 	github.com/openstack-k8s-operators/lib-common/modules/openstack v0.4.1-0.20240910122823-bdcfe881513b
 	github.com/openstack-k8s-operators/swift-operator/api v0.3.1-0.20240523121736-379011b2cfac
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
-	k8s.io/api v0.28.14
-	k8s.io/apimachinery v0.28.14
-	k8s.io/client-go v0.28.14
+	k8s.io/api v0.29.2
+	k8s.io/apimachinery v0.29.2
+	k8s.io/client-go v0.29.2
 	k8s.io/utils v0.0.0-20240711033017-18e509b52bc8
-	sigs.k8s.io/controller-runtime v0.16.6
+	sigs.k8s.io/controller-runtime v0.17.6
 )
 
 require (
@@ -72,8 +72,8 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/apiextensions-apiserver v0.28.14 // indirect
-	k8s.io/component-base v0.28.14 // indirect
+	k8s.io/apiextensions-apiserver v0.29.2 // indirect
+	k8s.io/component-base v0.29.2 // indirect
 	k8s.io/klog/v2 v2.120.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20240228011516-70dd3763d340 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
@@ -85,7 +85,7 @@ replace github.com/openstack-k8s-operators/swift-operator/api => ./api
 
 // mschuppert: map to latest commit from release-4.13 tag
 // must consistent within modules and service operators
-replace github.com/openshift/api => github.com/openshift/api v0.0.0-20230414143018-3367bc7e6ac7 //allow-merging
+replace github.com/openshift/api => github.com/openshift/api v0.0.0-20240830023148-b7d0481c9094 //allow-merging
 
 // custom RabbitmqClusterSpecCore for OpenStackControlplane (v2.6.0_patches_tag)
 replace github.com/rabbitmq/cluster-operator/v2 => github.com/openstack-k8s-operators/rabbitmq-cluster-operator/v2 v2.6.1-0.20240719064129-c0201810c8f5 //allow-merging

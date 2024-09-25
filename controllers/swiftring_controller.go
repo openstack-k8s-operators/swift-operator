@@ -275,7 +275,7 @@ func (r *SwiftRingReconciler) reconcileDelete(ctx context.Context, instance *swi
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *SwiftRingReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	swiftRingFilter := func(ctx context.Context, o client.Object) []reconcile.Request {
+	swiftRingFilter := func(_ context.Context, o client.Object) []reconcile.Request {
 		result := []reconcile.Request{}
 		swiftRings := &swiftv1beta1.SwiftRingList{}
 		listOpts := []client.ListOption{client.InNamespace(o.GetNamespace())}
