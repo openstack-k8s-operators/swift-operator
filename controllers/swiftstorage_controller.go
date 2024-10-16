@@ -343,9 +343,15 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		for _, swiftPod := range podList.Items {
 			dnsIP := ""
 			if len(instance.Spec.NetworkAttachments) > 0 {
-				dnsIP, err = getPodIPInNetwork(swiftPod, instance.Namespace, "storage")
+				dnsIP, err = getPodIPInNetwork(swiftPod, instance.Namespace, "storagemgmt")
+
 				if err != nil {
-					return ctrl.Result{}, err
+					previousErr := err
+					dnsIP, err = getPodIPInNetwork(swiftPod, instance.Namespace, "storage")
+					if err != nil {
+						err = errors.Join(previousErr, err)
+						return ctrl.Result{}, err
+					}
 				}
 			}
 
