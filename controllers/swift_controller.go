@@ -184,7 +184,7 @@ func (r *SwiftReconciler) reconcileNormal(ctx context.Context, instance *swiftv1
 			APIGroups:     []string{""},
 			Resources:     []string{"configmaps"},
 			ResourceNames: []string{"swift-ring-files"},
-			Verbs:         []string{"get", "update"},
+			Verbs:         []string{"get", "update", "delete"},
 		},
 	}
 	rbacResult, err := common_rbac.ReconcileRbac(ctx, helper, instance, rbacRules)
