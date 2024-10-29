@@ -83,10 +83,10 @@ status:
     reason: Ready
     status: "True"
     type: Ready
-  - message: Exposing service completed
+  - message: Create service completed
     reason: Ready
     status: "True"
-    type: ExposeServiceReady
+    type: CreateServiceReady
   - message: Input data complete
     reason: Ready
     status: "True"
