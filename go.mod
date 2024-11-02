@@ -8,12 +8,12 @@ require (
 	github.com/k8snetworkplumbingwg/network-attachment-definition-client v1.7.5
 	github.com/onsi/ginkgo/v2 v2.20.1
 	github.com/onsi/gomega v1.34.1
-	github.com/openstack-k8s-operators/barbican-operator/api v0.5.1-0.20241023065526-d735268ed60f
-	github.com/openstack-k8s-operators/infra-operator/apis v0.5.1-0.20241024081600-3e23dc62002c
-	github.com/openstack-k8s-operators/keystone-operator/api v0.5.1-0.20241023160107-bd8e671350e1
-	github.com/openstack-k8s-operators/lib-common/modules/ansible v0.5.1-0.20241025164019-30baa23bf6f1
+	github.com/openstack-k8s-operators/barbican-operator/api v0.5.1-0.20241030094455-e1b6b7cd0735
+	github.com/openstack-k8s-operators/infra-operator/apis v0.5.1-0.20241030094454-1ea50ac03c59
+	github.com/openstack-k8s-operators/keystone-operator/api v0.5.1-0.20241030161253-ca1668251700
+	github.com/openstack-k8s-operators/lib-common/modules/ansible v0.5.1-0.20241029151503-4878b3fa3333
 	github.com/openstack-k8s-operators/lib-common/modules/common v0.5.1-0.20241029151503-4878b3fa3333
-	github.com/openstack-k8s-operators/lib-common/modules/openstack v0.5.1-0.20241025164019-30baa23bf6f1
+	github.com/openstack-k8s-operators/lib-common/modules/openstack v0.5.1-0.20241029151503-4878b3fa3333
 	github.com/openstack-k8s-operators/swift-operator/api v0.3.1-0.20240523121736-379011b2cfac
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
 	k8s.io/api v0.29.10
@@ -52,9 +52,9 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/openshift/api v3.9.0+incompatible // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/prometheus/client_golang v1.18.0 // indirect
+	github.com/prometheus/client_golang v1.19.0 // indirect
 	github.com/prometheus/client_model v0.5.0 // indirect
-	github.com/prometheus/common v0.46.0 // indirect
+	github.com/prometheus/common v0.48.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
