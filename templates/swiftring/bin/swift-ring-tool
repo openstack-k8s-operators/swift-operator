@@ -18,7 +18,7 @@ function get() {
         -H "Authorization: Bearer $TOKEN" \
         -o "${CM_NAME}.json" \
         -w "%{http_code}" \
-        --silent --show-error --fail \
+        --silent --show-error --fail-with-body \
         -X GET "${URL}")
 
     case $HTTP_CODE in
@@ -37,6 +37,8 @@ function get() {
         ;;
 
         *)
+            cat "${CM_NAME}.json"
+            rm "${CM_NAME}.json"
             exit 1
         ;;
     esac
@@ -141,12 +143,13 @@ function push() {
     }'
 
     # https://kubernetes.io/docs/reference/kubernetes-api/config-and-storage-resources/config-map-v1/#update-replace-the-specified-configmap
-    /usr/bin/curl \
+    RESPONSE_BODY=$(/usr/bin/curl \
         -H "Authorization: Bearer $TOKEN" \
         --data-binary "${CONFIGMAP_JSON}" \
         -H 'Content-Type: application/json' \
-        -o /dev/null --silent --show-error --fail \
-        -X "${METHOD}" "${URL}"
+        --silent --show-error --fail-with-body \
+        -X "${METHOD}" "${URL}")
+    [ $? -ne 0 ] && echo -e "${RESPONSE_BODY}" || true
 }
 
 
