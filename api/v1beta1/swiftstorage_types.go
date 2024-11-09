@@ -79,6 +79,10 @@ type SwiftStorageSpecCore struct {
 	// DefaultConfigOverwrite - can be used to add additionalfiles. Those get
 	// added to the service config dir in /etc/<servicename>-conf.d
 	DefaultConfigOverwrite map[string]string `json:"defaultConfigOverwrite,omitempty"`
+
+	// +kubebuilder:validation:Optional
+	// NodeSelector to target subset of worker nodes running this service
+	NodeSelector *map[string]string `json:"nodeSelector,omitempty"`
 }
 
 // SwiftStorageStatus defines the observed state of SwiftStorage

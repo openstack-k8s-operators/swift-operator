@@ -101,6 +101,10 @@ type SwiftProxySpecCore struct {
 	// +kubebuilder:default=false
 	// Enables ceilometer in the swift proxy and creates required resources
 	CeilometerEnabled bool `json:"ceilometerEnabled"`
+
+	// +kubebuilder:validation:Optional
+	// NodeSelector to target subset of worker nodes running this service
+	NodeSelector *map[string]string `json:"nodeSelector,omitempty"`
 }
 
 // ProxyOverrideSpec to override the generated manifest of several child resources.
