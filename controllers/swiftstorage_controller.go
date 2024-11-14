@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
+	networkv1 "github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/apis/k8s.cni.cncf.io/v1"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -233,6 +234,7 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	}
 
 	// networks to attach to
+	nadList := []networkv1.NetworkAttachmentDefinition{}
 	storageNetworkRange := ""
 	for _, netAtt := range instance.Spec.NetworkAttachments {
 		nad, err := networkattachment.GetNADWithName(ctx, helper, netAtt, instance.Namespace)
@@ -255,6 +257,11 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 				err.Error()))
 			return ctrl.Result{}, err
 		}
+
+		if nad != nil {
+			nadList = append(nadList, *nad)
+		}
+
 		// Get the storage network subnet range to include it in the
 		// NetworkPolicy for the storage pods
 		config := Netconfig{}
@@ -265,8 +272,7 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 			storageNetworkRange = config.Ipam.Range
 		}
 	}
-
-	serviceAnnotations, err := networkattachment.CreateNetworksAnnotation(instance.Namespace, instance.Spec.NetworkAttachments)
+	serviceAnnotations, err := networkattachment.EnsureNetworksAnnotation(nadList)
 	if err != nil {
 		return ctrl.Result{}, fmt.Errorf("failed create network annotation from %s: %w",
 			instance.Spec.NetworkAttachments, err)

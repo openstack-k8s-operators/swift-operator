@@ -42,6 +42,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 
+	networkv1 "github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/apis/k8s.cni.cncf.io/v1"
 	"github.com/openstack-k8s-operators/lib-common/modules/common"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/condition"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/deployment"
@@ -589,8 +590,9 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	instance.Status.Conditions.MarkTrue(condition.ServiceConfigReadyCondition, condition.ServiceConfigReadyMessage)
 
 	// networks to attach to
+	nadList := []networkv1.NetworkAttachmentDefinition{}
 	for _, netAtt := range instance.Spec.NetworkAttachments {
-		_, err := networkattachment.GetNADWithName(ctx, helper, netAtt, instance.Namespace)
+		nad, err := networkattachment.GetNADWithName(ctx, helper, netAtt, instance.Namespace)
 		if err != nil {
 			if apierrors.IsNotFound(err) {
 				instance.Status.Conditions.Set(condition.FalseCondition(
@@ -610,9 +612,13 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 				err.Error()))
 			return ctrl.Result{}, err
 		}
+
+		if nad != nil {
+			nadList = append(nadList, *nad)
+		}
 	}
 
-	serviceAnnotations, err := networkattachment.CreateNetworksAnnotation(instance.Namespace, instance.Spec.NetworkAttachments)
+	serviceAnnotations, err := nad.EnsureNetworksAnnotation(nadList)
 	if err != nil {
 		return ctrl.Result{}, fmt.Errorf("failed create network annotation from %s: %w",
 			instance.Spec.NetworkAttachments, err)
