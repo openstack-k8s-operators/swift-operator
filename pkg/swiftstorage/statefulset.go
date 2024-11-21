@@ -213,7 +213,7 @@ func StatefulSet(
 		return nil, err
 	}
 
-	return &appsv1.StatefulSet{
+	statefulset := &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      swiftstorage.Name,
 			Namespace: swiftstorage.Namespace,
@@ -267,5 +267,11 @@ func StatefulSet(
 				},
 			}},
 		},
-	}, nil
+	}
+
+	if swiftstorage.Spec.NodeSelector != nil {
+		statefulset.Spec.Template.Spec.NodeSelector = *swiftstorage.Spec.NodeSelector
+	}
+
+	return statefulset, nil
 }

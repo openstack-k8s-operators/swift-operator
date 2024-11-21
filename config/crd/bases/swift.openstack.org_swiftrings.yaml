@@ -54,6 +54,12 @@ spec:
                 format: int64
                 minimum: 1
                 type: integer
+              nodeSelector:
+                additionalProperties:
+                  type: string
+                description: NodeSelector to target subset of worker nodes running
+                  this service
+                type: object
               partPower:
                 default: 10
                 description: Partition power of the Swift rings

@@ -81,6 +81,10 @@ type SwiftSpecBase struct {
 	// +kubebuilder:default=memcached
 	// Memcached instance name.
 	MemcachedInstance string `json:"memcachedInstance"`
+
+	// +kubebuilder:validation:Optional
+	// NodeSelector to target subset of worker nodes running this service
+	NodeSelector *map[string]string `json:"nodeSelector,omitempty"`
 }
 
 // SwiftStatus defines the observed state of Swift

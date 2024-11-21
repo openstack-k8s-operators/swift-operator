@@ -106,7 +106,7 @@ func Deployment(
 	envVars := map[string]env.Setter{}
 	envVars["CONFIG_HASH"] = env.SetValue(configHash)
 
-	return &appsv1.Deployment{
+	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      instance.Name,
 			Namespace: instance.Namespace,
@@ -173,5 +173,11 @@ func Deployment(
 				},
 			},
 		},
-	}, nil
+	}
+
+	if instance.Spec.NodeSelector != nil {
+		deployment.Spec.Template.Spec.NodeSelector = *instance.Spec.NodeSelector
+	}
+
+	return deployment, nil
 }
