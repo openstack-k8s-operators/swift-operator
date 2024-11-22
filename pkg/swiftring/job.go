@@ -51,7 +51,7 @@ func GetRingJob(instance *swiftv1beta1.SwiftRing, labels map[string]string) *bat
 		volumeMounts = append(volumeMounts, instance.Spec.TLS.CreateVolumeMounts(nil)...)
 	}
 
-	return &batchv1.Job{
+	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      instance.Name + "-rebalance",
 			Namespace: instance.Namespace,
@@ -83,4 +83,10 @@ func GetRingJob(instance *swiftv1beta1.SwiftRing, labels map[string]string) *bat
 			},
 		},
 	}
+
+	if instance.Spec.NodeSelector != nil {
+		job.Spec.Template.Spec.NodeSelector = *instance.Spec.NodeSelector
+	}
+
+	return job
 }
