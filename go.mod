@@ -9,11 +9,11 @@ require (
 	github.com/onsi/ginkgo/v2 v2.20.1
 	github.com/onsi/gomega v1.34.1
 	github.com/openstack-k8s-operators/barbican-operator/api v0.5.1-0.20250115151200-a09e4812ee3c
-	github.com/openstack-k8s-operators/infra-operator/apis v0.5.1-0.20250117140311-d7bb08248581
-	github.com/openstack-k8s-operators/keystone-operator/api v0.5.1-0.20250113154337-ece4d21f3ed9
-	github.com/openstack-k8s-operators/lib-common/modules/ansible v0.5.1-0.20250116145727-01a8948d5dd7
-	github.com/openstack-k8s-operators/lib-common/modules/common v0.5.1-0.20250116145727-01a8948d5dd7
-	github.com/openstack-k8s-operators/lib-common/modules/openstack v0.5.1-0.20250116145727-01a8948d5dd7
+	github.com/openstack-k8s-operators/infra-operator/apis v0.5.1-0.20250123115751-98853871de94
+	github.com/openstack-k8s-operators/keystone-operator/api v0.5.1-0.20250124143616-a588be8e9118
+	github.com/openstack-k8s-operators/lib-common/modules/ansible v0.5.1-0.20250124131400-f604bec9afd2
+	github.com/openstack-k8s-operators/lib-common/modules/common v0.5.1-0.20250124131400-f604bec9afd2
+	github.com/openstack-k8s-operators/lib-common/modules/openstack v0.5.1-0.20250124131400-f604bec9afd2
 	github.com/openstack-k8s-operators/swift-operator/api v0.3.1-0.20240523121736-379011b2cfac
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
 	k8s.io/api v0.29.12
