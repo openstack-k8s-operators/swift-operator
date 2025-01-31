@@ -660,7 +660,7 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		}
 
 		instance.Status.NetworkAttachments = networkAttachmentStatus
-		if networkReady {
+		if networkReady || *instance.Spec.Replicas == 0 {
 			instance.Status.Conditions.MarkTrue(condition.NetworkAttachmentsReadyCondition, condition.NetworkAttachmentsReadyMessage)
 		} else {
 			err := fmt.Errorf("not all pods have interfaces with ips as configured in NetworkAttachments: %s", instance.Spec.NetworkAttachments)
