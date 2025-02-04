@@ -60,7 +60,6 @@ import (
 	rabbitmqv1 "github.com/openstack-k8s-operators/infra-operator/apis/rabbitmq/v1beta1"
 	topologyv1 "github.com/openstack-k8s-operators/infra-operator/apis/topology/v1beta1"
 	keystonev1 "github.com/openstack-k8s-operators/keystone-operator/api/v1beta1"
-	"github.com/openstack-k8s-operators/lib-common/modules/common/topology"
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
 	"github.com/openstack-k8s-operators/swift-operator/pkg/swift"
 	"github.com/openstack-k8s-operators/swift-operator/pkg/swiftproxy"
@@ -635,7 +634,7 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	//
 	// Handle Topology
 	//
-	lastTopologyRef := topology.TopoRef{
+	lastTopologyRef := topologyv1.TopoRef{
 		Name:      instance.Status.LastAppliedTopology,
 		Namespace: instance.Namespace,
 	}
@@ -645,6 +644,7 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		instance.Spec.TopologyRef,
 		&lastTopologyRef,
 		instance.Name,
+		swiftproxy.ComponentName,
 	)
 	if err != nil {
 		instance.Status.Conditions.Set(condition.FalseCondition(
@@ -926,10 +926,10 @@ func (r *SwiftProxyReconciler) reconcileDelete(ctx context.Context, instance *sw
 	}
 
 	// Remove finalizer on the Topology CR
-	if ctrlResult, err := topology.EnsureDeletedTopologyRef(
+	if ctrlResult, err := topologyv1.EnsureDeletedTopologyRef(
 		ctx,
 		helper,
-		&topology.TopoRef{
+		&topologyv1.TopoRef{
 			Name:      instance.Status.LastAppliedTopology,
 			Namespace: instance.Namespace,
 		},

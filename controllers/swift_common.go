@@ -19,15 +19,16 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"github.com/openstack-k8s-operators/lib-common/modules/common"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/condition"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/helper"
+	"github.com/openstack-k8s-operators/lib-common/modules/common/labels"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/secret"
 	"k8s.io/apimachinery/pkg/types"
 	"time"
 
 	topologyv1 "github.com/openstack-k8s-operators/infra-operator/apis/topology/v1beta1"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/env"
-	"github.com/openstack-k8s-operators/lib-common/modules/common/topology"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -101,9 +102,10 @@ func verifyServiceSecret(
 func ensureSwiftTopology(
 	ctx context.Context,
 	helper *helper.Helper,
-	tpRef *topology.TopoRef,
-	lastAppliedTopology *topology.TopoRef,
+	tpRef *topologyv1.TopoRef,
+	lastAppliedTopology *topologyv1.TopoRef,
 	finalizer string,
+	selector string,
 ) (*topologyv1.Topology, error) {
 
 	var podTopology *topologyv1.Topology
@@ -119,7 +121,7 @@ func ensureSwiftTopology(
 	//    referenced topology (tpRef.Name != lastAppliedTopology.Name)
 	if (tpRef == nil && lastAppliedTopology.Name != "") ||
 		(tpRef != nil && tpRef.Name != lastAppliedTopology.Name) {
-		_, err = topology.EnsureDeletedTopologyRef(
+		_, err = topologyv1.EnsureDeletedTopologyRef(
 			ctx,
 			helper,
 			lastAppliedTopology,
@@ -135,12 +137,18 @@ func ensureSwiftTopology(
 		if tpRef.Namespace == "" {
 			tpRef.Namespace = helper.GetBeforeObject().GetNamespace()
 		}
+		// Build a defaultLabelSelector (component=manila-[api|scheduler|share])
+		defaultLabelSelector := labels.GetSingleLabelSelector(
+			common.ComponentSelector,
+			selector,
+		)
 		// Retrieve the referenced Topology
-		podTopology, _, err = topology.EnsureTopologyRef(
+		podTopology, _, err = topologyv1.EnsureTopologyRef(
 			ctx,
 			helper,
 			tpRef,
 			finalizer,
+			&defaultLabelSelector,
 		)
 		if err != nil {
 			return nil, err

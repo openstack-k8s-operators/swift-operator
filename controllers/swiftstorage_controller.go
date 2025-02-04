@@ -50,7 +50,6 @@ import (
 
 	memcachedv1 "github.com/openstack-k8s-operators/infra-operator/apis/memcached/v1beta1"
 	topologyv1 "github.com/openstack-k8s-operators/infra-operator/apis/topology/v1beta1"
-	"github.com/openstack-k8s-operators/lib-common/modules/common/topology"
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
 	"github.com/openstack-k8s-operators/swift-operator/pkg/swift"
 	"github.com/openstack-k8s-operators/swift-operator/pkg/swiftstorage"
@@ -315,7 +314,7 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	//
 	// Handle Topology
 	//
-	lastTopologyRef := topology.TopoRef{
+	lastTopologyRef := topologyv1.TopoRef{
 		Name:      instance.Status.LastAppliedTopology,
 		Namespace: instance.Namespace,
 	}
@@ -325,6 +324,7 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		instance.Spec.TopologyRef,
 		&lastTopologyRef,
 		instance.Name,
+		swiftstorage.ComponentName,
 	)
 	if err != nil {
 		instance.Status.Conditions.Set(condition.FalseCondition(
