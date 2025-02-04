@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	"github.com/openstack-k8s-operators/lib-common/modules/common/service"
+	topologyv1 "github.com/openstack-k8s-operators/infra-operator/apis/topology/v1beta1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -117,6 +118,10 @@ func (r *Swift) ValidateCreate() (admission.Warnings, error) {
 
 	var allErrs field.ErrorList
 	basePath := field.NewPath("spec")
+
+	// validate TopologyRef namespace
+	allErrs = r.Spec.ValidateSwiftTopology(basePath, r.Namespace)
+
 	if err := r.Spec.ValidateCreate(basePath); err != nil {
 		allErrs = append(allErrs, err...)
 	}
@@ -165,6 +170,9 @@ func (r *Swift) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
 
 	var allErrs field.ErrorList
 	basePath := field.NewPath("spec")
+
+	// validate TopologyRef namespace
+	allErrs = r.Spec.ValidateSwiftTopology(basePath, r.Namespace)
 
 	if err := r.Spec.ValidateUpdate(oldSwift.Spec, basePath); err != nil {
 		allErrs = append(allErrs, err...)
@@ -247,4 +255,36 @@ func (r *Swift) ValidateDelete() (admission.Warnings, error) {
 
 	// TODO(user): fill in your validation logic upon object deletion.
 	return nil, nil
+}
+
+// ValidateSwiftTopology - Returns an ErrorList if the Topology is referenced
+// on a different namespace
+func (spec *SwiftSpec) ValidateSwiftTopology(basePath *field.Path, namespace string) field.ErrorList {
+	var allErrs field.ErrorList
+
+	// When a TopologyRef CR is referenced, fail if a different Namespace is
+	// referenced because is not supported
+	if spec.TopologyRef != nil {
+		if err := topologyv1.ValidateTopologyNamespace(spec.TopologyRef.Namespace, *basePath, namespace); err != nil {
+			allErrs = append(allErrs, err)
+		}
+	}
+
+	// When a TopologyRef CR is referenced with an override to SwiftProxy, fail
+	// if a different Namespace is referenced because not supported
+	if spec.SwiftProxy.TopologyRef != nil {
+		if err := topologyv1.ValidateTopologyNamespace(spec.SwiftProxy.TopologyRef.Namespace, *basePath, namespace); err != nil {
+			allErrs = append(allErrs, err)
+		}
+	}
+
+	// When a TopologyRef CR is referenced with an override to SwiftStorage
+	// fail if a different Namespace is referenced because not supported
+	if spec.SwiftStorage.TopologyRef != nil {
+		if err := topologyv1.ValidateTopologyNamespace(spec.SwiftStorage.TopologyRef.Namespace, *basePath, namespace); err != nil {
+			allErrs = append(allErrs, err)
+		}
+	}
+
+	return allErrs
 }
