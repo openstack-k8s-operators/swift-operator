@@ -325,6 +325,7 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		instance.Spec.TopologyRef,
 		&lastTopologyRef,
 		instance.Name,
+		swiftstorage.ComponentName,
 	)
 	if err != nil {
 		instance.Status.Conditions.Set(condition.FalseCondition(

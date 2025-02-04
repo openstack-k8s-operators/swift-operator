@@ -645,6 +645,7 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		instance.Spec.TopologyRef,
 		&lastTopologyRef,
 		instance.Name,
+		swiftproxy.ComponentName,
 	)
 	if err != nil {
 		instance.Status.Conditions.Set(condition.FalseCondition(

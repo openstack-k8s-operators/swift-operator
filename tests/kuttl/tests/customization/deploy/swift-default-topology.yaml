@@ -1,0 +1,13 @@
+---
+apiVersion: topology.openstack.org/v1beta1
+kind: Topology
+metadata:
+  name: swift-default-topology
+spec:
+  topologySpreadConstraints:
+  - maxSkew: 1
+    topologyKey: "topology.kubernetes.io/hostname"
+    whenUnsatisfiable: SchedulAnyway
+    labelSelector:
+      matchLabels:
+        service: swift

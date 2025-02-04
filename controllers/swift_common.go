@@ -19,8 +19,10 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"github.com/openstack-k8s-operators/lib-common/modules/common"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/condition"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/helper"
+	"github.com/openstack-k8s-operators/lib-common/modules/common/labels"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/secret"
 	"k8s.io/apimachinery/pkg/types"
 	"time"
@@ -104,6 +106,7 @@ func ensureSwiftTopology(
 	tpRef *topology.TopoRef,
 	lastAppliedTopology *topology.TopoRef,
 	finalizer string,
+	selector string,
 ) (*topologyv1.Topology, error) {
 
 	var podTopology *topologyv1.Topology
@@ -135,12 +138,18 @@ func ensureSwiftTopology(
 		if tpRef.Namespace == "" {
 			tpRef.Namespace = helper.GetBeforeObject().GetNamespace()
 		}
+		// Build a defaultLabelSelector (component=manila-[api|scheduler|share])
+		defaultLabelSelector := labels.GetSingleLabelSelector(
+			common.ComponentSelector,
+			selector,
+		)
 		// Retrieve the referenced Topology
 		podTopology, _, err = topology.EnsureTopologyRef(
 			ctx,
 			helper,
 			tpRef,
 			finalizer,
+			&defaultLabelSelector,
 		)
 		if err != nil {
 			return nil, err
