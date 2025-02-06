@@ -26,6 +26,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/util/intstr"
 
+	topologyv1 "github.com/openstack-k8s-operators/infra-operator/apis/topology/v1beta1"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/env"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/service"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/tls"
@@ -38,6 +39,7 @@ func Deployment(
 	labels map[string]string,
 	annotations map[string]string,
 	configHash string,
+	topology *topologyv1.Topology,
 ) (*appsv1.Deployment, error) {
 
 	trueVal := true
@@ -110,6 +112,7 @@ func Deployment(
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      instance.Name,
 			Namespace: instance.Namespace,
+			Labels:    labels,
 		},
 		Spec: appsv1.DeploymentSpec{
 			Selector: &metav1.LabelSelector{
@@ -134,8 +137,7 @@ func Deployment(
 						// as root/swift/0440.
 						FSGroup: ptr.To(swift.RunAsUser),
 					},
-					Volumes:  volumes,
-					Affinity: swift.GetPodAffinity(ComponentName),
+					Volumes: volumes,
 					Containers: []corev1.Container{
 						{
 							Image:           instance.Spec.ContainerImageProxy,
@@ -177,6 +179,24 @@ func Deployment(
 
 	if instance.Spec.NodeSelector != nil {
 		deployment.Spec.Template.Spec.NodeSelector = *instance.Spec.NodeSelector
+	}
+
+	if topology != nil {
+		// Get the Topology .Spec
+		ts := topology.Spec
+		// Process TopologySpreadConstraints if defined in the referenced Topology
+		if ts.TopologySpreadConstraints != nil {
+			deployment.Spec.Template.Spec.TopologySpreadConstraints = *topology.Spec.TopologySpreadConstraints
+		}
+		// Process Affinity if defined in the referenced Topology
+		if ts.Affinity != nil {
+			deployment.Spec.Template.Spec.Affinity = ts.Affinity
+		}
+	} else {
+		// If possible two pods of the same service should not
+		// run on the same worker node. If this is not possible
+		// the get still created on the same worker node.
+		deployment.Spec.Template.Spec.Affinity = swift.GetPodAffinity(ComponentName)
 	}
 
 	return deployment, nil

@@ -468,11 +468,18 @@ func (r *SwiftReconciler) storageCreateOrUpdate(ctx context.Context, instance *s
 			ContainerSharderEnabled: instance.Spec.SwiftStorage.ContainerSharderEnabled,
 			DefaultConfigOverwrite:  instance.Spec.SwiftStorage.DefaultConfigOverwrite,
 			NodeSelector:            instance.Spec.SwiftStorage.NodeSelector,
+			TopologyRef:             instance.Spec.SwiftProxy.TopologyRef,
 		},
 	}
 
 	if swiftStorageSpec.NodeSelector == nil {
 		swiftStorageSpec.NodeSelector = instance.Spec.NodeSelector
+	}
+
+	// If topology is not present in the underlying SwiftStorage Spec
+	// inherit from the top-level CR
+	if swiftStorageSpec.TopologyRef == nil {
+		swiftStorageSpec.TopologyRef = instance.Spec.TopologyRef
 	}
 
 	deployment := &swiftv1.SwiftStorage{
@@ -513,11 +520,18 @@ func (r *SwiftReconciler) proxyCreateOrUpdate(ctx context.Context, instance *swi
 			RabbitMqClusterName:    instance.Spec.SwiftProxy.RabbitMqClusterName,
 			CeilometerEnabled:      instance.Spec.SwiftProxy.CeilometerEnabled,
 			NodeSelector:           instance.Spec.SwiftProxy.NodeSelector,
+			TopologyRef:            instance.Spec.SwiftProxy.TopologyRef,
 		},
 	}
 
 	if swiftProxySpec.NodeSelector == nil {
 		swiftProxySpec.NodeSelector = instance.Spec.NodeSelector
+	}
+
+	// If topology is not present in the underlying SwiftProxy Spec,
+	// inherit from the top-level CR
+	if swiftProxySpec.TopologyRef == nil {
+		swiftProxySpec.TopologyRef = instance.Spec.TopologyRef
 	}
 
 	deployment := &swiftv1.SwiftProxy{

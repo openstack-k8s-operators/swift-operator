@@ -18,6 +18,7 @@ package v1beta1
 
 import (
 	condition "github.com/openstack-k8s-operators/lib-common/modules/common/condition"
+	"github.com/openstack-k8s-operators/lib-common/modules/common/topology"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -83,6 +84,11 @@ type SwiftStorageSpecCore struct {
 	// +kubebuilder:validation:Optional
 	// NodeSelector to target subset of worker nodes running this service
 	NodeSelector *map[string]string `json:"nodeSelector,omitempty"`
+
+	// +kubebuilder:validation:Optional
+	// TopologyRef to apply the Topology defined by the associated CR referenced
+	// by name
+	TopologyRef *topology.TopoRef `json:"topologyRef,omitempty"`
 }
 
 // SwiftStorageStatus defines the observed state of SwiftStorage
@@ -104,6 +110,9 @@ type SwiftStorageStatus struct {
 	// then the controller has not processed the latest changes injected by
 	// the openstack-operator in the top-level CR (e.g. the ContainerImage)
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+
+	// LastAppliedTopology - the last applied Topology
+	LastAppliedTopology string `json:"lastAppliedTopology,omitempty"`
 }
 
 //+kubebuilder:object:root=true

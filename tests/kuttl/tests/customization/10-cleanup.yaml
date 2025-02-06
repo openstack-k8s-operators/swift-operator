@@ -4,6 +4,10 @@ delete:
 - apiVersion: swift.openstack.org/v1beta1
   kind: Swift
   name: swift
+  force: true
+- apiVersion: topology.openstack.org/v1beta1
+  kind: Topology
+  name: swift-default-topology
 commands:
 - script: |
     oc delete --ignore-not-found=true -n $NAMESPACE secret swift-conf

@@ -1,0 +1,26 @@
+# Check that swift-default-topology has been applied
+# and the condition is marked as true
+---
+apiVersion: swift.openstack.org/v1beta1
+kind: SwiftStorage
+metadata:
+  name: swift-storage
+status:
+  conditions:
+  - message: Topology config create completed
+    reason: Ready
+    status: "True"
+    type: TopologyReady
+  lastAppliedTopology: swift-default-topology
+---
+apiVersion: swift.openstack.org/v1beta1
+kind: SwiftProxy
+metadata:
+  name: swift-proxy
+status:
+  conditions:
+  - message: Topology config create completed
+    reason: Ready
+    status: "True"
+    type: TopologyReady
+  lastAppliedTopology: swift-default-topology
