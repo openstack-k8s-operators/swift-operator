@@ -553,8 +553,16 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return ctrl.Result{}, err
 	}
 
+	httpdOverrideSecret := &corev1.Secret{}
+	if instance.Spec.HttpdCustomization.CustomConfigSecret != nil && *instance.Spec.HttpdCustomization.CustomConfigSecret != "" {
+		httpdOverrideSecret, _, err = secret.GetSecret(ctx, helper, *instance.Spec.HttpdCustomization.CustomConfigSecret, instance.Namespace)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+	}
+
 	// Create a Secret populated with content from templates/
-	tpl := swiftproxy.SecretTemplates(
+	tpl, err := swiftproxy.SecretTemplates(
 		instance,
 		serviceLabels,
 		keystonePublicURL,
@@ -565,7 +573,18 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		secretRef,
 		os.GetRegion(),
 		transportURLString,
+		httpdOverrideSecret,
 	)
+	if err != nil {
+		instance.Status.Conditions.Set(condition.FalseCondition(
+			condition.ServiceConfigReadyCondition,
+			condition.ErrorReason,
+			condition.SeverityWarning,
+			condition.ServiceConfigReadyErrorMessage,
+			err.Error()))
+		return ctrl.Result{}, err
+	}
+
 	err = secret.EnsureSecrets(ctx, helper, instance, tpl, &envVars)
 	if err != nil {
 		instance.Status.Conditions.Set(condition.FalseCondition(
@@ -624,8 +643,13 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 			instance.Spec.NetworkAttachments, err)
 	}
 
+	configData, _, err := secret.GetSecret(ctx, helper, fmt.Sprintf("%s-config-data", instance.Name), instance.Namespace)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
 	// Create Deployment
-	ssDef, err := swiftproxy.Deployment(instance, serviceLabels, serviceAnnotations, inputHash)
+	ssDef, err := swiftproxy.Deployment(instance, serviceLabels, serviceAnnotations, inputHash, configData)
 	if err != nil {
 		instance.Status.Conditions.Set(condition.FalseCondition(
 			swiftv1beta1.SwiftProxyReadyCondition,
@@ -745,6 +769,18 @@ func (r *SwiftProxyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 			return nil
 		}
 		return []string{*cr.Spec.TLS.API.Public.SecretName}
+	}); err != nil {
+		return err
+	}
+
+	// index httpdOverrideSecretField
+	if err := mgr.GetFieldIndexer().IndexField(context.Background(), &swiftv1beta1.SwiftProxy{}, httpdCustomServiceConfigSecretField, func(rawObj client.Object) []string {
+		// Extract the secret name from the spec, if one is provided
+		cr := rawObj.(*swiftv1beta1.SwiftProxy)
+		if cr.Spec.HttpdCustomization.CustomConfigSecret == nil {
+			return nil
+		}
+		return []string{*cr.Spec.HttpdCustomization.CustomConfigSecret}
 	}); err != nil {
 		return err
 	}

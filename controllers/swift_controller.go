@@ -513,6 +513,7 @@ func (r *SwiftReconciler) proxyCreateOrUpdate(ctx context.Context, instance *swi
 			RabbitMqClusterName:    instance.Spec.SwiftProxy.RabbitMqClusterName,
 			CeilometerEnabled:      instance.Spec.SwiftProxy.CeilometerEnabled,
 			NodeSelector:           instance.Spec.SwiftProxy.NodeSelector,
+			HttpdCustomization:     instance.Spec.SwiftProxy.HttpdCustomization,
 		},
 	}
 

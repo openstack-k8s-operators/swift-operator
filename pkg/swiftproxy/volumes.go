@@ -17,13 +17,15 @@ limitations under the License.
 package swiftproxy
 
 import (
+	"strings"
+
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
 	"github.com/openstack-k8s-operators/swift-operator/pkg/swift"
 	corev1 "k8s.io/api/core/v1"
 )
 
 func getProxyVolumes(instance *swiftv1beta1.SwiftProxy) []corev1.Volume {
-	return []corev1.Volume{
+	volumes := []corev1.Volume{
 		{
 			Name: "config-data",
 			VolumeSource: corev1.VolumeSource{
@@ -92,6 +94,8 @@ func getProxyVolumes(instance *swiftv1beta1.SwiftProxy) []corev1.Volume {
 			},
 		},
 	}
+
+	return volumes
 }
 
 func getProxyVolumeMounts() []corev1.VolumeMount {
@@ -105,8 +109,8 @@ func getProxyVolumeMounts() []corev1.VolumeMount {
 }
 
 // getHttpdVolumeMounts - Returns the VolumeMounts used by the httpd sidecar
-func getHttpdVolumeMounts() []corev1.VolumeMount {
-	return []corev1.VolumeMount{
+func getHttpdVolumeMounts(configDataSecret *corev1.Secret) []corev1.VolumeMount {
+	volumeMounts := []corev1.VolumeMount{
 		{
 			Name:      "config-data",
 			MountPath: "/etc/httpd/conf/httpd.conf",
@@ -130,4 +134,20 @@ func getHttpdVolumeMounts() []corev1.VolumeMount {
 			ReadOnly:  false,
 		},
 	}
+
+	if configDataSecret != nil && len(configDataSecret.Data) > 0 {
+		for key := range configDataSecret.Data {
+			if strings.HasPrefix(key, "httpd_custom_") {
+				volumeMounts = append(volumeMounts,
+					corev1.VolumeMount{
+						Name:      "config-data",
+						MountPath: "/etc/httpd/conf/" + key,
+						SubPath:   key,
+						ReadOnly:  true,
+					})
+			}
+		}
+	}
+
+	return volumeMounts
 }

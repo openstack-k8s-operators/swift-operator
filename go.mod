@@ -12,9 +12,9 @@ require (
 	github.com/openstack-k8s-operators/infra-operator/apis v0.5.1-0.20250123115751-98853871de94
 	github.com/openstack-k8s-operators/keystone-operator/api v0.5.1-0.20250124143616-a588be8e9118
 	github.com/openstack-k8s-operators/lib-common/modules/ansible v0.5.1-0.20250124131400-f604bec9afd2
-	github.com/openstack-k8s-operators/lib-common/modules/common v0.5.1-0.20250124131400-f604bec9afd2
+	github.com/openstack-k8s-operators/lib-common/modules/common v0.5.1-0.20250116145727-01a8948d5dd7
 	github.com/openstack-k8s-operators/lib-common/modules/openstack v0.5.1-0.20250124131400-f604bec9afd2
-	github.com/openstack-k8s-operators/swift-operator/api v0.3.1-0.20240523121736-379011b2cfac
+	github.com/openstack-k8s-operators/swift-operator/api v0.0.0-00010101000000-000000000000
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
 	k8s.io/api v0.29.12
 	k8s.io/apimachinery v0.29.12

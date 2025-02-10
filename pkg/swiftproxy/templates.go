@@ -20,10 +20,13 @@ import (
 	"fmt"
 
 	memcachedv1 "github.com/openstack-k8s-operators/infra-operator/apis/memcached/v1beta1"
+	"github.com/openstack-k8s-operators/lib-common/modules/common"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/service"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/util"
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
 	swift "github.com/openstack-k8s-operators/swift-operator/pkg/swift"
+	"gopkg.in/yaml.v2"
+	corev1 "k8s.io/api/core/v1"
 )
 
 // SecretTemplates -
@@ -38,7 +41,8 @@ func SecretTemplates(
 	secretRef string,
 	keystoneRegion string,
 	transportURL string,
-) []util.Template {
+	httpdOverrideSecret *corev1.Secret,
+) ([]util.Template, error) {
 	templateParameters := make(map[string]interface{})
 	templateParameters["ServiceUser"] = instance.Spec.ServiceUser
 	templateParameters["ServicePassword"] = password
@@ -52,6 +56,7 @@ func SecretTemplates(
 	templateParameters["TransportURL"] = transportURL
 
 	// create httpd  vhost template parameters
+	customTemplates := map[string]string{}
 	httpdVhostConfig := map[string]interface{}{}
 	for _, endpt := range []service.Endpoint{service.EndpointInternal, service.EndpointPublic} {
 		endptConfig := map[string]interface{}{}
@@ -62,6 +67,16 @@ func SecretTemplates(
 			endptConfig["SSLCertificateFile"] = fmt.Sprintf("/etc/pki/tls/certs/%s.crt", endpt.String())
 			endptConfig["SSLCertificateKeyFile"] = fmt.Sprintf("/etc/pki/tls/private/%s.key", endpt.String())
 		}
+
+		endptConfig["Override"] = false
+		if httpdOverrideSecret != nil && len(httpdOverrideSecret.Data) > 0 {
+			endptConfig["Override"] = true
+			for key, data := range httpdOverrideSecret.Data {
+				if len(data) > 0 {
+					customTemplates["httpd_custom_"+endpt.String()+"_"+key] = string(data)
+				}
+			}
+		}
 		httpdVhostConfig[endpt.String()] = endptConfig
 	}
 	templateParameters["VHosts"] = httpdVhostConfig
@@ -70,15 +85,23 @@ func SecretTemplates(
 		customData[key] = data
 	}
 
+	// Marshal the templateParameters map to YAML
+	yamlData, err := yaml.Marshal(templateParameters)
+	if err != nil {
+		return []util.Template{}, fmt.Errorf("Error marshalling to YAML: %w", err)
+	}
+	customData[common.TemplateParameters] = string(yamlData)
+
 	return []util.Template{
 		{
-			Name:          fmt.Sprintf("%s-config-data", instance.Name),
-			Namespace:     instance.Namespace,
-			Type:          util.TemplateTypeConfig,
-			InstanceType:  instance.Kind,
-			ConfigOptions: templateParameters,
-			Labels:        labels,
-			CustomData:    customData,
+			Name:           fmt.Sprintf("%s-config-data", instance.Name),
+			Namespace:      instance.Namespace,
+			Type:           util.TemplateTypeConfig,
+			InstanceType:   instance.Kind,
+			ConfigOptions:  templateParameters,
+			Labels:         labels,
+			CustomData:     customData,
+			StringTemplate: customTemplates,
 		},
-	}
+	}, nil
 }
