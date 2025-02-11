@@ -38,6 +38,7 @@ func Deployment(
 	labels map[string]string,
 	annotations map[string]string,
 	configHash string,
+	configDataSecret *corev1.Secret,
 ) (*appsv1.Deployment, error) {
 
 	trueVal := true
@@ -71,7 +72,7 @@ func Deployment(
 	// create Volume and VolumeMounts
 	volumes := getProxyVolumes(instance)
 	volumeMounts := getProxyVolumeMounts()
-	httpdVolumeMounts := append(getProxyVolumeMounts(), getHttpdVolumeMounts()...)
+	httpdVolumeMounts := append(getProxyVolumeMounts(), getHttpdVolumeMounts(configDataSecret)...)
 
 	// add CA cert if defined
 	if instance.Spec.TLS.CaBundleSecretName != "" {
