@@ -1,0 +1,111 @@
+#
+# Check for:
+#
+# - 1 SwiftProxy CR
+# - 2 SwiftStorage CR
+# - 3 swift-proxy StatefulSet
+# - 4 swift-storage StatefulSet
+#
+# Check that swift-topology has been applied and conditions are marked as Ready
+---
+apiVersion: swift.openstack.org/v1beta1
+kind: SwiftStorage
+metadata:
+  name: swift-storage
+status:
+  conditions:
+  - message: Setup complete
+    reason: Ready
+    status: "True"
+    type: Ready
+  - message: NetworkAttachments completed
+    reason: Ready
+    status: "True"
+    type: NetworkAttachmentsReady
+  - message: Setup complete
+    reason: Ready
+    status: "True"
+    type: SwiftStorageReady
+  - message: Topology config create completed
+    reason: Ready
+    status: "True"
+    type: TopologyReady
+  lastAppliedTopology: swift-topology
+---
+apiVersion: swift.openstack.org/v1beta1
+kind: SwiftProxy
+metadata:
+  name: swift-proxy
+status:
+  conditions:
+  - message: Setup complete
+    reason: Ready
+    status: "True"
+    type: Ready
+  - message: Create service completed
+    reason: Ready
+    status: "True"
+    type: CreateServiceReady
+  - message: Input data complete
+    reason: Ready
+    status: "True"
+    type: InputReady
+  - message: Setup complete
+    reason: Ready
+    status: "True"
+    type: KeystoneEndpointReady
+  - message: Setup complete
+    reason: Ready
+    status: "True"
+    type: KeystoneServiceReady
+  - message: NetworkAttachments completed
+    reason: Ready
+    status: "True"
+    type: NetworkAttachmentsReady
+  - message: Service config create completed
+    reason: Ready
+    status: "True"
+    type: ServiceConfigReady
+  - message: Setup complete
+    reason: Ready
+    status: "True"
+    type: SwiftProxyReady
+  - message: Input data complete
+    reason: Ready
+    status: "True"
+    type: TLSInputReady
+  - message: Topology config create completed
+    reason: Ready
+    status: "True"
+    type: TopologyReady
+  lastAppliedTopology: swift-topology
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: swift-storage
+spec:
+  template:
+    spec:
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: "topology.kubernetes.io/hostname"
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            service: swift
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: swift-proxy
+spec:
+  template:
+    spec:
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: "topology.kubernetes.io/hostname"
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            service: swift
