@@ -119,10 +119,7 @@ func (r *Swift) ValidateCreate() (admission.Warnings, error) {
 	var allErrs field.ErrorList
 	basePath := field.NewPath("spec")
 
-	// validate TopologyRef namespace
-	allErrs = r.Spec.ValidateSwiftTopology(basePath, r.Namespace)
-
-	if err := r.Spec.ValidateCreate(basePath); err != nil {
+	if err := r.Spec.ValidateCreate(basePath, r.Namespace); err != nil {
 		allErrs = append(allErrs, err...)
 	}
 
@@ -137,8 +134,11 @@ func (r *Swift) ValidateCreate() (admission.Warnings, error) {
 
 // ValidateCreate - Exported function wrapping non-exported validate functions,
 // this function can be called externally to validate an swift spec.
-func (r *SwiftSpec) ValidateCreate(basePath *field.Path) field.ErrorList {
+func (r *SwiftSpec) ValidateCreate(basePath *field.Path, namespace string) field.ErrorList {
 	var allErrs field.ErrorList
+
+	// validate TopologyRef namespace
+	allErrs = r.ValidateSwiftTopology(basePath, namespace)
 
 	// validate the service override key is valid
 	allErrs = append(allErrs, service.ValidateRoutedOverrides(
@@ -148,8 +148,11 @@ func (r *SwiftSpec) ValidateCreate(basePath *field.Path) field.ErrorList {
 	return allErrs
 }
 
-func (r *SwiftSpecCore) ValidateCreate(basePath *field.Path) field.ErrorList {
+func (r *SwiftSpecCore) ValidateCreate(basePath *field.Path, namespace string) field.ErrorList {
 	var allErrs field.ErrorList
+
+	// validate TopologyRef namespace
+	allErrs = r.ValidateSwiftTopology(basePath, namespace)
 
 	// validate the service override key is valid
 	allErrs = append(allErrs, service.ValidateRoutedOverrides(
@@ -171,10 +174,7 @@ func (r *Swift) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
 	var allErrs field.ErrorList
 	basePath := field.NewPath("spec")
 
-	// validate TopologyRef namespace
-	allErrs = r.Spec.ValidateSwiftTopology(basePath, r.Namespace)
-
-	if err := r.Spec.ValidateUpdate(oldSwift.Spec, basePath); err != nil {
+	if err := r.Spec.ValidateUpdate(oldSwift.Spec, basePath, r.Namespace); err != nil {
 		allErrs = append(allErrs, err...)
 	}
 
@@ -189,7 +189,7 @@ func (r *Swift) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
 
 // ValidateUpdate - Exported function wrapping non-exported validate functions,
 // this function can be called externally to validate an swift spec.
-func (r *SwiftSpec) ValidateUpdate(old SwiftSpec, basePath *field.Path) field.ErrorList {
+func (r *SwiftSpec) ValidateUpdate(old SwiftSpec, basePath *field.Path, namespace string) field.ErrorList {
 	var allErrs field.ErrorList
 
 	zeroVal := int32(0)
@@ -210,6 +210,9 @@ func (r *SwiftSpec) ValidateUpdate(old SwiftSpec, basePath *field.Path) field.Er
 			*newReplicas,
 			"SwiftStorage does not support scale-in"))
 	}
+
+	// validate TopologyRef namespace
+	allErrs = append(allErrs, r.ValidateSwiftTopology(basePath, namespace)...)
 
 	// validate the service override key is valid
 	allErrs = append(allErrs, service.ValidateRoutedOverrides(
@@ -219,7 +222,7 @@ func (r *SwiftSpec) ValidateUpdate(old SwiftSpec, basePath *field.Path) field.Er
 	return allErrs
 }
 
-func (r *SwiftSpecCore) ValidateUpdate(old SwiftSpecCore, basePath *field.Path) field.ErrorList {
+func (r *SwiftSpecCore) ValidateUpdate(old SwiftSpecCore, basePath *field.Path, namespace string) field.ErrorList {
 	var allErrs field.ErrorList
 
 	zeroVal := int32(0)
@@ -240,6 +243,9 @@ func (r *SwiftSpecCore) ValidateUpdate(old SwiftSpecCore, basePath *field.Path) 
 			*newReplicas,
 			"SwiftStorage does not support scale-in"))
 	}
+
+	// validate TopologyRef namespace
+	allErrs = append(allErrs, r.ValidateSwiftTopology(basePath, namespace)...)
 
 	// validate the service override key is valid
 	allErrs = append(allErrs, service.ValidateRoutedOverrides(
@@ -255,6 +261,38 @@ func (r *Swift) ValidateDelete() (admission.Warnings, error) {
 
 	// TODO(user): fill in your validation logic upon object deletion.
 	return nil, nil
+}
+
+// ValidateSwiftTopology - Returns an ErrorList if the Topology is referenced
+// on a different namespace
+func (spec *SwiftSpecCore) ValidateSwiftTopology(basePath *field.Path, namespace string) field.ErrorList {
+	var allErrs field.ErrorList
+
+	// When a TopologyRef CR is referenced, fail if a different Namespace is
+	// referenced because is not supported
+	if spec.TopologyRef != nil {
+		if err := topologyv1.ValidateTopologyNamespace(spec.TopologyRef.Namespace, *basePath, namespace); err != nil {
+			allErrs = append(allErrs, err)
+		}
+	}
+
+	// When a TopologyRef CR is referenced with an override to SwiftProxy, fail
+	// if a different Namespace is referenced because not supported
+	if spec.SwiftProxy.TopologyRef != nil {
+		if err := topologyv1.ValidateTopologyNamespace(spec.SwiftProxy.TopologyRef.Namespace, *basePath, namespace); err != nil {
+			allErrs = append(allErrs, err)
+		}
+	}
+
+	// When a TopologyRef CR is referenced with an override to SwiftStorage
+	// fail if a different Namespace is referenced because not supported
+	if spec.SwiftStorage.TopologyRef != nil {
+		if err := topologyv1.ValidateTopologyNamespace(spec.SwiftStorage.TopologyRef.Namespace, *basePath, namespace); err != nil {
+			allErrs = append(allErrs, err)
+		}
+	}
+
+	return allErrs
 }
 
 // ValidateSwiftTopology - Returns an ErrorList if the Topology is referenced
