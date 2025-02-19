@@ -19,10 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"github.com/openstack-k8s-operators/lib-common/modules/common"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/condition"
-	"github.com/openstack-k8s-operators/lib-common/modules/common/helper"
-	"github.com/openstack-k8s-operators/lib-common/modules/common/labels"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/secret"
 	"k8s.io/apimachinery/pkg/types"
 	"time"
@@ -61,6 +58,23 @@ type conditionUpdater interface {
 	MarkTrue(t condition.Type, messageFormat string, messageArgs ...interface{})
 }
 
+type topologyGetter interface {
+	GetLastAppliedTopology() *topologyv1.TopoRef
+}
+
+// GetLastTopologyRef - Returns a TopoRef object that can be passed to the
+// Handle topology logic
+func GetLastAppliedTopologyRef(t topologyGetter, ns string) *topologyv1.TopoRef {
+	lastAppliedTopologyName := ""
+	if l := t.GetLastAppliedTopology(); l != nil {
+		lastAppliedTopologyName = l.Name
+	}
+	return &topologyv1.TopoRef{
+		Name:      lastAppliedTopologyName,
+		Namespace: ns,
+	}
+}
+
 // verifyServiceSecret - ensures that the Secret object exists and the expected
 // fields are in the Secret. It also sets a hash of the values of the expected
 // fields passed as input.
@@ -94,65 +108,4 @@ func verifyServiceSecret(
 	}
 	(*envVars)[secretName.Name] = env.SetValue(hash)
 	return ctrl.Result{}, nil
-}
-
-// ensureSwiftTopology - when a Topology CR is referenced, remove the
-// finalizer from a previous referenced Topology (if any), and retrieve the
-// newly referenced topology object
-func ensureSwiftTopology(
-	ctx context.Context,
-	helper *helper.Helper,
-	tpRef *topologyv1.TopoRef,
-	lastAppliedTopology *topologyv1.TopoRef,
-	finalizer string,
-	selector string,
-) (*topologyv1.Topology, error) {
-
-	var podTopology *topologyv1.Topology
-	var err error
-
-	// Remove (if present) the finalizer from a previously referenced topology
-	//
-	// 1. a topology reference is removed (tpRef == nil) from the Swift Component
-	//    subCR and the finalizer should be deleted from the last applied topology
-	//    (lastAppliedTopology != "")
-	// 2. a topology reference is updated in the Swift Component CR (tpRef != nil)
-	//    and the finalizer should be removed from the previously
-	//    referenced topology (tpRef.Name != lastAppliedTopology.Name)
-	if (tpRef == nil && lastAppliedTopology.Name != "") ||
-		(tpRef != nil && tpRef.Name != lastAppliedTopology.Name) {
-		_, err = topologyv1.EnsureDeletedTopologyRef(
-			ctx,
-			helper,
-			lastAppliedTopology,
-			finalizer,
-		)
-		if err != nil {
-			return nil, err
-		}
-	}
-	// TopologyRef is passed as input, get the Topology object
-	if tpRef != nil {
-		// no Namespace is provided, default to instance.Namespace
-		if tpRef.Namespace == "" {
-			tpRef.Namespace = helper.GetBeforeObject().GetNamespace()
-		}
-		// Build a defaultLabelSelector (component=manila-[api|scheduler|share])
-		defaultLabelSelector := labels.GetSingleLabelSelector(
-			common.ComponentSelector,
-			selector,
-		)
-		// Retrieve the referenced Topology
-		podTopology, _, err = topologyv1.EnsureTopologyRef(
-			ctx,
-			helper,
-			tpRef,
-			finalizer,
-			&defaultLabelSelector,
-		)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return podTopology, nil
 }

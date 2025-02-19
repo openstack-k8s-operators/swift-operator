@@ -39,6 +39,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	helper "github.com/openstack-k8s-operators/lib-common/modules/common/helper"
+	"github.com/openstack-k8s-operators/lib-common/modules/common/labels"
 	service "github.com/openstack-k8s-operators/lib-common/modules/common/service"
 	statefulset "github.com/openstack-k8s-operators/lib-common/modules/common/statefulset"
 
@@ -314,17 +315,16 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	//
 	// Handle Topology
 	//
-	lastTopologyRef := topologyv1.TopoRef{
-		Name:      instance.Status.LastAppliedTopology,
-		Namespace: instance.Namespace,
-	}
-	topology, err := ensureSwiftTopology(
+	topology, err := topologyv1.EnsureServiceTopology(
 		ctx,
 		helper,
 		instance.Spec.TopologyRef,
-		&lastTopologyRef,
+		GetLastAppliedTopologyRef(instance, instance.Namespace),
 		instance.Name,
-		swiftstorage.ComponentName,
+		labels.GetSingleLabelSelector(
+			common.ComponentSelector,
+			swiftstorage.ComponentName,
+		),
 	)
 	if err != nil {
 		instance.Status.Conditions.Set(condition.FalseCondition(
@@ -341,12 +341,12 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	// and mark the condition as true
 	if instance.Spec.TopologyRef != nil {
 		// update the Status with the last retrieved Topology name
-		instance.Status.LastAppliedTopology = instance.Spec.TopologyRef.Name
+		instance.Status.LastAppliedTopology = instance.Spec.TopologyRef
 		// update the TopologyRef associated condition
 		instance.Status.Conditions.MarkTrue(condition.TopologyReadyCondition, condition.TopologyReadyMessage)
 	} else {
 		// remove LastAppliedTopology from the .Status
-		instance.Status.LastAppliedTopology = ""
+		instance.Status.LastAppliedTopology = nil
 	}
 
 	// Statefulset with all backend containers
