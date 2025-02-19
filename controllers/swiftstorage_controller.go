@@ -39,6 +39,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	helper "github.com/openstack-k8s-operators/lib-common/modules/common/helper"
+	"github.com/openstack-k8s-operators/lib-common/modules/common/labels"
 	service "github.com/openstack-k8s-operators/lib-common/modules/common/service"
 	statefulset "github.com/openstack-k8s-operators/lib-common/modules/common/statefulset"
 
@@ -314,17 +315,16 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	//
 	// Handle Topology
 	//
-	lastTopologyRef := topologyv1.TopoRef{
-		Name:      instance.Status.LastAppliedTopology,
-		Namespace: instance.Namespace,
-	}
-	topology, err := ensureSwiftTopology(
+	topology, err := ensureTopology(
 		ctx,
 		helper,
-		instance.Spec.TopologyRef,
-		&lastTopologyRef,
-		instance.Name,
-		swiftstorage.ComponentName,
+		instance,      // topologyHandler
+		instance.Name, // finalizer
+		&instance.Status.Conditions,
+		labels.GetSingleLabelSelector(
+			common.ComponentSelector,
+			swiftstorage.ComponentName,
+		),
 	)
 	if err != nil {
 		instance.Status.Conditions.Set(condition.FalseCondition(
@@ -334,19 +334,6 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 			condition.TopologyReadyErrorMessage,
 			err.Error()))
 		return ctrl.Result{}, fmt.Errorf("waiting for Topology requirements: %w", err)
-	}
-
-	// If TopologyRef is present and ensureGlanceAPITopology returned a valid
-	// topology object, set .Status.LastAppliedTopology to the referenced one
-	// and mark the condition as true
-	if instance.Spec.TopologyRef != nil {
-		// update the Status with the last retrieved Topology name
-		instance.Status.LastAppliedTopology = instance.Spec.TopologyRef.Name
-		// update the TopologyRef associated condition
-		instance.Status.Conditions.MarkTrue(condition.TopologyReadyCondition, condition.TopologyReadyMessage)
-	} else {
-		// remove LastAppliedTopology from the .Status
-		instance.Status.LastAppliedTopology = ""
 	}
 
 	// Statefulset with all backend containers

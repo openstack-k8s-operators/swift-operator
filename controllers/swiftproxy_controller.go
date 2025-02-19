@@ -49,6 +49,7 @@ import (
 	"github.com/openstack-k8s-operators/lib-common/modules/common/endpoint"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/env"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/helper"
+	"github.com/openstack-k8s-operators/lib-common/modules/common/labels"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/networkattachment"
 	nad "github.com/openstack-k8s-operators/lib-common/modules/common/networkattachment"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/secret"
@@ -634,17 +635,16 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	//
 	// Handle Topology
 	//
-	lastTopologyRef := topologyv1.TopoRef{
-		Name:      instance.Status.LastAppliedTopology,
-		Namespace: instance.Namespace,
-	}
-	topology, err := ensureSwiftTopology(
+	topology, err := ensureTopology(
 		ctx,
 		helper,
-		instance.Spec.TopologyRef,
-		&lastTopologyRef,
-		instance.Name,
-		swiftproxy.ComponentName,
+		instance,      // topologyHandler
+		instance.Name, // finalizer
+		&instance.Status.Conditions,
+		labels.GetSingleLabelSelector(
+			common.ComponentSelector,
+			swiftproxy.ComponentName,
+		),
 	)
 	if err != nil {
 		instance.Status.Conditions.Set(condition.FalseCondition(
@@ -654,19 +654,6 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 			condition.TopologyReadyErrorMessage,
 			err.Error()))
 		return ctrl.Result{}, fmt.Errorf("waiting for Topology requirements: %w", err)
-	}
-
-	// If TopologyRef is present and ensureGlanceAPITopology returned a valid
-	// topology object, set .Status.LastAppliedTopology to the referenced one
-	// and mark the condition as true
-	if instance.Spec.TopologyRef != nil {
-		// update the Status with the last retrieved Topology name
-		instance.Status.LastAppliedTopology = instance.Spec.TopologyRef.Name
-		// update the TopologyRef associated condition
-		instance.Status.Conditions.MarkTrue(condition.TopologyReadyCondition, condition.TopologyReadyMessage)
-	} else {
-		// remove LastAppliedTopology from the .Status
-		instance.Status.LastAppliedTopology = ""
 	}
 
 	// Create Deployment
@@ -929,10 +916,7 @@ func (r *SwiftProxyReconciler) reconcileDelete(ctx context.Context, instance *sw
 	if ctrlResult, err := topologyv1.EnsureDeletedTopologyRef(
 		ctx,
 		helper,
-		&topologyv1.TopoRef{
-			Name:      instance.Status.LastAppliedTopology,
-			Namespace: instance.Namespace,
-		},
+		instance.Status.LastAppliedTopology,
 		instance.Name,
 	); err != nil {
 		return ctrlResult, err
