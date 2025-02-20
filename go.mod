@@ -9,7 +9,7 @@ require (
 	github.com/onsi/ginkgo/v2 v2.20.1
 	github.com/onsi/gomega v1.34.1
 	github.com/openstack-k8s-operators/barbican-operator/api v0.5.1-0.20250115151200-a09e4812ee3c
-	github.com/openstack-k8s-operators/infra-operator/apis v0.5.1-0.20250210183624-a8bf66784d6d
+	github.com/openstack-k8s-operators/infra-operator/apis v0.5.1-0.20250218115938-ae95bdfefded
 	github.com/openstack-k8s-operators/keystone-operator/api v0.5.1-0.20250124143616-a588be8e9118
 	github.com/openstack-k8s-operators/lib-common/modules/ansible v0.5.1-0.20250124131400-f604bec9afd2
 	github.com/openstack-k8s-operators/lib-common/modules/common v0.5.1-0.20250205143454-43504d7ad19a
