@@ -30,7 +30,8 @@ status:
     reason: Ready
     status: "True"
     type: TopologyReady
-  lastAppliedTopology: swift-topology
+  lastAppliedTopology:
+    name: swift-topology
 ---
 apiVersion: swift.openstack.org/v1beta1
 kind: SwiftProxy
@@ -78,7 +79,8 @@ status:
     reason: Ready
     status: "True"
     type: TopologyReady
-  lastAppliedTopology: swift-topology
+  lastAppliedTopology:
+    name: swift-topology
 ---
 apiVersion: apps/v1
 kind: StatefulSet
