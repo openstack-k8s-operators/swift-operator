@@ -72,9 +72,24 @@ done < $DEVICESFILE
 }
 
 
+function metaswap() {
+/usr/bin/env python3 << EOF
+from swift.common.ring import RingBuilder
+builder = RingBuilder.load("$1")
+for dev in builder.devs:
+    if dev.get('meta') and dev.get('device') == 'pv':
+        dev['meta'], dev['ip'] = dev['ip'], dev['meta']
+builder.save("$1")
+EOF
+}
+
+
 function rebalance() {
     for f in *.builder; do
+        metaswap $f || exit
         swift-ring-builder $f rebalance
+        metaswap $f || exit
+        swift-ring-builder $f write_ring
     done
 }
 
@@ -82,8 +97,8 @@ function rebalance() {
 function forced_rebalance() {
     for f in *.builder; do
         swift-ring-builder $f pretend_min_part_hours_passed
-        swift-ring-builder $f rebalance
     done
+    rebalance
 }
 
 
@@ -196,6 +211,10 @@ case $1 in
 
     "remove")
         remove $2
+    ;;
+
+    "metaswap")
+        metaswap $2
     ;;
 
     "rebalance")
