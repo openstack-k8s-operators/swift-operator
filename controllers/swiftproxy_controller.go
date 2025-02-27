@@ -641,10 +641,7 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		instance,      // topologyHandler
 		instance.Name, // finalizer
 		&instance.Status.Conditions,
-		labels.GetSingleLabelSelector(
-			common.ComponentSelector,
-			swiftproxy.ComponentName,
-		),
+		labels.GetLabelSelector(serviceLabels),
 	)
 	if err != nil {
 		instance.Status.Conditions.Set(condition.FalseCondition(
