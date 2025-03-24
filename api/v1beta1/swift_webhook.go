@@ -270,27 +270,20 @@ func (spec *SwiftSpecCore) ValidateSwiftTopology(basePath *field.Path, namespace
 
 	// When a TopologyRef CR is referenced, fail if a different Namespace is
 	// referenced because is not supported
-	if spec.TopologyRef != nil {
-		if err := topologyv1.ValidateTopologyNamespace(spec.TopologyRef.Namespace, *basePath, namespace); err != nil {
-			allErrs = append(allErrs, err)
-		}
-	}
+	allErrs = append(allErrs, topologyv1.ValidateTopologyRef(
+		spec.TopologyRef, *basePath.Child("TopologyRef"), namespace)...)
 
 	// When a TopologyRef CR is referenced with an override to SwiftProxy, fail
 	// if a different Namespace is referenced because not supported
-	if spec.SwiftProxy.TopologyRef != nil {
-		if err := topologyv1.ValidateTopologyNamespace(spec.SwiftProxy.TopologyRef.Namespace, *basePath, namespace); err != nil {
-			allErrs = append(allErrs, err)
-		}
-	}
+	proxyPath := basePath.Child("swiftProxy")
+	allErrs = append(allErrs,
+		spec.SwiftProxy.ValidateTopology(proxyPath, namespace)...)
 
 	// When a TopologyRef CR is referenced with an override to SwiftStorage
 	// fail if a different Namespace is referenced because not supported
-	if spec.SwiftStorage.TopologyRef != nil {
-		if err := topologyv1.ValidateTopologyNamespace(spec.SwiftStorage.TopologyRef.Namespace, *basePath, namespace); err != nil {
-			allErrs = append(allErrs, err)
-		}
-	}
+	storagePath := basePath.Child("swiftStorage")
+	allErrs = append(allErrs,
+		spec.SwiftProxy.ValidateTopology(storagePath, namespace)...)
 
 	return allErrs
 }
@@ -302,27 +295,20 @@ func (spec *SwiftSpec) ValidateSwiftTopology(basePath *field.Path, namespace str
 
 	// When a TopologyRef CR is referenced, fail if a different Namespace is
 	// referenced because is not supported
-	if spec.TopologyRef != nil {
-		if err := topologyv1.ValidateTopologyNamespace(spec.TopologyRef.Namespace, *basePath, namespace); err != nil {
-			allErrs = append(allErrs, err)
-		}
-	}
+	allErrs = append(allErrs, topologyv1.ValidateTopologyRef(
+		spec.TopologyRef, *basePath.Child("TopologyRef"), namespace)...)
 
 	// When a TopologyRef CR is referenced with an override to SwiftProxy, fail
 	// if a different Namespace is referenced because not supported
-	if spec.SwiftProxy.TopologyRef != nil {
-		if err := topologyv1.ValidateTopologyNamespace(spec.SwiftProxy.TopologyRef.Namespace, *basePath, namespace); err != nil {
-			allErrs = append(allErrs, err)
-		}
-	}
+	proxyPath := basePath.Child("swiftProxy")
+	allErrs = append(allErrs,
+		spec.SwiftProxy.ValidateTopology(proxyPath, namespace)...)
 
 	// When a TopologyRef CR is referenced with an override to SwiftStorage
 	// fail if a different Namespace is referenced because not supported
-	if spec.SwiftStorage.TopologyRef != nil {
-		if err := topologyv1.ValidateTopologyNamespace(spec.SwiftStorage.TopologyRef.Namespace, *basePath, namespace); err != nil {
-			allErrs = append(allErrs, err)
-		}
-	}
+	storagePath := basePath.Child("swiftStorage")
+	allErrs = append(allErrs,
+		spec.SwiftProxy.ValidateTopology(storagePath, namespace)...)
 
 	return allErrs
 }
