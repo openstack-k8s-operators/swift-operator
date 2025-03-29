@@ -8,12 +8,12 @@ require (
 	github.com/k8snetworkplumbingwg/network-attachment-definition-client v1.7.5
 	github.com/onsi/ginkgo/v2 v2.20.1
 	github.com/onsi/gomega v1.34.1
-	github.com/openstack-k8s-operators/barbican-operator/api v0.6.1-0.20250311111658-4dc36fada1f2
-	github.com/openstack-k8s-operators/infra-operator/apis v0.6.1-0.20250319162810-463dd75a4cc4
-	github.com/openstack-k8s-operators/keystone-operator/api v0.6.1-0.20250310170329-0ffb21c0bb2c
-	github.com/openstack-k8s-operators/lib-common/modules/ansible v0.6.1-0.20250315090821-34e570d2d5fb
-	github.com/openstack-k8s-operators/lib-common/modules/common v0.6.1-0.20250315090821-34e570d2d5fb
-	github.com/openstack-k8s-operators/lib-common/modules/openstack v0.6.1-0.20250315090821-34e570d2d5fb
+	github.com/openstack-k8s-operators/barbican-operator/api v0.6.1-0.20250328055331-d757b615a9bc
+	github.com/openstack-k8s-operators/infra-operator/apis v0.6.1-0.20250328101744-699b0b8f418d
+	github.com/openstack-k8s-operators/keystone-operator/api v0.6.1-0.20250328172130-125187a9d3d8
+	github.com/openstack-k8s-operators/lib-common/modules/ansible v0.6.1-0.20250324161140-e9964a1b2266
+	github.com/openstack-k8s-operators/lib-common/modules/common v0.6.1-0.20250324161140-e9964a1b2266
+	github.com/openstack-k8s-operators/lib-common/modules/openstack v0.6.1-0.20250324161140-e9964a1b2266
 	github.com/openstack-k8s-operators/swift-operator/api v0.3.1-0.20240523121736-379011b2cfac
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
 	k8s.io/api v0.29.15
