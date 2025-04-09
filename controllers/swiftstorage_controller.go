@@ -351,9 +351,12 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		return ctrlResult, nil
 	}
 
-	instance.Status.ReadyCount = sset.GetStatefulSet().Status.ReadyReplicas
-	if instance.Status.ReadyCount == *instance.Spec.Replicas &&
-		sset.GetStatefulSet().Generation == sset.GetStatefulSet().Status.ObservedGeneration {
+	deploy := sset.GetStatefulSet()
+	if deploy.Generation == deploy.Status.ObservedGeneration {
+		instance.Status.ReadyCount = deploy.Status.ReadyReplicas
+	}
+
+	if statefulset.IsReady(deploy) {
 		networkReady, networkAttachmentStatus, err := networkattachment.VerifyNetworkStatusFromAnnotation(ctx, helper, instance.Spec.NetworkAttachments, serviceLabels, instance.Status.ReadyCount)
 		if err != nil {
 			return ctrl.Result{}, err
