@@ -24,6 +24,7 @@ import (
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
 )
 
+// ConfigMapTemplates creates ConfigMap templates for swift storage configuration
 func ConfigMapTemplates(instance *swiftv1beta1.SwiftStorage,
 	labels map[string]string,
 	mc *memcachedv1.Memcached,

@@ -28,6 +28,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// GetRingJob creates a Kubernetes Job for swift ring rebalancing operations
 func GetRingJob(instance *swiftv1beta1.SwiftRing, labels map[string]string) *batchv1.Job {
 	securityContext := swift.GetSecurityContext()
 
@@ -39,8 +40,8 @@ func GetRingJob(instance *swiftv1beta1.SwiftRing, labels map[string]string) *bat
 	envVars["SWIFT_MIN_PART_HOURS"] = env.SetValue(fmt.Sprint(*instance.Spec.MinPartHours))
 	envVars["OWNER_APIVERSION"] = env.SetValue(instance.APIVersion)
 	envVars["OWNER_KIND"] = env.SetValue(instance.Kind)
-	envVars["OWNER_UID"] = env.SetValue(string(instance.ObjectMeta.UID))
-	envVars["OWNER_NAME"] = env.SetValue(instance.ObjectMeta.Name)
+	envVars["OWNER_UID"] = env.SetValue(string(instance.UID))
+	envVars["OWNER_NAME"] = env.SetValue(instance.Name)
 
 	volumes := getRingVolumes(instance)
 	volumeMounts := getRingVolumeMounts()

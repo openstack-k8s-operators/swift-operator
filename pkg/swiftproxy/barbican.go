@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package swiftproxy provides functionality for managing Swift proxy services
 package swiftproxy
 
 import (
@@ -30,6 +31,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/keymanager/v1/secrets"
 )
 
+// GetBarbicanSecret retrieves or creates a Barbican secret for Swift encryption
 func GetBarbicanSecret(instance *swiftv1.SwiftProxy, h *helper.Helper, keystonePublicURL string, password string) (string, error) {
 	secretRef := ""
 
