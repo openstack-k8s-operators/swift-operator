@@ -19,6 +19,7 @@ const (
 	// ComponentName -
 	ComponentName = "swift-proxy"
 
+	// BarbicanSecretName is the name of the Barbican secret for Swift encryption
 	// Same as in OOO to be backward compatible
-	BarbicanSecretName = "swift_root_secret_uuid"
+	BarbicanSecretName = "swift_root_secret_uuid" //nolint:gosec // G101: Not actual credentials, just secret name
 )

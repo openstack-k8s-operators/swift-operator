@@ -18,10 +18,12 @@ package swiftring
 
 import (
 	"fmt"
+
 	"github.com/openstack-k8s-operators/lib-common/modules/common/util"
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
 )
 
+// ConfigMapTemplates creates ConfigMap templates for swift ring configuration
 func ConfigMapTemplates(instance *swiftv1beta1.SwiftRing, labels map[string]string, devices string) []util.Template {
 	data := make(map[string]string)
 	data["devices.txt"] = devices

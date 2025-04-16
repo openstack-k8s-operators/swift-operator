@@ -27,6 +27,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// GetSecurityContext returns the security context for swift containers
 func GetSecurityContext() corev1.SecurityContext {
 	trueVal := true
 	falseVal := false
@@ -44,6 +45,7 @@ func GetSecurityContext() corev1.SecurityContext {
 	}
 }
 
+// Labels returns the common labels for swift resources
 func Labels() map[string]string {
 	return map[string]string{
 		common.AppSelector:       ServiceName,
@@ -51,12 +53,13 @@ func Labels() map[string]string {
 	}
 }
 
+// RandomString generates a random string of specified length
 func RandomString(length int) string {
 	sample := "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	str := make([]byte, length)
 
 	for i := 0; i < length; i++ {
-		str[i] = sample[rand.Intn(len(sample))]
+		str[i] = sample[rand.Intn(len(sample))] //nolint:gosec // G404: Non-cryptographic use acceptable for Swift hash generation
 	}
 	return string(str)
 }

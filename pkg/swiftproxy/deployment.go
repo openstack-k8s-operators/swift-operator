@@ -35,6 +35,7 @@ import (
 	swift "github.com/openstack-k8s-operators/swift-operator/pkg/swift"
 )
 
+// Deployment creates a Kubernetes Deployment for Swift proxy service
 func Deployment(
 	instance *swiftv1beta1.SwiftProxy,
 	labels map[string]string,

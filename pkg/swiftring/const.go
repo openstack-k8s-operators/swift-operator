@@ -13,11 +13,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package swiftring provides functionality for managing Swift ring operations
 package swiftring
 
 const (
 	// ComponentName -
-	ComponentName   = "swift-ring"
-	DataplaneDisks  = "edpm_swift_disks"
+	ComponentName = "swift-ring"
+	// DataplaneDisks is the name of the dataplane variable containing swift disk configuration
+	DataplaneDisks = "edpm_swift_disks"
+	// DataplaneDomain is the default domain for dataplane storage
 	DataplaneDomain = "storage.example.com"
 )
