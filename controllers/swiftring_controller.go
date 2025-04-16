@@ -225,7 +225,7 @@ func (r *SwiftRingReconciler) reconcileNormal(ctx context.Context, instance *swi
 			condition.ReadyCondition,
 			condition.ErrorReason,
 			condition.SeverityWarning,
-			err.Error()))
+			"%s", err.Error()))
 		return ctrl.Result{}, err
 	}
 
