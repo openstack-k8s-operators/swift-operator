@@ -14,7 +14,7 @@ Default deployments should use at least 3 SwiftStorage replicas and 2
 SwiftProxy replicas. Both values can be increased as needed to distribute
 storage across more nodes and disks. The number of `ringReplicas` defines the
 number of actual object copies in the cluster. As an example, you could set
-`ringReplicas: 3' and 'swiftStorage/replicas: 5'; in this case every object
+`ringReplicas: 3` and `swiftStorage/replicas: 5`; in this case every object
 will be stored on 3 different PVs, and the total number of PVs is 5.
 
 ```yaml
