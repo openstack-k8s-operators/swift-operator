@@ -44,6 +44,11 @@ type SwiftRingSpec struct {
 
 // SwiftRingSpec defines the desired state of SwiftRing
 type SwiftRingSpecCore struct {
+    // +kubebuilder:validation:Optional
+    // Enabled - Whether SwiftRing service should be deployed and managed
+    // +kubebuilder:default=true
+    // +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:booleanSwitch"}
+    Enabled bool `json:"enabled"`
 
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default=1

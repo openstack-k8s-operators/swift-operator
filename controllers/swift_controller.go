@@ -84,7 +84,7 @@ func (r *SwiftReconciler) Reconcile(ctx context.Context, req ctrl.Request) (resu
 			return ctrl.Result{}, nil
 		}
 		// Error reading the object - requeue the request.
-		r.Log.Error(err, "Failed to get SwiftRing")
+		r.Log.Error(err, "Failed to get Swift")
 		return ctrl.Result{}, err
 	}
 
@@ -309,44 +309,49 @@ func (r *SwiftReconciler) reconcileNormal(ctx context.Context, instance *swiftv1
 		r.Log.Info(fmt.Sprintf("Deployment %s successfully reconciled - operation: %s", instance.Name, string(op)))
 	}
 
-	// create or update Swift rings
-	swiftRing, op, err := r.ringCreateOrUpdate(ctx, instance)
-	if err != nil {
-		instance.Status.Conditions.Set(condition.FalseCondition(
-			swiftv1.SwiftRingReadyCondition,
-			condition.ErrorReason,
-			condition.SeverityWarning,
-			swiftv1.SwiftRingReadyErrorMessage,
-			err.Error()))
-		return ctrl.Result{}, err
-	}
-
-	// make sure the controller is watching the last generation of the subCR
-	ring, err := r.checkSwiftRingGeneration(instance)
-	if err != nil {
-		instance.Status.Conditions.Set(condition.FalseCondition(
-			swiftv1.SwiftRingReadyCondition,
-			condition.ErrorReason,
-			condition.SeverityWarning,
-			swiftv1.SwiftRingReadyErrorMessage,
-			err.Error()))
-		return ctrl.Result{}, err
-	}
-	if !ring {
-		instance.Status.Conditions.Set(condition.UnknownCondition(
-			swiftv1.SwiftRingReadyCondition,
-			condition.InitReason,
-			swiftv1.SwiftRingReadyInitMessage,
-		))
-	} else {
-		// Mirror SwiftRing's condition status
-		c := swiftRing.Status.Conditions.Mirror(swiftv1.SwiftRingReadyCondition)
-		if c != nil {
-			instance.Status.Conditions.Set(c)
+	if instance.Spec.SwiftRing.Enabled {
+		// create or update Swift rings
+		swiftRing, op, err := r.ringCreateOrUpdate(ctx, instance)
+		if err != nil {
+			instance.Status.Conditions.Set(condition.FalseCondition(
+				swiftv1.SwiftRingReadyCondition,
+				condition.ErrorReason,
+				condition.SeverityWarning,
+				swiftv1.SwiftRingReadyErrorMessage,
+				err.Error()))
+			return ctrl.Result{}, err
 		}
-	}
-	if op != controllerutil.OperationResultNone && ring {
-		r.Log.Info(fmt.Sprintf("Deployment %s successfully reconciled - operation: %s", instance.Name, string(op)))
+
+		// make sure the controller is watching the last generation of the subCR
+		ring, err := r.checkSwiftRingGeneration(instance)
+		if err != nil {
+			instance.Status.Conditions.Set(condition.FalseCondition(
+				swiftv1.SwiftRingReadyCondition,
+				condition.ErrorReason,
+				condition.SeverityWarning,
+				swiftv1.SwiftRingReadyErrorMessage,
+				err.Error()))
+			return ctrl.Result{}, err
+		}
+		if !ring {
+			instance.Status.Conditions.Set(condition.UnknownCondition(
+				swiftv1.SwiftRingReadyCondition,
+				condition.InitReason,
+				swiftv1.SwiftRingReadyInitMessage,
+			))
+		} else {
+			// Mirror SwiftRing's condition status
+			c := swiftRing.Status.Conditions.Mirror(swiftv1.SwiftRingReadyCondition)
+			if c != nil {
+				instance.Status.Conditions.Set(c)
+			}
+		}
+
+		if op != controllerutil.OperationResultNone && ring {
+			r.Log.Info(fmt.Sprintf("Deployment %s successfully reconciled - operation: %s", instance.Name, string(op)))
+		}
+	} else {
+		instance.Status.Conditions.Remove(swiftv1.SwiftRingReadyCondition)
 	}
 
 	// create or update Swift proxy
