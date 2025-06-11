@@ -346,3 +346,159 @@ spec:
             [DEFAULT]
             workers = 4
 ```
+
+
+### Using externally managed Swift rings
+By default Swift rings are created automatically and will include both PV and
+dataplane devices. These rings will also be updated if the PVs or dataplane
+disks are changing.
+To allow more control about the rings, it is possible to disable the automatic
+ring management. In this case you need to manage and rebelance the rings on
+your own. To disable the automatic ring management, set
+`spec.swift.template.swiftRing.enabled` to false in the OpenStackControlPlane,
+for example:
+
+```
+apiVersion: core.openstack.org/v1beta1
+kind: OpenStackControlPlane
+metadata:
+  name: openstack-galera-network-isolation
+  namespace: openstack
+spec:
+  ...
+  swift:
+    template:
+      swiftRing:
+        enabled: false
+  ...
+```
+
+Please note that you need to create the ring file ConfigMap with the required
+ring files on your own in this case. You need to provide at least the following
+files:
+
+- account.ring.gz
+- container.ring.gz
+- object.ring.gz
+
+These files must be added to the ConfigMap using the same names as keys. This
+can be done easily if only these files are stored in a directory, for example:
+
+```
+oc create ConfigMap swift-ring-files --from-file=swift-ring-files/
+```
+
+Use the following command to update the ConfigMap:
+
+```
+oc create ConfigMap --dry-run=client -o yaml swift-ring-files --from-file=swift-ring-files/ | oc apply -f -
+```
+
+
+#### Resolving hostnames of manually managed ring nodes
+
+Dataplane nodes will be automatically added to a `DNSData` resource to allow
+resolving hostnames, which is required for Swift services to connect to storage
+nodes. If you are using additional nodes that are not part of an
+`OpenStackDataPlaneNodeSet` and use hostnames instead of IP addresses, you need
+to create a custom `DNSData` resource.
+
+For example:
+
+```
+apiVersion: network.openstack.org/v1beta1
+kind: DNSData
+metadata:
+  name: openstack-external-swift-storage
+  namespace: openstack
+spec:
+  dnsDataLabelSelectorValue: dnsdata
+  hosts:
+  - hostnames:
+    - external-swift-0.storage.example.com
+    ip: 172.18.2.100
+  - hostnames:
+    - external-swift-1.storage.example.com
+    ip: 172.18.2.101
+  - hostnames:
+    - external-swift-2.storage.example.com
+    ip: 172.18.2.102
+```
+
+#### Using larger rings
+Rings are stored in ConfigMaps, and ConfigMaps itself are stored in etcd. The
+size of a single ConfigMap is limited to 1MiB, and files must not be
+more than 1MiB in total size therefore. For very large deployments or deployments
+with a large number of Swift storage policies, this might not be sufficient. In
+this case you can spread the rings over multiple ConfigMaps. The names of these
+ConfigMaps need to be provided to the Swift template in this case, for example:
+
+```
+apiVersion: core.openstack.org/v1beta1
+kind: OpenStackControlPlane
+metadata:
+  name: openstack-galera-network-isolation
+  namespace: openstack
+spec:
+  ...
+  swift:
+    template:
+      ringConfigMaps:
+      - swift-ring-files-0
+      - swift-ring-files-1
+  ...
+```
+
+It is recommended to only store the `*.ring.gz` files to reduce required space
+and disable automatic ring management by setting
+`spec.swift.template.swiftRing.enabled` to false in the OpenStackControlPlane
+(as described above).
+
+#### Simplify usage of swift-ring-builder
+`swift-ring-builder` is included in Swift, and using it is required to externally
+manage rings. You can either install the required packages or source, or use an
+alias, podman and container image. This makes it easy to use the exact same
+version of `swift-ring-builder` that is used on the deployment itself.
+
+The following defines a shell alias to swift-ring-builder, executed by podman
+using a container image and mounts the current directory into the container:
+
+```
+alias swift-ring-builder="podman run -it --userns=keep-id:uid=42445 -v .:/etc/swift:Z -w /etc/swift quay.io/podified-antelope-centos9/openstack-swift-proxy-server:current-podified swift-ring-builder"
+```
+
+It is recommended to use a dedicated directory for the swift ring files and
+change to this directory before using the alias. Once done, you can use
+`swift-ring-builder` without installing Swift locally.
+
+### Customizing Swift on dataplane nodes
+Configuration files are included from the ConfigMaps and Secrets defined in the
+service itself. The default service looks like this:
+
+```
+apiVersion: dataplane.openstack.org/v1beta1
+kind: OpenStackDataPlaneService
+metadata:
+  name: swift-customized
+spec:
+  playbook: osp.edpm.swift
+  dataSources:
+    - secretRef:
+        name: swift-conf
+    - configMapRef:
+        name: swift-storage-config-data
+    - configMapRef:
+        name: swift-ring-files
+  edpmServiceType: swift
+```
+
+You can create a customized service and include additional ConfigMaps or
+Secrets as needed to apply modified configurations as needed. This is also
+needed if you deploy with multiple ring file ConfigMaps. In any case a custom
+service name should be used, for example `swift-customized` in this case. The
+same name needs to be used in the list of services `OpenStackDataPlaneNodeSet`.
+
+Customizing the service also allows to apply different configuration to
+different nodesets. For example, if you have two different type of nodes with
+different performance characteristics, you might want to use different
+configuration files with specifically tuned settings per `nodeSet`.
