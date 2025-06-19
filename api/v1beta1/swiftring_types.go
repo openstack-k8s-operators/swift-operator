@@ -71,6 +71,12 @@ type SwiftRingSpecCore struct {
 	// +kubebuilder:validation:Optional
 	// NodeSelector to target subset of worker nodes running this service
 	NodeSelector *map[string]string `json:"nodeSelector,omitempty"`
+
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default={swift-ring-files}
+	// +listType=atomic
+	// List of ring ConfigMaps
+	RingConfigMaps []string `json:"ringConfigMaps"`
 }
 
 // SwiftRingStatus defines the observed state of SwiftRing

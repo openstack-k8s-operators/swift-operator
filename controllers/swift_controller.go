@@ -425,11 +425,12 @@ func (r *SwiftReconciler) ringCreateOrUpdate(ctx context.Context, instance *swif
 	swiftRingSpec := swiftv1.SwiftRingSpec{
 		ContainerImage: instance.Spec.SwiftRing.ContainerImage,
 		SwiftRingSpecCore: swiftv1.SwiftRingSpecCore{
-			RingReplicas: instance.Spec.SwiftRing.RingReplicas,
-			PartPower:    instance.Spec.SwiftRing.PartPower,
-			MinPartHours: instance.Spec.SwiftRing.MinPartHours,
-			TLS:          instance.Spec.SwiftProxy.TLS.Ca,
-			NodeSelector: instance.Spec.SwiftRing.NodeSelector,
+			RingReplicas:   instance.Spec.SwiftRing.RingReplicas,
+			PartPower:      instance.Spec.SwiftRing.PartPower,
+			MinPartHours:   instance.Spec.SwiftRing.MinPartHours,
+			TLS:            instance.Spec.SwiftProxy.TLS.Ca,
+			NodeSelector:   instance.Spec.SwiftRing.NodeSelector,
+			RingConfigMaps: instance.Spec.RingConfigMaps,
 		},
 	}
 
@@ -474,6 +475,7 @@ func (r *SwiftReconciler) storageCreateOrUpdate(ctx context.Context, instance *s
 			DefaultConfigOverwrite:  instance.Spec.SwiftStorage.DefaultConfigOverwrite,
 			NodeSelector:            instance.Spec.SwiftStorage.NodeSelector,
 			TopologyRef:             instance.Spec.SwiftProxy.TopologyRef,
+			RingConfigMaps:          instance.Spec.RingConfigMaps,
 		},
 	}
 
@@ -526,6 +528,7 @@ func (r *SwiftReconciler) proxyCreateOrUpdate(ctx context.Context, instance *swi
 			CeilometerEnabled:      instance.Spec.SwiftProxy.CeilometerEnabled,
 			NodeSelector:           instance.Spec.SwiftProxy.NodeSelector,
 			TopologyRef:            instance.Spec.SwiftProxy.TopologyRef,
+			RingConfigMaps:         instance.Spec.RingConfigMaps,
 		},
 	}
 

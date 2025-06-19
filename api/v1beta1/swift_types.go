@@ -91,6 +91,12 @@ type SwiftSpecBase struct {
 	// TopologyRef to apply the Topology defined by the associated CR referenced
 	// by name
 	TopologyRef *topologyv1.TopoRef `json:"topologyRef,omitempty"`
+
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default={swift-ring-files}
+	// +listType=atomic
+	// List of ring ConfigMaps
+	RingConfigMaps []string `json:"ringConfigMaps"`
 }
 
 // SwiftStatus defines the observed state of Swift
