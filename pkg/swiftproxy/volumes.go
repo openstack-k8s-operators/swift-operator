@@ -23,6 +23,51 @@ import (
 )
 
 func getProxyVolumes(instance *swiftv1beta1.SwiftProxy) []corev1.Volume {
+	sources := []corev1.VolumeProjection{
+		{
+			Secret: &corev1.SecretProjection{
+				LocalObjectReference: corev1.LocalObjectReference{
+					Name: instance.Name + "-config-data",
+				},
+				Items: []corev1.KeyToPath{
+					{
+						Key:  "00-proxy-server.conf",
+						Path: "proxy-server.conf.d/00-proxy-server.conf",
+					},
+					{
+						Key:  "01-proxy-server.conf",
+						Path: "proxy-server.conf.d/01-proxy-server.conf",
+					},
+					{
+						Key:  "dispersion.conf",
+						Path: "dispersion.conf",
+					},
+					{
+						Key:  "keymaster.conf",
+						Path: "keymaster.conf",
+					},
+				},
+			},
+		},
+		{
+			Secret: &corev1.SecretProjection{
+				LocalObjectReference: corev1.LocalObjectReference{
+					Name: swift.SwiftConfSecretName,
+				},
+			},
+		},
+	}
+
+	for _, cm := range instance.Spec.RingConfigMaps {
+		sources = append(sources, corev1.VolumeProjection{
+			ConfigMap: &corev1.ConfigMapProjection{
+				LocalObjectReference: corev1.LocalObjectReference{
+					Name: cm,
+				},
+			},
+		})
+	}
+
 	return []corev1.Volume{
 		{
 			Name: "config-data",
@@ -36,46 +81,7 @@ func getProxyVolumes(instance *swiftv1beta1.SwiftProxy) []corev1.Volume {
 			Name: "etc-swift",
 			VolumeSource: corev1.VolumeSource{
 				Projected: &corev1.ProjectedVolumeSource{
-					Sources: []corev1.VolumeProjection{
-						{
-							ConfigMap: &corev1.ConfigMapProjection{
-								LocalObjectReference: corev1.LocalObjectReference{
-									Name: swift.RingConfigMapName,
-								},
-							}},
-						{
-							Secret: &corev1.SecretProjection{
-								LocalObjectReference: corev1.LocalObjectReference{
-									Name: instance.Name + "-config-data",
-								},
-								Items: []corev1.KeyToPath{
-									{
-										Key:  "00-proxy-server.conf",
-										Path: "proxy-server.conf.d/00-proxy-server.conf",
-									},
-									{
-										Key:  "01-proxy-server.conf",
-										Path: "proxy-server.conf.d/01-proxy-server.conf",
-									},
-									{
-										Key:  "dispersion.conf",
-										Path: "dispersion.conf",
-									},
-									{
-										Key:  "keymaster.conf",
-										Path: "keymaster.conf",
-									},
-								},
-							},
-						},
-						{
-							Secret: &corev1.SecretProjection{
-								LocalObjectReference: corev1.LocalObjectReference{
-									Name: swift.SwiftConfSecretName,
-								},
-							},
-						},
-					},
+					Sources: sources,
 				},
 			},
 		},

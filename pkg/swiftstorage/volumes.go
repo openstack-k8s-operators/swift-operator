@@ -24,6 +24,75 @@ import (
 )
 
 func getStorageVolumes(instance *swiftv1beta1.SwiftStorage) []corev1.Volume {
+	sources := []corev1.VolumeProjection{
+		{
+			ConfigMap: &corev1.ConfigMapProjection{
+				LocalObjectReference: corev1.LocalObjectReference{
+					Name: instance.Name + "-config-data",
+				},
+				Items: []corev1.KeyToPath{
+					{
+						Key:  "00-account-server.conf",
+						Path: "account-server.conf.d/00-account-server.conf",
+					},
+					{
+						Key:  "01-account-server.conf",
+						Path: "account-server.conf.d/01-account-server.conf",
+					},
+					{
+						Key:  "00-container-server.conf",
+						Path: "container-server.conf.d/00-container-server.conf",
+					},
+					{
+						Key:  "01-container-server.conf",
+						Path: "container-server.conf.d/01-container-server.conf",
+					},
+					{
+						Key:  "00-object-server.conf",
+						Path: "object-server.conf.d/00-object-server.conf",
+					},
+					{
+						Key:  "01-object-server.conf",
+						Path: "object-server.conf.d/01-object-server.conf",
+					},
+					{
+						Key:  "00-object-expirer.conf",
+						Path: "object-expirer.conf.d/00-object-expirer.conf",
+					},
+					{
+						Key:  "01-object-expirer.conf",
+						Path: "object-expirer.conf.d/01-object-expirer.conf",
+					},
+					{
+						Key:  "internal-client.conf",
+						Path: "internal-client.conf",
+					},
+					{
+						Key:  "rsyncd.conf",
+						Path: "rsyncd.conf",
+					},
+				},
+			},
+		},
+		{
+			Secret: &corev1.SecretProjection{
+				LocalObjectReference: corev1.LocalObjectReference{
+					Name: swift.SwiftConfSecretName,
+				},
+			},
+		},
+	}
+
+	for _, cm := range instance.Spec.RingConfigMaps {
+		sources = append(sources, corev1.VolumeProjection{
+			ConfigMap: &corev1.ConfigMapProjection{
+				LocalObjectReference: corev1.LocalObjectReference{
+					Name: cm,
+				},
+			},
+		})
+	}
+
 	return []corev1.Volume{
 		{
 			Name: swift.ClaimName,
@@ -38,70 +107,7 @@ func getStorageVolumes(instance *swiftv1beta1.SwiftStorage) []corev1.Volume {
 			Name: "etc-swift",
 			VolumeSource: corev1.VolumeSource{
 				Projected: &corev1.ProjectedVolumeSource{
-					Sources: []corev1.VolumeProjection{
-						{
-							ConfigMap: &corev1.ConfigMapProjection{
-								LocalObjectReference: corev1.LocalObjectReference{
-									Name: swift.RingConfigMapName,
-								},
-							}},
-						{
-							ConfigMap: &corev1.ConfigMapProjection{
-								LocalObjectReference: corev1.LocalObjectReference{
-									Name: instance.Name + "-config-data",
-								},
-								Items: []corev1.KeyToPath{
-									{
-										Key:  "00-account-server.conf",
-										Path: "account-server.conf.d/00-account-server.conf",
-									},
-									{
-										Key:  "01-account-server.conf",
-										Path: "account-server.conf.d/01-account-server.conf",
-									},
-									{
-										Key:  "00-container-server.conf",
-										Path: "container-server.conf.d/00-container-server.conf",
-									},
-									{
-										Key:  "01-container-server.conf",
-										Path: "container-server.conf.d/01-container-server.conf",
-									},
-									{
-										Key:  "00-object-server.conf",
-										Path: "object-server.conf.d/00-object-server.conf",
-									},
-									{
-										Key:  "01-object-server.conf",
-										Path: "object-server.conf.d/01-object-server.conf",
-									},
-									{
-										Key:  "00-object-expirer.conf",
-										Path: "object-expirer.conf.d/00-object-expirer.conf",
-									},
-									{
-										Key:  "01-object-expirer.conf",
-										Path: "object-expirer.conf.d/01-object-expirer.conf",
-									},
-									{
-										Key:  "internal-client.conf",
-										Path: "internal-client.conf",
-									},
-									{
-										Key:  "rsyncd.conf",
-										Path: "rsyncd.conf",
-									},
-								},
-							},
-						},
-						{
-							Secret: &corev1.SecretProjection{
-								LocalObjectReference: corev1.LocalObjectReference{
-									Name: swift.SwiftConfSecretName,
-								},
-							},
-						},
-					},
+					Sources: sources,
 				},
 			},
 		},

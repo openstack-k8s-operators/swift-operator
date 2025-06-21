@@ -39,7 +39,6 @@ import (
 	"github.com/openstack-k8s-operators/lib-common/modules/common/job"
 
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
-	"github.com/openstack-k8s-operators/swift-operator/pkg/swift"
 	"github.com/openstack-k8s-operators/swift-operator/pkg/swiftring"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -255,7 +254,7 @@ func (r *SwiftRingReconciler) reconcileNormal(ctx context.Context, instance *swi
 func (r *SwiftRingReconciler) reconcileDelete(ctx context.Context, instance *swiftv1beta1.SwiftRing, helper *helper.Helper) (ctrl.Result, error) {
 	r.Log.Info(fmt.Sprintf("Reconciling Service '%s' delete", instance.Name))
 
-	ringConfigMap, _, err := configmap.GetConfigMapAndHashWithName(ctx, helper, swift.RingConfigMapName, instance.Namespace)
+	ringConfigMap, _, err := configmap.GetConfigMapAndHashWithName(ctx, helper, instance.Spec.RingConfigMaps[0], instance.Namespace)
 	if err != nil && !apierrors.IsNotFound(err) {
 		return ctrl.Result{}, err
 	}
@@ -267,7 +266,7 @@ func (r *SwiftRingReconciler) reconcileDelete(ctx context.Context, instance *swi
 			if err != nil && !apierrors.IsNotFound(err) {
 				return ctrl.Result{}, err
 			}
-			r.Log.Info(fmt.Sprintf("Removed finalizer from ConfigMap %s", swift.RingConfigMapName))
+			r.Log.Info(fmt.Sprintf("Removed finalizer from ConfigMap %s", instance.Spec.RingConfigMaps[0]))
 		}
 	}
 
