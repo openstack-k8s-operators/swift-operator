@@ -26,6 +26,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/util/intstr"
 
+	memcachedv1 "github.com/openstack-k8s-operators/infra-operator/apis/memcached/v1beta1"
 	topologyv1 "github.com/openstack-k8s-operators/infra-operator/apis/topology/v1beta1"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/env"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/service"
@@ -40,6 +41,7 @@ func Deployment(
 	annotations map[string]string,
 	configHash string,
 	topology *topologyv1.Topology,
+	memcached *memcachedv1.Memcached,
 ) (*appsv1.Deployment, error) {
 
 	trueVal := true
@@ -80,6 +82,13 @@ func Deployment(
 		volumes = append(volumes, instance.Spec.TLS.CreateVolume())
 		volumeMounts = append(volumeMounts, instance.Spec.TLS.CreateVolumeMounts(nil)...)
 		httpdVolumeMounts = append(httpdVolumeMounts, instance.Spec.TLS.CreateVolumeMounts(nil)...)
+	}
+
+	// MTLS certs
+	if memcached.Status.MTLSCert != "" {
+		volumes = append(volumes, memcached.CreateMTLSVolume())
+		volumeMounts = append(volumeMounts, memcached.CreateMTLSVolumeMounts(ptr.To(memcachedv1.CertPathDst), ptr.To(memcachedv1.KeyPathDst))...)
+		httpdVolumeMounts = append(httpdVolumeMounts, memcached.CreateMTLSVolumeMounts(ptr.To(memcachedv1.CertPathDst), ptr.To(memcachedv1.KeyPathDst))...)
 	}
 
 	for _, endpt := range []service.Endpoint{service.EndpointInternal, service.EndpointPublic} {

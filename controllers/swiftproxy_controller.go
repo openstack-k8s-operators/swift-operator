@@ -659,7 +659,7 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	}
 
 	// Create Deployment
-	ssDef, err := swiftproxy.Deployment(instance, serviceLabels, serviceAnnotations, inputHash, topology)
+	ssDef, err := swiftproxy.Deployment(instance, serviceLabels, serviceAnnotations, inputHash, topology, memcached)
 	if err != nil {
 		instance.Status.Conditions.Set(condition.FalseCondition(
 			swiftv1beta1.SwiftProxyReadyCondition,
