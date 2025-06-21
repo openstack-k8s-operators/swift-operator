@@ -80,10 +80,10 @@ github.com/openshift/api v0.0.0-20240830023148-b7d0481c9094 h1:J1wuGhVxpsHykZBa6
 github.com/openshift/api v0.0.0-20240830023148-b7d0481c9094/go.mod h1:CxgbWAlvu2iQB0UmKTtRu1YfepRg1/vJ64n2DlIEVz4=
 github.com/openstack-k8s-operators/barbican-operator/api v0.6.1-0.20250605093226-67d5f3147fef h1:BbREQxgmNL6gfiEDfdM3j6D+tJwdJIJmxZUUdSDeC0E=
 github.com/openstack-k8s-operators/barbican-operator/api v0.6.1-0.20250605093226-67d5f3147fef/go.mod h1:B1zJ7KM5JUDlBdWYSaU+Bd3P8qIi5sYd1TM/Por+Ro0=
-github.com/openstack-k8s-operators/infra-operator/apis v0.6.1-0.20250613123151-9852006cb911 h1:HLkzMRmigqmXA20zE+9mfxlfUA/qSBRsiagE/COqwdA=
-github.com/openstack-k8s-operators/infra-operator/apis v0.6.1-0.20250613123151-9852006cb911/go.mod h1:so/v+BENfwaidvyMDf75XF7UQFgqUQ90jTpkrQyR/WE=
-github.com/openstack-k8s-operators/keystone-operator/api v0.6.1-0.20250605095955-a8616555fe6d h1:pUbVG9eaD11Jz/NABcA5A01/yt7Wb5ntrxEF3KfQlLc=
-github.com/openstack-k8s-operators/keystone-operator/api v0.6.1-0.20250605095955-a8616555fe6d/go.mod h1:ioDBu+83etEVCSMnwy5hPXMxpc6vPWy0MEgIltN/kt0=
+github.com/openstack-k8s-operators/infra-operator/apis v0.6.1-0.20250618132842-b6570a4d893d h1:/FR2x3aJHHehy5UwcXFKkyiboWia650MqPug5kqqrtY=
+github.com/openstack-k8s-operators/infra-operator/apis v0.6.1-0.20250618132842-b6570a4d893d/go.mod h1:so/v+BENfwaidvyMDf75XF7UQFgqUQ90jTpkrQyR/WE=
+github.com/openstack-k8s-operators/keystone-operator/api v0.6.1-0.20250620072008-0d8d8c482919 h1:hv7wtvDustqgpwr4yNADTa5b5g0IBczyeWk7y/O14Jg=
+github.com/openstack-k8s-operators/keystone-operator/api v0.6.1-0.20250620072008-0d8d8c482919/go.mod h1:ioDBu+83etEVCSMnwy5hPXMxpc6vPWy0MEgIltN/kt0=
 github.com/openstack-k8s-operators/lib-common/modules/ansible v0.6.1-0.20250605082218-a58074898dd7 h1:+xRLtYesgir4FQZd4J6Lg61+ZiPSfc1XGkpVqfoJ8AM=
 github.com/openstack-k8s-operators/lib-common/modules/ansible v0.6.1-0.20250605082218-a58074898dd7/go.mod h1:0bajRHochTUT6Ecfriw27l3vL0yezVrnUmt3bcIpu4w=
 github.com/openstack-k8s-operators/lib-common/modules/common v0.6.1-0.20250605082218-a58074898dd7 h1:bx5LfMQHLnYE3QvY8aRXHVfgTwDROnTqH96UL84a9Mw=
