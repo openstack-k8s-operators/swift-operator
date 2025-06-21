@@ -368,6 +368,11 @@ spec:
                   containerImage:
                     description: Image URL for Swift proxy service
                     type: string
+                  enabled:
+                    default: true
+                    description: Enabled - Whether SwiftRing service should be deployed
+                      and managed
+                    type: boolean
                   minPartHours:
                     default: 1
                     description: Minimum number of hours to restrict moving a partition
