@@ -200,8 +200,6 @@ spec:
         projected:
           defaultMode: 420
           sources:
-          - configMap:
-              name: swift-ring-files
           - secret:
               items:
               - key: 00-proxy-server.conf
@@ -215,6 +213,8 @@ spec:
               name: swift-proxy-config-data
           - secret:
               name: swift-conf
+          - configMap:
+              name: swift-ring-files
       - emptyDir: {}
         name: run-httpd
       - emptyDir: {}
