@@ -31,6 +31,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	memcachedv1 "github.com/openstack-k8s-operators/infra-operator/apis/memcached/v1beta1"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/condition"
@@ -47,8 +48,12 @@ import (
 type SwiftReconciler struct {
 	client.Client
 	Scheme  *runtime.Scheme
-	Log     logr.Logger
 	Kclient kubernetes.Interface
+}
+
+// GetLogger returns a logger object with a prefix of "controller.name" and additional controller context fields
+func (r *SwiftReconciler) GetLogger(ctx context.Context) logr.Logger {
+	return log.FromContext(ctx).WithName("Controllers").WithName("Swift")
 }
 
 //+kubebuilder:rbac:groups=swift.openstack.org,resources=swifts,verbs=get;list;watch;create;update;patch;delete
@@ -72,7 +77,7 @@ type SwiftReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.13.0/pkg/reconcile
 func (r *SwiftReconciler) Reconcile(ctx context.Context, req ctrl.Request) (result ctrl.Result, _err error) {
-	_ = r.Log.WithValues("swift", req.NamespacedName)
+	Log := r.GetLogger(ctx)
 
 	instance := &swiftv1.Swift{}
 	err := r.Get(ctx, req.NamespacedName, instance)
@@ -80,11 +85,11 @@ func (r *SwiftReconciler) Reconcile(ctx context.Context, req ctrl.Request) (resu
 		if apierrors.IsNotFound(err) {
 			// If the custom resource is not found then, it usually means that it was deleted or not created
 			// In this way, we will stop the reconciliation
-			r.Log.Info("Swift resource not found. Ignoring since object must be deleted")
+			Log.Info("Swift resource not found. Ignoring since object must be deleted")
 			return ctrl.Result{}, nil
 		}
 		// Error reading the object - requeue the request.
-		r.Log.Error(err, "Failed to get Swift")
+		Log.Error(err, "Failed to get Swift")
 		return ctrl.Result{}, err
 	}
 
@@ -93,7 +98,7 @@ func (r *SwiftReconciler) Reconcile(ctx context.Context, req ctrl.Request) (resu
 		r.Client,
 		r.Kclient,
 		r.Scheme,
-		r.Log,
+		Log,
 	)
 	if err != nil {
 		return ctrl.Result{}, err
@@ -115,7 +120,7 @@ func (r *SwiftReconciler) Reconcile(ctx context.Context, req ctrl.Request) (resu
 	defer func() {
 		// Don't update the status, if Reconciler Panics
 		if rc := recover(); rc != nil {
-			r.Log.Info(fmt.Sprintf("Panic during reconcile %v\n", rc))
+			Log.Info(fmt.Sprintf("Panic during reconcile %v\n", rc))
 			panic(rc)
 		}
 		condition.RestoreLastTransitionTimes(
@@ -162,7 +167,7 @@ func (r *SwiftReconciler) Reconcile(ctx context.Context, req ctrl.Request) (resu
 
 	// Handle service delete
 	if !instance.DeletionTimestamp.IsZero() {
-		return r.reconcileDelete(instance, helper)
+		return r.reconcileDelete(ctx, instance, helper)
 	}
 
 	// Handle non-deleted clusters
@@ -170,7 +175,8 @@ func (r *SwiftReconciler) Reconcile(ctx context.Context, req ctrl.Request) (resu
 }
 
 func (r *SwiftReconciler) reconcileNormal(ctx context.Context, instance *swiftv1.Swift, helper *helper.Helper) (ctrl.Result, error) {
-	r.Log.Info(fmt.Sprintf("Reconciling Service '%s'", instance.Name))
+	Log := r.GetLogger(ctx)
+	Log.Info(fmt.Sprintf("Reconciling Service '%s'", instance.Name))
 
 	// Service account, role, binding
 	rbacRules := []rbacv1.PolicyRule{
@@ -243,7 +249,7 @@ func (r *SwiftReconciler) reconcileNormal(ctx context.Context, instance *swiftv1
 				condition.RequestedReason,
 				condition.SeverityInfo,
 				condition.MemcachedReadyWaitingMessage))
-			r.Log.Info(fmt.Sprintf("%s... requeueing", condition.MemcachedReadyWaitingMessage))
+			Log.Info(fmt.Sprintf("%s... requeueing", condition.MemcachedReadyWaitingMessage))
 			return ctrl.Result{RequeueAfter: time.Duration(10) * time.Second}, nil
 
 		}
@@ -262,7 +268,7 @@ func (r *SwiftReconciler) reconcileNormal(ctx context.Context, instance *swiftv1
 			condition.RequestedReason,
 			condition.SeverityInfo,
 			condition.MemcachedReadyWaitingMessage))
-		r.Log.Info(fmt.Sprintf("%s... requeueing", condition.MemcachedReadyWaitingMessage))
+		Log.Info(fmt.Sprintf("%s... requeueing", condition.MemcachedReadyWaitingMessage))
 		return ctrl.Result{RequeueAfter: time.Duration(10) * time.Second}, nil
 	}
 	// Mark the Memcached Service as Ready if we get to this point with no errors
@@ -282,7 +288,7 @@ func (r *SwiftReconciler) reconcileNormal(ctx context.Context, instance *swiftv1
 		return ctrl.Result{}, err
 	}
 	// make sure the controller is watching the last generation of the subCR
-	stg, err := r.checkSwiftStorageGeneration(instance)
+	stg, err := r.checkSwiftStorageGeneration(ctx, instance)
 	if err != nil {
 		instance.Status.Conditions.Set(condition.FalseCondition(
 			swiftv1.SwiftStorageReadyCondition,
@@ -306,7 +312,7 @@ func (r *SwiftReconciler) reconcileNormal(ctx context.Context, instance *swiftv1
 		}
 	}
 	if op != controllerutil.OperationResultNone && stg {
-		r.Log.Info(fmt.Sprintf("Deployment %s successfully reconciled - operation: %s", instance.Name, string(op)))
+		Log.Info(fmt.Sprintf("Deployment %s successfully reconciled - operation: %s", instance.Name, string(op)))
 	}
 
 	if instance.Spec.SwiftRing.Enabled {
@@ -323,7 +329,7 @@ func (r *SwiftReconciler) reconcileNormal(ctx context.Context, instance *swiftv1
 		}
 
 		// make sure the controller is watching the last generation of the subCR
-		ring, err := r.checkSwiftRingGeneration(instance)
+		ring, err := r.checkSwiftRingGeneration(ctx, instance)
 		if err != nil {
 			instance.Status.Conditions.Set(condition.FalseCondition(
 				swiftv1.SwiftRingReadyCondition,
@@ -348,7 +354,7 @@ func (r *SwiftReconciler) reconcileNormal(ctx context.Context, instance *swiftv1
 		}
 
 		if op != controllerutil.OperationResultNone && ring {
-			r.Log.Info(fmt.Sprintf("Deployment %s successfully reconciled - operation: %s", instance.Name, string(op)))
+			Log.Info(fmt.Sprintf("Deployment %s successfully reconciled - operation: %s", instance.Name, string(op)))
 		}
 	} else {
 		instance.Status.Conditions.Remove(swiftv1.SwiftRingReadyCondition)
@@ -365,7 +371,7 @@ func (r *SwiftReconciler) reconcileNormal(ctx context.Context, instance *swiftv1
 			err.Error()))
 		return ctrl.Result{}, err
 	}
-	sst, err := r.checkSwiftProxyGeneration(instance)
+	sst, err := r.checkSwiftProxyGeneration(ctx, instance)
 	if err != nil {
 		instance.Status.Conditions.Set(condition.FalseCondition(
 			swiftv1.SwiftProxyReadyCondition,
@@ -389,7 +395,7 @@ func (r *SwiftReconciler) reconcileNormal(ctx context.Context, instance *swiftv1
 		}
 	}
 	if op != controllerutil.OperationResultNone && sst {
-		r.Log.Info(fmt.Sprintf("Deployment %s successfully reconciled - operation: %s", instance.Name, string(op)))
+		Log.Info(fmt.Sprintf("Deployment %s successfully reconciled - operation: %s", instance.Name, string(op)))
 	}
 
 	// We reached the end of the Reconcile, update the Ready condition based on
@@ -398,7 +404,7 @@ func (r *SwiftReconciler) reconcileNormal(ctx context.Context, instance *swiftv1
 		instance.Status.Conditions.MarkTrue(
 			condition.ReadyCondition, condition.ReadyMessage)
 	}
-	r.Log.Info(fmt.Sprintf("Reconciled Service '%s' successfully", instance.Name))
+	Log.Info(fmt.Sprintf("Reconciled Service '%s' successfully", instance.Name))
 	return ctrl.Result{}, nil
 }
 
@@ -415,12 +421,13 @@ func (r *SwiftReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func (r *SwiftReconciler) reconcileDelete(instance *swiftv1.Swift, helper *helper.Helper) (ctrl.Result, error) {
-	r.Log.Info(fmt.Sprintf("Reconciling Service '%s' delete", instance.Name))
+func (r *SwiftReconciler) reconcileDelete(ctx context.Context, instance *swiftv1.Swift, helper *helper.Helper) (ctrl.Result, error) {
+	Log := r.GetLogger(ctx)
+	Log.Info(fmt.Sprintf("Reconciling Service '%s' delete", instance.Name))
 
 	// Service is deleted so remove the finalizer.
 	controllerutil.RemoveFinalizer(instance, helper.GetFinalizer())
-	r.Log.Info(fmt.Sprintf("Reconciled Service '%s' delete successfully", instance.Name))
+	Log.Info(fmt.Sprintf("Reconciled Service '%s' delete successfully", instance.Name))
 
 	return ctrl.Result{}, nil
 }
@@ -569,14 +576,16 @@ func (r *SwiftReconciler) proxyCreateOrUpdate(ctx context.Context, instance *swi
 
 // checkSwiftProxyGeneration -
 func (r *SwiftReconciler) checkSwiftProxyGeneration(
+	ctx context.Context,
 	instance *swiftv1.Swift,
 ) (bool, error) {
+	Log := r.GetLogger(ctx)
 	proxy := &swiftv1.SwiftProxyList{}
 	listOpts := []client.ListOption{
 		client.InNamespace(instance.Namespace),
 	}
 	if err := r.Client.List(context.Background(), proxy, listOpts...); err != nil {
-		r.Log.Error(err, "Unable to retrieve SwiftProxy %w")
+		Log.Error(err, "Unable to retrieve SwiftProxy %w")
 		return false, err
 	}
 	for _, item := range proxy.Items {
@@ -589,14 +598,16 @@ func (r *SwiftReconciler) checkSwiftProxyGeneration(
 
 // checkSwiftStorageGeneration -
 func (r *SwiftReconciler) checkSwiftStorageGeneration(
+	ctx context.Context,
 	instance *swiftv1.Swift,
 ) (bool, error) {
+	Log := r.GetLogger(ctx)
 	sst := &swiftv1.SwiftStorageList{}
 	listOpts := []client.ListOption{
 		client.InNamespace(instance.Namespace),
 	}
 	if err := r.Client.List(context.Background(), sst, listOpts...); err != nil {
-		r.Log.Error(err, "Unable to retrieve SwiftStorage %w")
+		Log.Error(err, "Unable to retrieve SwiftStorage %w")
 		return false, err
 	}
 	for _, item := range sst.Items {
@@ -609,14 +620,16 @@ func (r *SwiftReconciler) checkSwiftStorageGeneration(
 
 // checkSwiftRingGeneration -
 func (r *SwiftReconciler) checkSwiftRingGeneration(
+	ctx context.Context,
 	instance *swiftv1.Swift,
 ) (bool, error) {
+	Log := r.GetLogger(ctx)
 	rings := &swiftv1.SwiftRingList{}
 	listOpts := []client.ListOption{
 		client.InNamespace(instance.Namespace),
 	}
 	if err := r.Client.List(context.Background(), rings, listOpts...); err != nil {
-		r.Log.Error(err, "Unable to retrieve SwiftRing %w")
+		Log.Error(err, "Unable to retrieve SwiftRing %w")
 		return false, err
 	}
 	for _, item := range rings.Items {

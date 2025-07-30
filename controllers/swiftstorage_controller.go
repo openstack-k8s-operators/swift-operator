@@ -68,8 +68,12 @@ import (
 type SwiftStorageReconciler struct {
 	client.Client
 	Scheme  *runtime.Scheme
-	Log     logr.Logger
 	Kclient kubernetes.Interface
+}
+
+// GetLogger returns a logger object with a prefix of "controller.name" and additional controller context fields
+func (r *SwiftStorageReconciler) GetLogger(ctx context.Context) logr.Logger {
+	return log.FromContext(ctx).WithName("Controllers").WithName("SwiftStorage")
 }
 
 // Partial struct of the NetworkAttachmentDefinition
@@ -104,7 +108,7 @@ type Netconfig struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.12.2/pkg/reconcile
 func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request) (result ctrl.Result, _err error) {
-	_ = r.Log.WithValues("swiftstorage", req.NamespacedName)
+	Log := r.GetLogger(ctx)
 
 	instance := &swiftv1beta1.SwiftStorage{}
 	err := r.Get(ctx, req.NamespacedName, instance)
@@ -112,11 +116,11 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		if apierrors.IsNotFound(err) {
 			// If the custom resource is not found then, it usually means that it was deleted or not created
 			// In this way, we will stop the reconciliation
-			r.Log.Info("SwiftStorage resource not found. Ignoring since object must be deleted")
+			Log.Info("SwiftStorage resource not found. Ignoring since object must be deleted")
 			return ctrl.Result{}, nil
 		}
 		// Error reading the object - requeue the request.
-		r.Log.Error(err, "Failed to get SwiftStorage")
+		Log.Error(err, "Failed to get SwiftStorage")
 		return ctrl.Result{}, err
 	}
 
@@ -125,10 +129,10 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		r.Client,
 		r.Kclient,
 		r.Scheme,
-		r.Log,
+		Log,
 	)
 	if err != nil {
-		r.Log.Error(err, fmt.Sprintf("Could not instantiate helper for instance %s", instance.Name))
+		Log.Error(err, fmt.Sprintf("Could not instantiate helper for instance %s", instance.Name))
 		return ctrl.Result{}, err
 	}
 
@@ -151,7 +155,7 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	defer func() {
 		// Don't update the status, if Reconciler Panics
 		if rc := recover(); rc != nil {
-			r.Log.Info(fmt.Sprintf("Panic during reconcile %v\n", rc))
+			Log.Info(fmt.Sprintf("Panic during reconcile %v\n", rc))
 			panic(rc)
 		}
 		condition.RestoreLastTransitionTimes(
@@ -216,7 +220,7 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	memcached, err := memcachedv1.GetMemcachedByName(ctx, helper, instance.Spec.MemcachedInstance, instance.Namespace)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			r.Log.Info(fmt.Sprintf("memcached %s not found", instance.Spec.MemcachedInstance))
+			Log.Info(fmt.Sprintf("memcached %s not found", instance.Spec.MemcachedInstance))
 			instance.Status.Conditions.Set(condition.FalseCondition(
 				condition.MemcachedReadyCondition,
 				condition.RequestedReason,
@@ -265,7 +269,7 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 					condition.SeverityInfo,
 					condition.NetworkAttachmentsReadyWaitingMessage,
 					netAtt))
-				r.Log.Error(err, "network-attachment-definition not found")
+				Log.Error(err, "network-attachment-definition not found")
 				return ctrl.Result{RequeueAfter: time.Second * 10}, nil
 			}
 			instance.Status.Conditions.Set(condition.FalseCondition(
@@ -448,13 +452,13 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		instance.Status.Conditions.MarkTrue(
 			condition.ReadyCondition, condition.ReadyMessage)
 	}
-	r.Log.Info(fmt.Sprintf("Reconciled SwiftStorage '%s' successfully", instance.Name))
+	Log.Info(fmt.Sprintf("Reconciled SwiftStorage '%s' successfully", instance.Name))
 	return ctrl.Result{}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *SwiftStorageReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	logger := mgr.GetLogger()
+func (r *SwiftStorageReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager) error {
+	Log := r.GetLogger(ctx)
 
 	memcachedFn := func(_ context.Context, o client.Object) []reconcile.Request {
 		result := []reconcile.Request{}
@@ -465,7 +469,7 @@ func (r *SwiftStorageReconciler) SetupWithManager(mgr ctrl.Manager) error {
 			client.InNamespace(o.GetNamespace()),
 		}
 		if err := r.Client.List(context.Background(), crList, listOpts...); err != nil {
-			logger.Error(err, "Unable to retrieve SwiftStorage CRs %w")
+			Log.Error(err, "Unable to retrieve SwiftStorage CRs %w")
 			return nil
 		}
 
@@ -475,7 +479,7 @@ func (r *SwiftStorageReconciler) SetupWithManager(mgr ctrl.Manager) error {
 					Namespace: o.GetNamespace(),
 					Name:      cr.Name,
 				}
-				logger.Info(fmt.Sprintf("Memcached %s is used by SwiftStorage CR %s", o.GetName(), cr.Name))
+				Log.Info(fmt.Sprintf("Memcached %s is used by SwiftStorage CR %s", o.GetName(), cr.Name))
 				result = append(result, reconcile.Request{NamespacedName: name})
 			}
 		}
@@ -513,7 +517,7 @@ func (r *SwiftStorageReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 func (r *SwiftStorageReconciler) findObjectsForSrc(ctx context.Context, src client.Object) []reconcile.Request {
 	requests := []reconcile.Request{}
-	l := log.FromContext(ctx).WithName("Controllers").WithName("SwiftStorage")
+	Log := r.GetLogger(ctx)
 	for _, field := range swiftStorageWatchFields {
 		crList := &swiftv1beta1.SwiftStorageList{}
 		listOps := &client.ListOptions{
@@ -522,11 +526,11 @@ func (r *SwiftStorageReconciler) findObjectsForSrc(ctx context.Context, src clie
 		}
 		err := r.List(ctx, crList, listOps)
 		if err != nil {
-			l.Error(err, fmt.Sprintf("listing %s for field: %s - %s", crList.GroupVersionKind().Kind, field, src.GetNamespace()))
+			Log.Error(err, fmt.Sprintf("listing %s for field: %s - %s", crList.GroupVersionKind().Kind, field, src.GetNamespace()))
 			return requests
 		}
 		for _, item := range crList.Items {
-			l.Info(fmt.Sprintf("input source %s changed, reconcile: %s - %s", src.GetName(), item.GetName(), item.GetNamespace()))
+			Log.Info(fmt.Sprintf("input source %s changed, reconcile: %s - %s", src.GetName(), item.GetName(), item.GetNamespace()))
 			requests = append(requests,
 				reconcile.Request{
 					NamespacedName: types.NamespacedName{

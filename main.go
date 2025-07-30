@@ -17,6 +17,7 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"crypto/tls"
 	"flag"
 	"fmt"
@@ -142,25 +143,22 @@ func main() {
 	if err = (&controllers.SwiftProxyReconciler{
 		Client:  mgr.GetClient(),
 		Scheme:  mgr.GetScheme(),
-		Log:     mgr.GetLogger(),
 		Kclient: kclient,
-	}).SetupWithManager(mgr); err != nil {
+	}).SetupWithManager(context.Background(), mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "SwiftProxy")
 		os.Exit(1)
 	}
 	if err = (&controllers.SwiftStorageReconciler{
 		Client:  mgr.GetClient(),
 		Scheme:  mgr.GetScheme(),
-		Log:     mgr.GetLogger(),
 		Kclient: kclient,
-	}).SetupWithManager(mgr); err != nil {
+	}).SetupWithManager(context.Background(), mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "SwiftStorage")
 		os.Exit(1)
 	}
 	if err = (&controllers.SwiftRingReconciler{
 		Client:  mgr.GetClient(),
 		Scheme:  mgr.GetScheme(),
-		Log:     mgr.GetLogger(),
 		Kclient: kclient,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "SwiftRing")
@@ -169,7 +167,6 @@ func main() {
 	if err = (&controllers.SwiftReconciler{
 		Client:  mgr.GetClient(),
 		Scheme:  mgr.GetScheme(),
-		Log:     mgr.GetLogger(),
 		Kclient: kclient,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Swift")

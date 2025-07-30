@@ -133,7 +133,6 @@ var _ = BeforeSuite(func() {
 		Client:  k8sManager.GetClient(),
 		Scheme:  k8sManager.GetScheme(),
 		Kclient: kclient,
-		Log:     ctrl.Log.WithName("controllers").WithName("Swift"),
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
@@ -141,15 +140,13 @@ var _ = BeforeSuite(func() {
 		Client:  k8sManager.GetClient(),
 		Scheme:  k8sManager.GetScheme(),
 		Kclient: kclient,
-		Log:     ctrl.Log.WithName("controllers").WithName("SwiftProxy"),
-	}).SetupWithManager(k8sManager)
+	}).SetupWithManager(context.Background(), k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
 	err = (&controllers.SwiftRingReconciler{
 		Client:  k8sManager.GetClient(),
 		Scheme:  k8sManager.GetScheme(),
 		Kclient: kclient,
-		Log:     ctrl.Log.WithName("controllers").WithName("SwiftRing"),
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
@@ -157,8 +154,7 @@ var _ = BeforeSuite(func() {
 		Client:  k8sManager.GetClient(),
 		Scheme:  k8sManager.GetScheme(),
 		Kclient: kclient,
-		Log:     ctrl.Log.WithName("controllers").WithName("SwiftStorage"),
-	}).SetupWithManager(k8sManager)
+	}).SetupWithManager(context.Background(), k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
 	// Acquire environmental defaults and initialize operator defaults with them

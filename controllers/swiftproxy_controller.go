@@ -70,8 +70,12 @@ import (
 type SwiftProxyReconciler struct {
 	client.Client
 	Scheme  *runtime.Scheme
-	Log     logr.Logger
 	Kclient kubernetes.Interface
+}
+
+// GetLogger returns a logger object with a prefix of "controller.name" and additional controller context fields
+func (r *SwiftProxyReconciler) GetLogger(ctx context.Context) logr.Logger {
+	return log.FromContext(ctx).WithName("Controllers").WithName("SwiftProxy")
 }
 
 //+kubebuilder:rbac:groups=swift.openstack.org,resources=swiftproxies,verbs=get;list;watch;create;update;patch;delete
@@ -99,7 +103,7 @@ type SwiftProxyReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.12.2/pkg/reconcile
 func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (result ctrl.Result, _err error) {
-	_ = r.Log.WithValues("swiftproxy", req.NamespacedName)
+	Log := r.GetLogger(ctx)
 
 	instance := &swiftv1beta1.SwiftProxy{}
 	err := r.Get(ctx, req.NamespacedName, instance)
@@ -107,15 +111,15 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		if apierrors.IsNotFound(err) {
 			// If the custom resource is not found then, it usually means that it was deleted or not created
 			// In this way, we will stop the reconciliation
-			r.Log.Info("SwiftProxy resource not found. Ignoring since object must be deleted")
+			Log.Info("SwiftProxy resource not found. Ignoring since object must be deleted")
 			return ctrl.Result{}, nil
 		}
 		// Error reading the object - requeue the request.
-		r.Log.Error(err, "Failed to get SwiftProxy")
+		Log.Error(err, "Failed to get SwiftProxy")
 		return ctrl.Result{}, err
 	}
 
-	helper, err := helper.NewHelper(instance, r.Client, r.Kclient, r.Scheme, r.Log)
+	helper, err := helper.NewHelper(instance, r.Client, r.Kclient, r.Scheme, Log)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -139,7 +143,7 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	defer func() {
 		// Don't update the status, if Reconciler Panics
 		if rc := recover(); rc != nil {
-			r.Log.Info(fmt.Sprintf("Panic during reconcile %v\n", rc))
+			Log.Info(fmt.Sprintf("Panic during reconcile %v\n", rc))
 			panic(rc)
 		}
 		condition.RestoreLastTransitionTimes(
@@ -275,13 +279,13 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		}
 
 		if op != controllerutil.OperationResultNone {
-			r.Log.Info(fmt.Sprintf("TransportURL %s successfully reconciled - operation: %s", transportURL.Name, string(op)))
+			Log.Info(fmt.Sprintf("TransportURL %s successfully reconciled - operation: %s", transportURL.Name, string(op)))
 		}
 
 		instance.Status.TransportURLSecret = transportURL.Status.SecretName
 
 		if instance.Status.TransportURLSecret == "" {
-			r.Log.Info(fmt.Sprintf("Waiting for TransportURL %s secret to be created", transportURL.Name))
+			Log.Info(fmt.Sprintf("Waiting for TransportURL %s secret to be created", transportURL.Name))
 			return ctrl.Result{RequeueAfter: time.Duration(10) * time.Second}, nil
 		}
 
@@ -462,7 +466,7 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return ctrl.Result{}, err
 	}
 	if !keystoneAPI.IsReady() {
-		r.Log.Info("Keystone API is not yet ready... requeueing")
+		Log.Info("Keystone API is not yet ready... requeueing")
 		return ctrl.Result{RequeueAfter: time.Duration(10) * time.Second}, nil
 	}
 	keystonePublicURL, err := keystoneAPI.GetEndpoint(endpoint.EndpointPublic)
@@ -479,15 +483,15 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	if err != nil {
 		return ctrl.Result{}, err
 	}
-	_, err = os.CreateRole(r.Log, "swiftoperator")
+	_, err = os.CreateRole(Log, "swiftoperator")
 	if err != nil {
 		return ctrl.Result{}, err
 	}
-	_, err = os.CreateRole(r.Log, "SwiftProjectReader")
+	_, err = os.CreateRole(Log, "SwiftProjectReader")
 	if err != nil {
 		return ctrl.Result{}, err
 	}
-	_, err = os.CreateRole(r.Log, "SwiftSystemReader")
+	_, err = os.CreateRole(Log, "SwiftSystemReader")
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -524,7 +528,7 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 					condition.RequestedReason,
 					condition.SeverityInfo,
 					condition.InputReadyWaitingMessage))
-				r.Log.Error(err, "Failed to get secretRef from Barbican")
+				Log.Error(err, "Failed to get secretRef from Barbican")
 				return ctrl.Result{RequeueAfter: time.Duration(10) * time.Second}, nil
 			}
 			instance.Status.Conditions.Set(condition.FalseCondition(
@@ -549,7 +553,7 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	memcached, err := memcachedv1.GetMemcachedByName(ctx, helper, instance.Spec.MemcachedInstance, instance.Namespace)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			r.Log.Info(fmt.Sprintf("memcached %s not found", instance.Spec.MemcachedInstance))
+			Log.Info(fmt.Sprintf("memcached %s not found", instance.Spec.MemcachedInstance))
 			instance.Status.Conditions.Set(condition.FalseCondition(
 				condition.MemcachedReadyCondition,
 				condition.RequestedReason,
@@ -614,7 +618,7 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 					condition.SeverityInfo,
 					condition.NetworkAttachmentsReadyWaitingMessage,
 					netAtt))
-				r.Log.Error(err, "network-attachment-definition not found")
+				Log.Error(err, "network-attachment-definition not found")
 				return ctrl.Result{RequeueAfter: time.Second * 10}, nil
 			}
 			instance.Status.Conditions.Set(condition.FalseCondition(
@@ -734,13 +738,13 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		instance.Status.Conditions.MarkTrue(
 			condition.ReadyCondition, condition.ReadyMessage)
 	}
-	r.Log.Info(fmt.Sprintf("Reconciled SwiftProxy '%s' successfully", instance.Name))
+	Log.Info(fmt.Sprintf("Reconciled SwiftProxy '%s' successfully", instance.Name))
 	return ctrl.Result{}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *SwiftProxyReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	logger := mgr.GetLogger()
+func (r *SwiftProxyReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Manager) error {
+	Log := r.GetLogger(ctx)
 
 	// index passwordSecretField
 	if err := mgr.GetFieldIndexer().IndexField(context.Background(), &swiftv1beta1.SwiftProxy{}, passwordSecretField, func(rawObj client.Object) []string {
@@ -811,7 +815,7 @@ func (r *SwiftProxyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 			client.InNamespace(o.GetNamespace()),
 		}
 		if err := r.Client.List(context.Background(), crList, listOpts...); err != nil {
-			logger.Error(err, "Unable to retrieve SwiftProxy CRs %w")
+			Log.Error(err, "Unable to retrieve SwiftProxy CRs %w")
 			return nil
 		}
 
@@ -821,7 +825,7 @@ func (r *SwiftProxyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 					Namespace: o.GetNamespace(),
 					Name:      cr.Name,
 				}
-				logger.Info(fmt.Sprintf("Memcached %s is used by SwiftProxy CR %s", o.GetName(), cr.Name))
+				Log.Info(fmt.Sprintf("Memcached %s is used by SwiftProxy CR %s", o.GetName(), cr.Name))
 				result = append(result, reconcile.Request{NamespacedName: name})
 			}
 		}
@@ -858,7 +862,7 @@ func (r *SwiftProxyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 func (r *SwiftProxyReconciler) findObjectsForSrc(ctx context.Context, src client.Object) []reconcile.Request {
 	requests := []reconcile.Request{}
 
-	l := log.FromContext(ctx).WithName("Controllers").WithName("SwiftProxy")
+	Log := r.GetLogger(ctx)
 
 	for _, field := range swiftProxyWatchFields {
 		crList := &swiftv1beta1.SwiftProxyList{}
@@ -868,12 +872,12 @@ func (r *SwiftProxyReconciler) findObjectsForSrc(ctx context.Context, src client
 		}
 		err := r.List(ctx, crList, listOps)
 		if err != nil {
-			l.Error(err, fmt.Sprintf("listing %s for field: %s - %s", crList.GroupVersionKind().Kind, field, src.GetNamespace()))
+			Log.Error(err, fmt.Sprintf("listing %s for field: %s - %s", crList.GroupVersionKind().Kind, field, src.GetNamespace()))
 			return requests
 		}
 
 		for _, item := range crList.Items {
-			l.Info(fmt.Sprintf("input source %s changed, reconcile: %s - %s", src.GetName(), item.GetName(), item.GetNamespace()))
+			Log.Info(fmt.Sprintf("input source %s changed, reconcile: %s - %s", src.GetName(), item.GetName(), item.GetNamespace()))
 
 			requests = append(requests,
 				reconcile.Request{
@@ -892,7 +896,7 @@ func (r *SwiftProxyReconciler) findObjectsForSrc(ctx context.Context, src client
 func (r *SwiftProxyReconciler) findObjectForSrc(ctx context.Context, src client.Object) []reconcile.Request {
 	requests := []reconcile.Request{}
 
-	l := log.FromContext(ctx).WithName("Controllers").WithName("SwiftProxy")
+	Log := r.GetLogger(ctx)
 
 	crList := &swiftv1beta1.SwiftProxyList{}
 	listOps := &client.ListOptions{
@@ -900,12 +904,12 @@ func (r *SwiftProxyReconciler) findObjectForSrc(ctx context.Context, src client.
 	}
 	err := r.Client.List(ctx, crList, listOps)
 	if err != nil {
-		l.Error(err, fmt.Sprintf("listing %s for namespace: %s", crList.GroupVersionKind().Kind, src.GetNamespace()))
+		Log.Error(err, fmt.Sprintf("listing %s for namespace: %s", crList.GroupVersionKind().Kind, src.GetNamespace()))
 		return requests
 	}
 
 	for _, item := range crList.Items {
-		l.Info(fmt.Sprintf("input source %s changed, reconcile: %s - %s", src.GetName(), item.GetName(), item.GetNamespace()))
+		Log.Info(fmt.Sprintf("input source %s changed, reconcile: %s - %s", src.GetName(), item.GetName(), item.GetNamespace()))
 
 		requests = append(requests,
 			reconcile.Request{
@@ -921,7 +925,8 @@ func (r *SwiftProxyReconciler) findObjectForSrc(ctx context.Context, src client.
 }
 
 func (r *SwiftProxyReconciler) reconcileDelete(ctx context.Context, instance *swiftv1beta1.SwiftProxy, helper *helper.Helper) (ctrl.Result, error) {
-	r.Log.Info(fmt.Sprintf("Reconciling Service '%s' delete", instance.Name))
+	Log := r.GetLogger(ctx)
+	Log.Info(fmt.Sprintf("Reconciling Service '%s' delete", instance.Name))
 
 	// Remove the finalizer from our KeystoneEndpoint CR
 	keystoneEndpoint, err := keystonev1.GetKeystoneEndpointWithName(ctx, helper, swift.ServiceName, instance.Namespace)
@@ -967,7 +972,7 @@ func (r *SwiftProxyReconciler) reconcileDelete(ctx context.Context, instance *sw
 	// We did all the cleanup on the objects we created so we can remove the
 	// finalizer from ourselves to allow the deletion
 	controllerutil.RemoveFinalizer(instance, helper.GetFinalizer())
-	r.Log.Info(fmt.Sprintf("Reconciled SwiftProxy '%s' delete successfully", instance.Name))
+	Log.Info(fmt.Sprintf("Reconciled SwiftProxy '%s' delete successfully", instance.Name))
 
 	return ctrl.Result{}, nil
 }
