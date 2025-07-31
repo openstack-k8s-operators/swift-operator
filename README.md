@@ -6,7 +6,7 @@ an easy way to install and manage an OpenStack Swift installation on OpenShift.
 ## Available documentation
 - [Configuration](docs/config.md)
 - [Adoption](https://openstack-k8s-operators.github.io/data-plane-adoption/)
-- [Design Decisisons](docs/design-decisions.md)
+- [Design Decisions](docs/design-decisions.md)
 
 ## Getting Started
 The easiest way is to deploy using the openstack-operator and [install_yamls](https://github.com/openstack-k8s-operators/install_yamls).
