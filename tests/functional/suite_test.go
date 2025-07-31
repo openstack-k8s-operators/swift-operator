@@ -137,7 +137,7 @@ var _ = BeforeSuite(func() {
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
-	err = (&controllers.SwiftReconciler{
+	err = (&controllers.SwiftProxyReconciler{
 		Client:  k8sManager.GetClient(),
 		Scheme:  k8sManager.GetScheme(),
 		Kclient: kclient,
@@ -145,7 +145,7 @@ var _ = BeforeSuite(func() {
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
-	err = (&controllers.SwiftReconciler{
+	err = (&controllers.SwiftRingReconciler{
 		Client:  k8sManager.GetClient(),
 		Scheme:  k8sManager.GetScheme(),
 		Kclient: kclient,
@@ -153,7 +153,7 @@ var _ = BeforeSuite(func() {
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
-	err = (&controllers.SwiftReconciler{
+	err = (&controllers.SwiftStorageReconciler{
 		Client:  k8sManager.GetClient(),
 		Scheme:  k8sManager.GetScheme(),
 		Kclient: kclient,
