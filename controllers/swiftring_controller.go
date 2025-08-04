@@ -29,6 +29,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -50,8 +51,12 @@ import (
 type SwiftRingReconciler struct {
 	client.Client
 	Scheme  *runtime.Scheme
-	Log     logr.Logger
 	Kclient kubernetes.Interface
+}
+
+// GetLogger returns a logger object with a prefix of "controller.name" and additional controller context fields
+func (r *SwiftRingReconciler) GetLogger(ctx context.Context) logr.Logger {
+	return log.FromContext(ctx).WithName("Controllers").WithName("SwiftRing")
 }
 
 //+kubebuilder:rbac:groups=swift.openstack.org,resources=swiftrings,verbs=get;list;watch;create;update;patch;delete
@@ -71,7 +76,7 @@ type SwiftRingReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.12.2/pkg/reconcile
 func (r *SwiftRingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (result ctrl.Result, _err error) {
-	_ = r.Log.WithValues("swiftring", req.NamespacedName)
+	Log := r.GetLogger(ctx)
 
 	instance := &swiftv1beta1.SwiftRing{}
 	err := r.Get(ctx, req.NamespacedName, instance)
@@ -79,11 +84,11 @@ func (r *SwiftRingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		if apierrors.IsNotFound(err) {
 			// If the custom resource is not found then, it usually means that it was deleted or not created
 			// In this way, we will stop the reconciliation
-			r.Log.Info("SwiftRing resource not found. Ignoring since object must be deleted")
+			Log.Info("SwiftRing resource not found. Ignoring since object must be deleted")
 			return ctrl.Result{}, nil
 		}
 		// Error reading the object - requeue the request.
-		r.Log.Error(err, "Failed to get SwiftRing")
+		Log.Error(err, "Failed to get SwiftRing")
 		return ctrl.Result{}, err
 	}
 
@@ -92,7 +97,7 @@ func (r *SwiftRingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		r.Client,
 		r.Kclient,
 		r.Scheme,
-		r.Log,
+		Log,
 	)
 	if err != nil {
 		return ctrl.Result{}, err
@@ -117,7 +122,7 @@ func (r *SwiftRingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	defer func() {
 		// Don't update the status, if Reconciler Panics
 		if rc := recover(); rc != nil {
-			r.Log.Info(fmt.Sprintf("Panic during reconcile %v\n", rc))
+			Log.Info(fmt.Sprintf("Panic during reconcile %v\n", rc))
 			panic(rc)
 		}
 		condition.RestoreLastTransitionTimes(
@@ -160,7 +165,8 @@ func (r *SwiftRingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 }
 
 func (r *SwiftRingReconciler) reconcileNormal(ctx context.Context, instance *swiftv1beta1.SwiftRing, helper *helper.Helper) (ctrl.Result, error) {
-	r.Log.Info(fmt.Sprintf("Reconciling Service '%s'", instance.Name))
+	Log := r.GetLogger(ctx)
+	Log.Info(fmt.Sprintf("Reconciling Service '%s'", instance.Name))
 
 	serviceLabels := swiftring.Labels()
 
@@ -178,7 +184,7 @@ func (r *SwiftRingReconciler) reconcileNormal(ctx context.Context, instance *swi
 			swiftv1beta1.SwiftRingReadyErrorMessage,
 			err.Error()))
 		if apierrors.IsNotFound(err) {
-			r.Log.Info(fmt.Sprintf("%s... requeueing", err.Error()))
+			Log.Info(fmt.Sprintf("%s... requeueing", err.Error()))
 			return ctrl.Result{RequeueAfter: time.Duration(5) * time.Second}, nil
 		}
 		return ctrl.Result{}, err
@@ -247,12 +253,13 @@ func (r *SwiftRingReconciler) reconcileNormal(ctx context.Context, instance *swi
 		instance.Status.Conditions.MarkTrue(
 			condition.ReadyCondition, condition.ReadyMessage)
 	}
-	r.Log.Info(fmt.Sprintf("Reconciled SwiftRing '%s' successfully", instance.Name))
+	Log.Info(fmt.Sprintf("Reconciled SwiftRing '%s' successfully", instance.Name))
 	return ctrl.Result{}, nil
 }
 
 func (r *SwiftRingReconciler) reconcileDelete(ctx context.Context, instance *swiftv1beta1.SwiftRing, helper *helper.Helper) (ctrl.Result, error) {
-	r.Log.Info(fmt.Sprintf("Reconciling Service '%s' delete", instance.Name))
+	Log := r.GetLogger(ctx)
+	Log.Info(fmt.Sprintf("Reconciling Service '%s' delete", instance.Name))
 
 	ringConfigMap, _, err := configmap.GetConfigMapAndHashWithName(ctx, helper, instance.Spec.RingConfigMaps[0], instance.Namespace)
 	if err != nil && !apierrors.IsNotFound(err) {
@@ -266,13 +273,13 @@ func (r *SwiftRingReconciler) reconcileDelete(ctx context.Context, instance *swi
 			if err != nil && !apierrors.IsNotFound(err) {
 				return ctrl.Result{}, err
 			}
-			r.Log.Info(fmt.Sprintf("Removed finalizer from ConfigMap %s", instance.Spec.RingConfigMaps[0]))
+			Log.Info(fmt.Sprintf("Removed finalizer from ConfigMap %s", instance.Spec.RingConfigMaps[0]))
 		}
 	}
 
 	// Service is deleted so remove the finalizer.
 	controllerutil.RemoveFinalizer(instance, helper.GetFinalizer())
-	r.Log.Info(fmt.Sprintf("Reconciled Service '%s' delete successfully", instance.Name))
+	Log.Info(fmt.Sprintf("Reconciled Service '%s' delete successfully", instance.Name))
 
 	return ctrl.Result{}, nil
 }
