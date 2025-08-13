@@ -19,18 +19,26 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"github.com/openstack-k8s-operators/lib-common/modules/common/condition"
-	"github.com/openstack-k8s-operators/lib-common/modules/common/helper"
-	"github.com/openstack-k8s-operators/lib-common/modules/common/secret"
-	"k8s.io/apimachinery/pkg/types"
+	"strings"
 	"time"
 
 	topologyv1 "github.com/openstack-k8s-operators/infra-operator/apis/topology/v1beta1"
+	keystonev1 "github.com/openstack-k8s-operators/keystone-operator/api/v1beta1"
+	"github.com/openstack-k8s-operators/lib-common/modules/common/condition"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/env"
+	"github.com/openstack-k8s-operators/lib-common/modules/common/helper"
+	"github.com/openstack-k8s-operators/lib-common/modules/common/secret"
+
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 // fields to index to reconcile when change
@@ -139,4 +147,52 @@ func verifyServiceSecret(
 	}
 	(*envVars)[secretName.Name] = env.SetValue(hash)
 	return ctrl.Result{}, nil
+}
+
+// AddACWatches adds KeystoneApplicationCredential + Secret watches to the passed controller builder
+func AddACWatches(b *builder.Builder) *builder.Builder {
+	const (
+		acPrefix    = "ac-"
+		acSecSuffix = "-secret"
+	)
+
+	acMap := handler.MapFunc(func(_ context.Context, obj client.Object) []reconcile.Request {
+		name := obj.GetName()
+		ns := obj.GetNamespace()
+
+		// must begin with "ac-"
+		if !strings.HasPrefix(name, acPrefix) {
+			return nil
+		}
+		trim := strings.TrimPrefix(name, acPrefix)
+		// for Secrets also strip "-secret"
+		if _, isSecret := obj.(*corev1.Secret); isSecret {
+			if !strings.HasSuffix(trim, acSecSuffix) {
+				return nil
+			}
+			trim = strings.TrimSuffix(trim, acSecSuffix)
+		}
+
+		// enqueue reconcile only for swift proxy controller
+		svc := trim
+		return []reconcile.Request{
+			{NamespacedName: types.NamespacedName{Namespace: ns, Name: svc + "-proxy"}},
+		}
+	})
+
+	// watch the AC CR
+	b = b.Watches(
+		&keystonev1.KeystoneApplicationCredential{},
+		handler.EnqueueRequestsFromMapFunc(acMap),
+		builder.WithPredicates(predicate.GenerationChangedPredicate{}),
+	)
+
+	// watch the AC kube Secret
+	b = b.Watches(
+		&corev1.Secret{},
+		handler.EnqueueRequestsFromMapFunc(acMap),
+		builder.WithPredicates(predicate.ResourceVersionChangedPredicate{}),
+	)
+
+	return b
 }

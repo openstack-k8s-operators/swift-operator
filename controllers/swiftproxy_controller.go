@@ -39,6 +39,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	k8s_errors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 
@@ -511,6 +512,19 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return ctrlResult, err
 	}
 
+	// Check for Application Credentials
+	ctrlResult, err = r.verifyApplicationCredentials(
+		ctx,
+		r.GetLogger(ctx),
+		helper.GetClient(),
+		instance.Namespace,
+		"swift",
+		&envVars,
+	)
+	if (err != nil || ctrlResult != ctrl.Result{}) {
+		return ctrlResult, err
+	}
+
 	// Get the service password and pass it to the template
 	sps, _, err := secret.GetSecret(ctx, helper, instance.Spec.Secret, instance.Namespace)
 	if err != nil {
@@ -570,6 +584,20 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return ctrl.Result{}, err
 	}
 
+	// Get Application Credential data if available
+	acID, acSecret, useAC, err := r.getApplicationCredentialData(
+		ctx,
+		helper.GetClient(),
+		instance.Namespace,
+		"swift",
+	)
+	if err != nil {
+		Log.Info("Failed to get application credentials, continuing with password auth", "error", err.Error())
+		useAC = false
+		acID = ""
+		acSecret = ""
+	}
+
 	// Create a Secret populated with content from templates/
 	tpl := swiftproxy.SecretTemplates(
 		instance,
@@ -582,6 +610,9 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		secretRef,
 		os.GetRegion(),
 		transportURLString,
+		useAC,
+		acID,
+		acSecret,
 	)
 	err = secret.EnsureSecrets(ctx, helper, instance, tpl, &envVars)
 	if err != nil {
@@ -835,7 +866,7 @@ func (r *SwiftProxyReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Ma
 		return nil
 	}
 
-	return ctrl.NewControllerManagedBy(mgr).
+	b := ctrl.NewControllerManagedBy(mgr).
 		For(&swiftv1beta1.SwiftProxy{}).
 		Owns(&corev1.Secret{}).
 		Owns(&keystonev1.KeystoneService{}).
@@ -855,8 +886,9 @@ func (r *SwiftProxyReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Ma
 			builder.WithPredicates(predicate.GenerationChangedPredicate{})).
 		Watches(&keystonev1.KeystoneAPI{},
 			handler.EnqueueRequestsFromMapFunc(r.findObjectForSrc),
-			builder.WithPredicates(keystonev1.KeystoneAPIStatusChangedPredicate)).
-		Complete(r)
+			builder.WithPredicates(keystonev1.KeystoneAPIStatusChangedPredicate))
+	b = AddACWatches(b)
+	return b.Complete(r)
 }
 
 func (r *SwiftProxyReconciler) findObjectsForSrc(ctx context.Context, src client.Object) []reconcile.Request {
@@ -1019,4 +1051,136 @@ func (r *SwiftProxyReconciler) transportURLCreateOrUpdate(
 	})
 
 	return transportURL, op, err
+}
+
+// verifyApplicationCredentials handles Application Credentials validation
+// It only uses AC if it's in a complete/ready state, otherwise continues with password auth
+func (r *SwiftProxyReconciler) verifyApplicationCredentials(
+	ctx context.Context,
+	log logr.Logger,
+	client client.Client,
+	namespace string,
+	serviceName string,
+	configVars *map[string]env.Setter,
+) (ctrl.Result, error) {
+	// Check for Application Credential - only use it if it's fully ready
+	acName := fmt.Sprintf("ac-%s", serviceName)
+	ac := &keystonev1.KeystoneApplicationCredential{}
+
+	if err := client.Get(ctx, types.NamespacedName{Namespace: namespace, Name: acName}, ac); err == nil {
+		// AC CR exists - check if it's in ready state
+		if r.isACReady(ctx, log, client, ac) {
+			// AC is ready - add it to configVars for hash tracking
+			secretKey := types.NamespacedName{Namespace: namespace, Name: ac.Status.SecretName}
+			hash, res, err := secret.VerifySecret(
+				ctx,
+				secretKey,
+				[]string{"AC_ID", "AC_SECRET"},
+				client,
+				10*time.Second,
+			)
+			if err != nil {
+				log.Info("ApplicationCredential secret verification failed, continuing with password auth", "error", err.Error())
+			} else if res.RequeueAfter > 0 {
+				return res, nil
+			} else {
+				// AC is ready and verified - add to configVars for change tracking
+				(*configVars)["secret-"+ac.Status.SecretName] = env.SetValue(hash)
+				log.Info("Using ApplicationCredential authentication")
+			}
+		} else {
+			// AC exists but not ready - wait for it
+			log.Info("ApplicationCredential exists but not ready, waiting")
+			return ctrl.Result{RequeueAfter: time.Duration(10) * time.Second}, nil
+		}
+	} else if !k8s_errors.IsNotFound(err) {
+		return ctrl.Result{}, err
+	}
+
+	return ctrl.Result{}, nil
+}
+
+// isACReady checks if ApplicationCredential is in a ready state with all required components
+func (r *SwiftProxyReconciler) isACReady(ctx context.Context, log logr.Logger, client client.Client, ac *keystonev1.KeystoneApplicationCredential) bool {
+	// Check if AC has completed setup (secret name is populated)
+	if ac.Status.SecretName == "" {
+		log.V(1).Info("AC not ready: SecretName not populated", "ac", ac.Name)
+		return false
+	}
+
+	secret := &corev1.Secret{}
+	secretKey := types.NamespacedName{Namespace: ac.Namespace, Name: ac.Status.SecretName}
+	if err := client.Get(ctx, secretKey, secret); err != nil {
+		log.V(1).Info("AC not ready: Secret not found", "secret", secretKey, "error", err)
+		return false
+	}
+
+	acID, acIDExists := secret.Data["AC_ID"]
+	acSecret, acSecretExists := secret.Data["AC_SECRET"]
+
+	if !acIDExists || !acSecretExists {
+		log.V(1).Info("AC not ready: Missing required fields", "secret", secretKey)
+		return false
+	}
+
+	if len(acID) == 0 || len(acSecret) == 0 {
+		log.V(1).Info("AC not ready: Empty required fields", "secret", secretKey)
+		return false
+	}
+
+	log.V(1).Info("AC is ready", "secret", secretKey)
+	return true
+}
+
+// getApplicationCredentialData retrieves AC data from secret if available and ready
+func (r *SwiftProxyReconciler) getApplicationCredentialData(
+	ctx context.Context,
+	client client.Client,
+	namespace string,
+	serviceName string,
+) (acID string, acSecret string, useAC bool, err error) {
+	// Check for Application Credential
+	acName := fmt.Sprintf("ac-%s", serviceName)
+	ac := &keystonev1.KeystoneApplicationCredential{}
+
+	if err := client.Get(ctx, types.NamespacedName{Namespace: namespace, Name: acName}, ac); err != nil {
+		if k8s_errors.IsNotFound(err) {
+			return "", "", false, nil // AC not found, use password auth
+		}
+		return "", "", false, err
+	}
+
+	// AC exists, check if it's ready
+	if ac.Status.SecretName == "" {
+		return "", "", false, nil // AC not ready, use password auth
+	}
+
+	// Look up the AC secret
+	secret := &corev1.Secret{}
+	secName := types.NamespacedName{Namespace: ac.Namespace, Name: ac.Status.SecretName}
+	if err := client.Get(ctx, secName, secret); err != nil {
+		if k8s_errors.IsNotFound(err) {
+			return "", "", false, fmt.Errorf("%w: ApplicationCredential Secret %s", util.ErrNotFound, secName)
+		}
+		return "", "", false, err
+	}
+
+	// Validate required AC secret keys exist and are not empty
+	acIDData, acIDExists := secret.Data["AC_ID"]
+	acSecretData, acSecretExists := secret.Data["AC_SECRET"]
+
+	if !acIDExists {
+		return "", "", false, fmt.Errorf("%w: field AC_ID not found in ApplicationCredential Secret %s", util.ErrFieldNotFound, secName)
+	}
+	if !acSecretExists {
+		return "", "", false, fmt.Errorf("%w: field AC_SECRET not found in ApplicationCredential Secret %s", util.ErrFieldNotFound, secName)
+	}
+	if len(acIDData) == 0 {
+		return "", "", false, fmt.Errorf("%w: field AC_ID is empty in ApplicationCredential Secret %s", util.ErrFieldNotFound, secName)
+	}
+	if len(acSecretData) == 0 {
+		return "", "", false, fmt.Errorf("%w: field AC_SECRET is empty in ApplicationCredential Secret %s", util.ErrFieldNotFound, secName)
+	}
+
+	return string(acIDData), string(acSecretData), true, nil
 }
