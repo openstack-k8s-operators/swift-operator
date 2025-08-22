@@ -7,6 +7,28 @@ rules:
 - apiGroups:
   - ""
   resources:
+  - configmaps
+  - secrets
+  - services
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  verbs:
+  - get
+  - list
+- apiGroups:
+  - ""
+  resources:
+  - persistentvolumeclaims
   - pods
   verbs:
   - get
@@ -39,17 +61,6 @@ rules:
   - apps
   resources:
   - deployments
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - apps
-  resources:
   - statefulsets
   verbs:
   - create
@@ -80,57 +91,6 @@ rules:
   - update
   - watch
 - apiGroups:
-  - ""
-  resources:
-  - configmaps
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - ""
-  resources:
-  - nodes
-  verbs:
-  - get
-  - list
-- apiGroups:
-  - ""
-  resources:
-  - persistentvolumeclaims
-  verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
-  - ""
-  resources:
-  - secrets
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - ""
-  resources:
-  - services
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
   - k8s.cni.cncf.io
   resources:
   - network-attachment-definitions
@@ -150,17 +110,6 @@ rules:
   - keystone.openstack.org
   resources:
   - keystoneendpoints
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - keystone.openstack.org
-  resources:
   - keystoneservices
   verbs:
   - create
@@ -218,16 +167,6 @@ rules:
   - rbac.authorization.k8s.io
   resources:
   - rolebindings
-  verbs:
-  - create
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - rbac.authorization.k8s.io
-  resources:
   - roles
   verbs:
   - create
@@ -248,86 +187,8 @@ rules:
   - swift.openstack.org
   resources:
   - swiftproxies
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - swift.openstack.org
-  resources:
-  - swiftproxies/finalizers
-  verbs:
-  - patch
-  - update
-- apiGroups:
-  - swift.openstack.org
-  resources:
-  - swiftproxies/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - swift.openstack.org
-  resources:
   - swiftrings
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - swift.openstack.org
-  resources:
-  - swiftrings/finalizers
-  verbs:
-  - patch
-  - update
-- apiGroups:
-  - swift.openstack.org
-  resources:
-  - swiftrings/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - swift.openstack.org
-  resources:
   - swifts
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - swift.openstack.org
-  resources:
-  - swifts/finalizers
-  verbs:
-  - patch
-  - update
-- apiGroups:
-  - swift.openstack.org
-  resources:
-  - swifts/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - swift.openstack.org
-  resources:
   - swiftstorages
   verbs:
   - create
@@ -340,6 +201,9 @@ rules:
 - apiGroups:
   - swift.openstack.org
   resources:
+  - swiftproxies/finalizers
+  - swiftrings/finalizers
+  - swifts/finalizers
   - swiftstorages/finalizers
   verbs:
   - patch
@@ -347,6 +211,9 @@ rules:
 - apiGroups:
   - swift.openstack.org
   resources:
+  - swiftproxies/status
+  - swiftrings/status
+  - swifts/status
   - swiftstorages/status
   verbs:
   - get

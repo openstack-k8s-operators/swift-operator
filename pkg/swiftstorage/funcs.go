@@ -21,6 +21,7 @@ import (
 	"github.com/openstack-k8s-operators/swift-operator/pkg/swift"
 )
 
+// Labels returns the labels for swift storage resources
 func Labels() map[string]string {
 	return map[string]string{
 		common.AppSelector:       swift.ServiceName,

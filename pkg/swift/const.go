@@ -13,26 +13,39 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package swift provides common constants and utilities for Swift services
 package swift
 
 const (
-	RunAsUser      int64 = 42445
-	ProxyPort      int32 = 8081
+	// RunAsUser is the UID for running swift containers
+	RunAsUser int64 = 42445
+	// ProxyPort is the port for Swift proxy service
+	ProxyPort int32 = 8081
+	// ProxyHttpdPort is the HTTP port for Swift proxy
 	ProxyHttpdPort int32 = 8080
 
-	AccountServerPort   int32 = 6202
+	// AccountServerPort is the port for Swift account server
+	AccountServerPort int32 = 6202
+	// ContainerServerPort is the port for Swift container server
 	ContainerServerPort int32 = 6201
-	ObjectServerPort    int32 = 6200
-	RsyncPort           int32 = 873
+	// ObjectServerPort is the port for Swift object server
+	ObjectServerPort int32 = 6200
+	// RsyncPort is the port for rsync service
+	RsyncPort int32 = 873
 
-	ServiceName        = "swift"
-	ServiceType        = "object-store"
-	ServiceAccount     = "swift-swift"
+	// ServiceName is the name of the Swift service
+	ServiceName = "swift"
+	// ServiceType is the OpenStack service type for Swift
+	ServiceType = "object-store"
+	// ServiceAccount is the service account name for Swift
+	ServiceAccount = "swift-swift"
+	// ServiceDescription is the description of the Swift service
 	ServiceDescription = "Swift Object Storage"
 
+	// ClaimName is the persistent volume claim name for Swift
 	ClaimName = "swift"
 
-	// Must match with settings in the dataplane-operator
-	// and adoption docs/tests
+	// SwiftConfSecretName is the name of the secret containing swift.conf
+	// Must match with settings in the dataplane-operator and adoption docs/tests
 	SwiftConfSecretName = "swift-conf"
 )

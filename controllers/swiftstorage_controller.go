@@ -76,8 +76,7 @@ func (r *SwiftStorageReconciler) GetLogger(ctx context.Context) logr.Logger {
 	return log.FromContext(ctx).WithName("Controllers").WithName("SwiftStorage")
 }
 
-// Partial struct of the NetworkAttachmentDefinition
-// config to retrieve the subnet range
+// Netconfig represents a partial NetworkAttachmentDefinition configuration for subnet range retrieval.
 type Netconfig struct {
 	Name string `json:"name"`
 	Ipam struct {
@@ -375,7 +374,7 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		if networkReady || *instance.Spec.Replicas == 0 {
 			instance.Status.Conditions.MarkTrue(condition.NetworkAttachmentsReadyCondition, condition.NetworkAttachmentsReadyMessage)
 		} else {
-			err := fmt.Errorf("not all pods have interfaces with ips as configured in NetworkAttachments: %s", instance.Spec.NetworkAttachments)
+			err := fmt.Errorf("%w: %s", swift.ErrNetworkAttachmentsMismatch, instance.Spec.NetworkAttachments)
 			instance.Status.Conditions.Set(condition.FalseCondition(
 				condition.NetworkAttachmentsReadyCondition,
 				condition.ErrorReason,
@@ -417,7 +416,7 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 			}
 
 			if len(dnsIP) == 0 {
-				return ctrl.Result{}, errors.New("Unable to get any IP address for pod")
+				return ctrl.Result{}, swift.ErrNoPodIPAddress
 			}
 
 			hostName := fmt.Sprintf("%s.%s.%s.svc", swiftPod.Name, instance.Name, swiftPod.Namespace)
@@ -468,7 +467,7 @@ func (r *SwiftStorageReconciler) SetupWithManager(ctx context.Context, mgr ctrl.
 		listOpts := []client.ListOption{
 			client.InNamespace(o.GetNamespace()),
 		}
-		if err := r.Client.List(context.Background(), crList, listOpts...); err != nil {
+		if err := r.List(context.Background(), crList, listOpts...); err != nil {
 			Log.Error(err, "Unable to retrieve SwiftStorage CRs %w")
 			return nil
 		}
@@ -569,7 +568,7 @@ func getPodIPInNetwork(swiftPod corev1.Pod, namespace string, networkAttachment 
 	networkName := fmt.Sprintf("%s/%s", namespace, networkAttachment)
 	netStat, err := networkattachment.GetNetworkStatusFromAnnotation(swiftPod.Annotations)
 	if err != nil {
-		err = fmt.Errorf("Error while getting the Network Status for pod %s: %w",
+		err = fmt.Errorf("error while getting the Network Status for pod %s: %w",
 			swiftPod.Name, err)
 		return "", err
 	}
@@ -582,6 +581,6 @@ func getPodIPInNetwork(swiftPod corev1.Pod, namespace string, networkAttachment 
 	}
 
 	// If this is reached it means that no IP was found, construct error and return
-	err = fmt.Errorf("Error while getting IP address from pod %s in network %s", swiftPod.Name, networkAttachment)
+	err = fmt.Errorf("%w %s in network %s", swift.ErrPodIPAddressRetrieval, swiftPod.Name, networkAttachment)
 	return "", err
 }
