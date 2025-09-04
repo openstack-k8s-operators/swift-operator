@@ -582,6 +582,7 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		secretRef,
 		os.GetRegion(),
 		transportURLString,
+		instance.Spec.APITimeout,
 	)
 	err = secret.EnsureSecrets(ctx, helper, instance, tpl, &envVars)
 	if err != nil {

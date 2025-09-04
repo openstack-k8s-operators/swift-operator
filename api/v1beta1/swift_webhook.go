@@ -37,6 +37,7 @@ type SwiftDefaults struct {
 	ContainerContainerImageURL string
 	ObjectContainerImageURL    string
 	ProxyContainerImageURL     string
+	ProxyAPITimeout int
 }
 
 var swiftDefaults SwiftDefaults
@@ -100,6 +101,10 @@ func (spec *SwiftSpec) Default() {
 	if spec.SwiftProxy.ContainerImageProxy == "" {
 		spec.SwiftProxy.ContainerImageProxy = swiftDefaults.ProxyContainerImageURL
 	}
+
+    if spec.SwiftProxy.APITimeout == 0 {
+        spec.SwiftProxy.APITimeout = swiftDefaults.ProxyAPITimeout
+    }
 }
 
 // Default - set defaults for this Swift core spec (this version is used by OpenStackControlplane webhooks)
@@ -311,4 +316,30 @@ func (spec *SwiftSpec) ValidateSwiftTopology(basePath *field.Path, namespace str
 		spec.SwiftProxy.ValidateTopology(storagePath, namespace)...)
 
 	return allErrs
+}
+
+// SetDefaultRouteAnnotations sets HAProxy timeout values of the route
+func (spec *SwiftSpecCore) SetDefaultRouteAnnotations(annotations map[string]string) {
+	const haProxyAnno = "haproxy.router.openshift.io/timeout"
+	// Use a custom annotation to flag when the operator has set the default HAProxy timeout
+	// With the annotation func determines when to overwrite existing HAProxy timeout with the APITimeout
+	const swiftAnno = "api.swift.openstack.org/timeout"
+
+	valSwift, okSwift := annotations[swiftAnno]
+	valHAProxy, okHAProxy := annotations[haProxyAnno]
+
+	// Human operator set the HAProxy timeout manually
+	if !okSwift && okHAProxy {
+		return
+	}
+
+	// Human operator modified the HAProxy timeout manually without removing the Swift flag
+	if okSwift && okHAProxy && valSwift != valHAProxy {
+		delete(annotations, swiftAnno)
+		return
+	}
+
+	timeout := fmt.Sprintf("%ds", spec.SwiftProxy.APITimeout)
+	annotations[swiftAnno] = timeout
+	annotations[haProxyAnno] = timeout
 }
