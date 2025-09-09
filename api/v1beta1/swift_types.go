@@ -29,6 +29,9 @@ const (
 	ContainerImageContainer = "quay.io/podified-antelope-centos9/openstack-swift-container:current-podified"
 	ContainerImageObject    = "quay.io/podified-antelope-centos9/openstack-swift-object:current-podified"
 	ContainerImageProxy     = "quay.io/podified-antelope-centos9/openstack-swift-proxy-server:current-podified"
+
+	// ProxyAPITimeoutDefault  - Default timeout in seconds for HAProxy and Apache
+	ProxyAPITimeout = 60
 )
 
 // SwiftSpec defines the desired state of Swift

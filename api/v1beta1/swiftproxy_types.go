@@ -113,6 +113,11 @@ type SwiftProxySpecCore struct {
 	// by name
 	TopologyRef *topologyv1.TopoRef `json:"topologyRef,omitempty"`
 
+	// +kubebuilder:default=60
+	// +kubebuilder:validation:Minimum=1
+	// Default APITimeout for HAProxy and Apache, defaults to 60 seconds
+	APITimeout int `json:"apiTimeout,omitempty"`
+
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default={swift-ring-files}
 	// +listType=atomic
