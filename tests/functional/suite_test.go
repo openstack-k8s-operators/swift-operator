@@ -28,6 +28,7 @@ import (
 	"github.com/go-logr/logr"
 	. "github.com/onsi/ginkgo/v2" //revive:disable:dot-imports
 	. "github.com/onsi/gomega"    //revive:disable:dot-imports
+
 	//revive:disable-next-line:dot-imports
 	. "github.com/openstack-k8s-operators/lib-common/modules/common/test/helpers"
 
@@ -173,11 +174,11 @@ var _ = BeforeSuite(func() {
 	dialer := &net.Dialer{Timeout: time.Duration(10) * time.Second}
 	addrPort := fmt.Sprintf("%s:%d", webhookInstallOptions.LocalServingHost, webhookInstallOptions.LocalServingPort)
 	Eventually(func() error {
-		conn, err := tls.DialWithDialer(dialer, "tcp", addrPort, &tls.Config{InsecureSkipVerify: true})
+		conn, err := tls.DialWithDialer(dialer, "tcp", addrPort, &tls.Config{InsecureSkipVerify: true}) //nolint:gosec // G402: InsecureSkipVerify is acceptable in test environment
 		if err != nil {
 			return err
 		}
-		conn.Close()
+		_ = conn.Close() // Ignore close error in tests
 		return nil
 	}).Should(Succeed())
 })

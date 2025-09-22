@@ -20,10 +20,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
-
-	"golang.org/x/exp/slices"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -40,6 +39,7 @@ import (
 
 //+kubebuilder:rbac:groups=core,resources=persistentvolumeclaims,verbs=get;list;watch
 
+// DeviceList returns a list of swift devices as CSV format for ring building
 func DeviceList(ctx context.Context, h *helper.Helper, instance *swiftv1beta1.SwiftRing) (string, string, error) {
 	// Returns a list of devices as CSV
 	devices := []string{}
@@ -62,7 +62,7 @@ func DeviceList(ctx context.Context, h *helper.Helper, instance *swiftv1beta1.Sw
 			}
 
 			if foundClaim.Status.Phase != corev1.ClaimBound {
-				err = fmt.Errorf("PersistentVolumeClaim %s found, but not bound yet (%s). Requeueing", cn, foundClaim.Status.Phase)
+				err = fmt.Errorf("%w %s (%s). Requeueing", swift.ErrPVCNotBound, cn, foundClaim.Status.Phase)
 				return "", "", err // requeueing
 			}
 			capacity := foundClaim.Status.Capacity[corev1.ResourceStorage]
@@ -73,11 +73,11 @@ func DeviceList(ctx context.Context, h *helper.Helper, instance *swiftv1beta1.Sw
 			foundPod := &corev1.Pod{}
 			err = h.GetClient().Get(ctx, types.NamespacedName{Name: podName, Namespace: storageInstance.Namespace}, foundPod)
 			if err != nil {
-				err = fmt.Errorf("Pod %s not found", podName)
+				err = fmt.Errorf("%w %s", swift.ErrPodNotFound, podName)
 				return "", "", err
 			}
 			if foundPod.Spec.NodeName == "" {
-				err = fmt.Errorf("Pod %s found, but NodeName not yet set. Requeueing", podName)
+				err = fmt.Errorf("%w %s. Requeueing", swift.ErrPodNodeNameNotSet, podName)
 				return "", "", err // requeueing
 			}
 
@@ -164,6 +164,7 @@ func DeviceList(ctx context.Context, h *helper.Helper, instance *swiftv1beta1.Sw
 	return deviceList.String(), deviceListHash, nil
 }
 
+// Labels returns the labels for swift ring resources
 func Labels() map[string]string {
 	return map[string]string{
 		"job-name": "swift-ring-rebalance",

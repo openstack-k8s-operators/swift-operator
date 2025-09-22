@@ -21,6 +21,7 @@ import (
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
 )
 
+// SecretTemplates creates secret templates for swift configuration
 func SecretTemplates(instance *swiftv1beta1.Swift, serviceLabels map[string]string) []util.Template {
 	templateParameters := make(map[string]interface{})
 	templateParameters["SwiftHashPathPrefix"] = RandomString(16)

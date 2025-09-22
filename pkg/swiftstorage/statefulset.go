@@ -197,6 +197,7 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage, env []corev1.
 	return containers
 }
 
+// StatefulSet creates a Kubernetes StatefulSet for swift storage nodes
 func StatefulSet(
 	swiftstorage *swiftv1beta1.SwiftStorage,
 	labels map[string]string,

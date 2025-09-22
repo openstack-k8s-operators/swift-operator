@@ -235,7 +235,7 @@ func (r *SwiftRingReconciler) reconcileNormal(ctx context.Context, instance *swi
 			condition.ReadyCondition,
 			condition.ErrorReason,
 			condition.SeverityWarning,
-			err.Error()))
+			"%s", err.Error()))
 		return ctrl.Result{}, err
 	}
 
@@ -290,7 +290,7 @@ func (r *SwiftRingReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		result := []reconcile.Request{}
 		swiftRings := &swiftv1beta1.SwiftRingList{}
 		listOpts := []client.ListOption{client.InNamespace(o.GetNamespace())}
-		err := r.Client.List(context.Background(), swiftRings, listOpts...)
+		err := r.List(context.Background(), swiftRings, listOpts...)
 		if err != nil {
 			return nil
 		}

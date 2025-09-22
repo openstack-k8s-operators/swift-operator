@@ -19,13 +19,14 @@ package swiftstorage
 import (
 	"context"
 	"fmt"
+	"time"
+
 	networkingv1 "k8s.io/api/networking/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"time"
 
 	"github.com/openstack-k8s-operators/lib-common/modules/common/helper"
 
@@ -37,6 +38,7 @@ import (
 
 //+kubebuilder:rbac:groups=networking.k8s.io,resources=networkpolicies,verbs=get;list;watch;create;update;patch;delete
 
+// NetworkPolicy creates a NetworkPolicy for swift storage services
 func NetworkPolicy(
 	instance *swiftv1beta1.SwiftStorage, storageNetworkRange string) *networkingv1.NetworkPolicy {
 
@@ -122,6 +124,7 @@ func NetworkPolicy(
 	}
 }
 
+// NetworkPolicyStruct provides utilities for managing NetworkPolicy resources
 type NetworkPolicyStruct struct {
 	networkPolicy *networkingv1.NetworkPolicy
 	timeout       time.Duration
@@ -138,6 +141,7 @@ func NewNetworkPolicy(
 	}
 }
 
+// CreateOrPatch creates or patches the NetworkPolicy resource
 // TODO: add this to lib-common
 func (np *NetworkPolicyStruct) CreateOrPatch(
 	ctx context.Context,

@@ -584,7 +584,7 @@ func (r *SwiftReconciler) checkSwiftProxyGeneration(
 	listOpts := []client.ListOption{
 		client.InNamespace(instance.Namespace),
 	}
-	if err := r.Client.List(context.Background(), proxy, listOpts...); err != nil {
+	if err := r.List(context.Background(), proxy, listOpts...); err != nil {
 		Log.Error(err, "Unable to retrieve SwiftProxy %w")
 		return false, err
 	}
@@ -606,7 +606,7 @@ func (r *SwiftReconciler) checkSwiftStorageGeneration(
 	listOpts := []client.ListOption{
 		client.InNamespace(instance.Namespace),
 	}
-	if err := r.Client.List(context.Background(), sst, listOpts...); err != nil {
+	if err := r.List(context.Background(), sst, listOpts...); err != nil {
 		Log.Error(err, "Unable to retrieve SwiftStorage %w")
 		return false, err
 	}
@@ -628,7 +628,7 @@ func (r *SwiftReconciler) checkSwiftRingGeneration(
 	listOpts := []client.ListOption{
 		client.InNamespace(instance.Namespace),
 	}
-	if err := r.Client.List(context.Background(), rings, listOpts...); err != nil {
+	if err := r.List(context.Background(), rings, listOpts...); err != nil {
 		Log.Error(err, "Unable to retrieve SwiftRing %w")
 		return false, err
 	}

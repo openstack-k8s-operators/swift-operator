@@ -14,16 +14,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package controllers implements the OpenStack Swift Kubernetes controllers.
 package controllers
 
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/openstack-k8s-operators/lib-common/modules/common/condition"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/helper"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/secret"
 	"k8s.io/apimachinery/pkg/types"
-	"time"
 
 	topologyv1 "github.com/openstack-k8s-operators/infra-operator/apis/topology/v1beta1"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/env"
@@ -36,7 +38,7 @@ import (
 // fields to index to reconcile when change
 const (
 	passwordSecretField     = ".spec.secret"
-	caBundleSecretNameField = ".spec.tls.caBundleSecretName"
+	caBundleSecretNameField = ".spec.tls.caBundleSecretName" //nolint:gosec // G101: Not actual credentials, just field path
 	tlsAPIInternalField     = ".spec.tls.api.internal.secretName"
 	tlsAPIPublicField       = ".spec.tls.api.public.secretName"
 	topologyField           = ".spec.topologyRef.Name"

@@ -60,6 +60,7 @@ import (
 )
 */
 
+// Service creates a Kubernetes Service for swift storage
 func Service(
 	instance *swiftv1beta1.SwiftStorage) *corev1.Service {
 
