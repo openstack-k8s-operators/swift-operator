@@ -18,6 +18,7 @@ package swiftproxy
 
 import (
 	"fmt"
+	"maps"
 
 	memcachedv1 "github.com/openstack-k8s-operators/infra-operator/apis/memcached/v1beta1"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/service"
@@ -40,7 +41,7 @@ func SecretTemplates(
 	transportURL string,
 	apiTimeout int,
 ) []util.Template {
-	templateParameters := make(map[string]interface{})
+	templateParameters := make(map[string]any)
 	templateParameters["ServiceUser"] = instance.Spec.ServiceUser
 	templateParameters["ServicePassword"] = password
 	templateParameters["KeystonePublicURL"] = keystonePublicURL
@@ -65,9 +66,9 @@ func SecretTemplates(
 	}
 
 	// create httpd  vhost template parameters
-	httpdVhostConfig := map[string]interface{}{}
+	httpdVhostConfig := map[string]any{}
 	for _, endpt := range []service.Endpoint{service.EndpointInternal, service.EndpointPublic} {
-		endptConfig := map[string]interface{}{}
+		endptConfig := map[string]any{}
 		endptConfig["ServerName"] = fmt.Sprintf("%s-%s.%s.svc", swift.ServiceName, endpt.String(), instance.Namespace)
 		endptConfig["TLS"] = false // default TLS to false, and set it bellow to true if enabled
 		if instance.Spec.TLS.API.Enabled(endpt) {
@@ -79,9 +80,7 @@ func SecretTemplates(
 	}
 	templateParameters["VHosts"] = httpdVhostConfig
 	customData := map[string]string{}
-	for key, data := range instance.Spec.DefaultConfigOverwrite {
-		customData[key] = data
-	}
+	maps.Copy(customData, instance.Spec.DefaultConfigOverwrite)
 
 	return []util.Template{
 		{

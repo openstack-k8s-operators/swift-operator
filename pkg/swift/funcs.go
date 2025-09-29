@@ -58,7 +58,7 @@ func RandomString(length int) string {
 	sample := "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	str := make([]byte, length)
 
-	for i := 0; i < length; i++ {
+	for i := range length {
 		str[i] = sample[rand.Intn(len(sample))] //nolint:gosec // G404: Non-cryptographic use acceptable for Swift hash generation
 	}
 	return string(str)

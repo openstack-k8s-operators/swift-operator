@@ -107,7 +107,7 @@ func DeviceList(ctx context.Context, h *helper.Helper, instance *swiftv1beta1.Sw
 		}
 		nodeSetGroup := inventory.Groups[secret.Labels["openstackdataplanenodeset"]]
 
-		if slices.Contains(nodeSetGroup.Vars["edpm_services"].([]interface{}), "swift") {
+		if slices.Contains(nodeSetGroup.Vars["edpm_services"].([]any), "swift") {
 			// Get the global disk vars first that are used for all
 			// nodes if not set otherwise per-node
 			var globalDisks []swiftv1beta1.SwiftDisk

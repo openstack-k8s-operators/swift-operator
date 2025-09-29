@@ -23,7 +23,7 @@ import (
 
 // SecretTemplates creates secret templates for swift configuration
 func SecretTemplates(instance *swiftv1beta1.Swift, serviceLabels map[string]string) []util.Template {
-	templateParameters := make(map[string]interface{})
+	templateParameters := make(map[string]any)
 	templateParameters["SwiftHashPathPrefix"] = RandomString(16)
 	templateParameters["SwiftHashPathSuffix"] = RandomString(16)
 
