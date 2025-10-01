@@ -25,14 +25,14 @@ import (
 
 	swiftv1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
 
-	gophercloud "github.com/gophercloud/gophercloud"
-	gopherstack "github.com/gophercloud/gophercloud/openstack"
-	"github.com/gophercloud/gophercloud/openstack/keymanager/v1/orders"
-	"github.com/gophercloud/gophercloud/openstack/keymanager/v1/secrets"
+	gophercloud "github.com/gophercloud/gophercloud/v2"
+	gopherstack "github.com/gophercloud/gophercloud/v2/openstack"
+	"github.com/gophercloud/gophercloud/v2/openstack/keymanager/v1/orders"
+	"github.com/gophercloud/gophercloud/v2/openstack/keymanager/v1/secrets"
 )
 
 // GetBarbicanSecret retrieves or creates a Barbican secret for Swift encryption
-func GetBarbicanSecret(instance *swiftv1.SwiftProxy, h *helper.Helper, keystonePublicURL string, password string) (string, error) {
+func GetBarbicanSecret(ctx context.Context, instance *swiftv1.SwiftProxy, h *helper.Helper, keystonePublicURL string, password string) (string, error) {
 	secretRef := ""
 
 	caCerts := []string{}
@@ -57,7 +57,7 @@ func GetBarbicanSecret(instance *swiftv1.SwiftProxy, h *helper.Helper, keystoneP
 		},
 	}
 
-	providerClient, err := openstack.GetOpenStackProvider(authOpts)
+	providerClient, err := openstack.GetOpenStackProvider(ctx, authOpts)
 	if err != nil {
 		return secretRef, err
 	}
@@ -69,7 +69,7 @@ func GetBarbicanSecret(instance *swiftv1.SwiftProxy, h *helper.Helper, keystoneP
 
 	// Find secret for Swift
 	listOpts := secrets.ListOpts{Name: BarbicanSecretName}
-	allPages, err := secrets.List(keyManagerClient, listOpts).AllPages()
+	allPages, err := secrets.List(keyManagerClient, listOpts).AllPages(ctx)
 	if err != nil {
 		return secretRef, err
 	}
@@ -94,12 +94,12 @@ func GetBarbicanSecret(instance *swiftv1.SwiftProxy, h *helper.Helper, keystoneP
 				Mode:      "ctr",
 			},
 		}
-		_, err := orders.Create(keyManagerClient, createOpts).Extract()
+		_, err := orders.Create(ctx, keyManagerClient, createOpts).Extract()
 		if err != nil {
 			return secretRef, err
 		}
 
-		allPages, err = secrets.List(keyManagerClient, listOpts).AllPages()
+		allPages, err = secrets.List(keyManagerClient, listOpts).AllPages(ctx)
 		if err != nil {
 			return secretRef, err
 		}
