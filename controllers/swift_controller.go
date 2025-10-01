@@ -244,10 +244,15 @@ func (r *SwiftReconciler) reconcileNormal(ctx context.Context, instance *swiftv1
 	memcached, err := memcachedv1.GetMemcachedByName(ctx, helper, instance.Spec.MemcachedInstance, instance.Namespace)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
+			// Memcached should be automatically created by the encompassing OpenStackControlPlane,
+			// but we don't propagate its name into the "memcachedInstance" field of other sub-resources,
+			// so if it is missing at this point, it *could* be because there's a mismatch between the
+			// name of the Memcached CR and the name of the Memcached instance referenced by this CR.
+			// Since that situation would block further reconciliation, we treat it as a warning.
 			instance.Status.Conditions.Set(condition.FalseCondition(
 				condition.MemcachedReadyCondition,
-				condition.RequestedReason,
-				condition.SeverityInfo,
+				condition.ErrorReason,
+				condition.SeverityWarning,
 				condition.MemcachedReadyWaitingMessage))
 			Log.Info(fmt.Sprintf("%s... requeueing", condition.MemcachedReadyWaitingMessage))
 			return ctrl.Result{RequeueAfter: time.Duration(10) * time.Second}, nil
