@@ -219,11 +219,16 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	memcached, err := memcachedv1.GetMemcachedByName(ctx, helper, instance.Spec.MemcachedInstance, instance.Namespace)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
+			// Memcached should be automatically created by the encompassing OpenStackControlPlane,
+			// but we don't propagate its name into the "memcachedInstance" field of other sub-resources,
+			// so if it is missing at this point, it *could* be because there's a mismatch between the
+			// name of the Memcached CR and the name of the Memcached instance referenced by this CR.
+			// Since that situation would block further reconciliation, we treat it as a warning.
 			Log.Info(fmt.Sprintf("memcached %s not found", instance.Spec.MemcachedInstance))
 			instance.Status.Conditions.Set(condition.FalseCondition(
 				condition.MemcachedReadyCondition,
-				condition.RequestedReason,
-				condition.SeverityInfo,
+				condition.ErrorReason,
+				condition.SeverityWarning,
 				condition.MemcachedReadyWaitingMessage))
 			return ctrl.Result{RequeueAfter: 10 * time.Second}, nil
 		}
@@ -262,10 +267,12 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		nad, err := networkattachment.GetNADWithName(ctx, helper, netAtt, instance.Namespace)
 		if err != nil {
 			if apierrors.IsNotFound(err) {
+				// Since the net-attach-def CR should have been manually created by the user and referenced in the spec,
+				// we treat this as a warning because it means that the service will not be able to start.
 				instance.Status.Conditions.Set(condition.FalseCondition(
 					condition.NetworkAttachmentsReadyCondition,
-					condition.RequestedReason,
-					condition.SeverityInfo,
+					condition.ErrorReason,
+					condition.SeverityWarning,
 					condition.NetworkAttachmentsReadyWaitingMessage,
 					netAtt))
 				Log.Error(err, "network-attachment-definition not found")
