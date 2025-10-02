@@ -578,6 +578,30 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return ctrl.Result{}, err
 	}
 
+	// Get Application Credential data if available
+	useAC := false
+	acID := ""
+	acSecret := ""
+	// Try to get Application Credential from the secret specified in the CR
+	if instance.Spec.Auth.ApplicationCredentialSecret != "" {
+		secret := &corev1.Secret{}
+		key := types.NamespacedName{Namespace: instance.Namespace, Name: instance.Spec.Auth.ApplicationCredentialSecret}
+		if err := r.Get(ctx, key, secret); err != nil {
+			if !apierrors.IsNotFound(err) {
+				Log.Error(err, "Failed to get ApplicationCredential secret", "secret", key)
+			}
+		} else {
+			acIDData, okID := secret.Data[keystonev1.ACIDSecretKey]
+			acSecretData, okSecret := secret.Data[keystonev1.ACSecretSecretKey]
+			if okID && len(acIDData) > 0 && okSecret && len(acSecretData) > 0 {
+				useAC = true
+				acID = string(acIDData)
+				acSecret = string(acSecretData)
+				Log.Info("Using ApplicationCredentials auth", "secret", key)
+			}
+		}
+	}
+
 	// Create a Secret populated with content from templates/
 	tpl := swiftproxy.SecretTemplates(
 		instance,
@@ -591,6 +615,9 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		os.GetRegion(),
 		transportURLString,
 		instance.Spec.APITimeout,
+		useAC,
+		acID,
+		acSecret,
 	)
 	err = secret.EnsureSecrets(ctx, helper, instance, tpl, &envVars)
 	if err != nil {
@@ -813,6 +840,18 @@ func (r *SwiftProxyReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Ma
 			return nil
 		}
 		return []string{cr.Spec.TopologyRef.Name}
+	}); err != nil {
+		return err
+	}
+
+	// index authAppCredSecretField
+	if err := mgr.GetFieldIndexer().IndexField(context.Background(), &swiftv1beta1.SwiftProxy{}, authAppCredSecretField, func(rawObj client.Object) []string {
+		// Extract the application credential secret name from the spec, if one is provided
+		cr := rawObj.(*swiftv1beta1.SwiftProxy)
+		if cr.Spec.Auth.ApplicationCredentialSecret == "" {
+			return nil
+		}
+		return []string{cr.Spec.Auth.ApplicationCredentialSecret}
 	}); err != nil {
 		return err
 	}

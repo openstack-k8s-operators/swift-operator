@@ -52,6 +52,15 @@ spec:
           spec:
             description: SwiftSpec defines the desired state of Swift
             properties:
+              auth:
+                description: Auth - Parameters related to authentication for all Swift
+                  services
+                properties:
+                  applicationCredentialSecret:
+                    description: ApplicationCredentialSecret - Secret containing Application
+                      Credential ID and Secret
+                    type: string
+                type: object
               memcachedInstance:
                 default: memcached
                 description: Memcached instance name.
@@ -92,6 +101,14 @@ spec:
                       to 60 seconds
                     minimum: 1
                     type: integer
+                  auth:
+                    description: Auth - Parameters related to authentication
+                    properties:
+                      applicationCredentialSecret:
+                        description: ApplicationCredentialSecret - Secret containing
+                          Application Credential ID and Secret
+                        type: string
+                    type: object
                   ceilometerEnabled:
                     default: false
                     description: Enables ceilometer in the swift proxy and creates
