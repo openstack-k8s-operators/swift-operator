@@ -59,6 +59,8 @@ func (r *SwiftReconciler) GetLogger(ctx context.Context) logr.Logger {
 //+kubebuilder:rbac:groups=swift.openstack.org,resources=swifts,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=swift.openstack.org,resources=swifts/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=swift.openstack.org,resources=swifts/finalizers,verbs=update;patch
+//+kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
+//+kubebuilder:rbac:groups=keystone.openstack.org,resources=keystoneapplicationcredentials,verbs=get;list;watch
 
 // service account, role, rolebinding
 // +kubebuilder:rbac:groups="",resources=serviceaccounts,verbs=get;list;watch;create;update;patch
