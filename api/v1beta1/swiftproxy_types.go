@@ -17,12 +17,12 @@ limitations under the License.
 package v1beta1
 
 import (
-	condition "github.com/openstack-k8s-operators/lib-common/modules/common/condition"
 	topologyv1 "github.com/openstack-k8s-operators/infra-operator/apis/topology/v1beta1"
+	condition "github.com/openstack-k8s-operators/lib-common/modules/common/condition"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/service"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/tls"
-	"k8s.io/apimachinery/pkg/util/validation/field"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -90,6 +90,11 @@ type SwiftProxySpecCore struct {
 	// TLS - Parameters related to the TLS
 	TLS tls.API `json:"tls,omitempty"`
 
+	// +kubebuilder:validation:Optional
+	// +operator-sdk:csv:customresourcedefinitions:type=spec
+	// Auth - Parameters related to authentication
+	Auth AuthSpec `json:"auth,omitempty"`
+
 	// DefaultConfigOverwrite - can be used to add additionalfiles. Those get
 	// added to the service config dir in /etc/<servicename>-conf.d
 	DefaultConfigOverwrite map[string]string `json:"defaultConfigOverwrite,omitempty"`
@@ -130,6 +135,14 @@ type ProxyOverrideSpec struct {
 	// Override configuration for the Service created to serve traffic to the cluster.
 	// The key must be the endpoint type (public, internal)
 	Service map[service.Endpoint]service.RoutedOverrideSpec `json:"service,omitempty"`
+}
+
+// AuthSpec defines authentication parameters
+type AuthSpec struct {
+	// +kubebuilder:validation:Optional
+	// +operator-sdk:csv:customresourcedefinitions:type=spec
+	// ApplicationCredentialSecret - Secret containing Application Credential ID and Secret
+	ApplicationCredentialSecret string `json:"applicationCredentialSecret,omitempty"`
 }
 
 // SwiftProxyStatus defines the observed state of SwiftProxy
