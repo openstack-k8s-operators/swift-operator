@@ -40,6 +40,9 @@ func SecretTemplates(
 	keystoneRegion string,
 	transportURL string,
 	apiTimeout int,
+	useApplicationCredentials bool,
+	applicationCredentialID string,
+	applicationCredentialSecret string,
 ) []util.Template {
 	templateParameters := make(map[string]any)
 	templateParameters["ServiceUser"] = instance.Spec.ServiceUser
@@ -53,6 +56,13 @@ func SecretTemplates(
 	templateParameters["KeystoneRegion"] = keystoneRegion
 	templateParameters["TransportURL"] = transportURL
 	templateParameters["APITimeout"] = apiTimeout
+
+	// Application Credential parameters
+	templateParameters["UseApplicationCredentials"] = useApplicationCredentials
+	if useApplicationCredentials {
+		templateParameters["ApplicationCredentialID"] = applicationCredentialID
+		templateParameters["ApplicationCredentialSecret"] = applicationCredentialSecret
+	}
 
 	// MTLS params
 	if mc.Status.MTLSCert != "" {
