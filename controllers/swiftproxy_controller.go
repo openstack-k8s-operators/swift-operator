@@ -484,15 +484,15 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	if err != nil {
 		return ctrl.Result{}, err
 	}
-	_, err = os.CreateRole(Log, "swiftoperator")
+	_, err = os.CreateRole(ctx, Log, "swiftoperator")
 	if err != nil {
 		return ctrl.Result{}, err
 	}
-	_, err = os.CreateRole(Log, "SwiftProjectReader")
+	_, err = os.CreateRole(ctx, Log, "SwiftProjectReader")
 	if err != nil {
 		return ctrl.Result{}, err
 	}
-	_, err = os.CreateRole(Log, "SwiftSystemReader")
+	_, err = os.CreateRole(ctx, Log, "SwiftSystemReader")
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -521,7 +521,7 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 
 	secretRef := ""
 	if instance.Spec.EncryptionEnabled {
-		secretRef, err = swiftproxy.GetBarbicanSecret(instance, helper, keystonePublicURL, password)
+		secretRef, err = swiftproxy.GetBarbicanSecret(ctx, instance, helper, keystonePublicURL, password)
 		if err != nil {
 			if apierrors.IsNotFound(err) {
 				// Since the Barbican secret is required for encryption, we treat this as a warning
