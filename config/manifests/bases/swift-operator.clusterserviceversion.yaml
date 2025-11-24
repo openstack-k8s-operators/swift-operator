@@ -33,6 +33,11 @@ spec:
       kind: SwiftRing
       name: swiftrings.swift.openstack.org
       specDescriptors:
+      - description: Enabled - Whether SwiftRing service should be deployed and managed
+        displayName: Enabled
+        path: enabled
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: TLS - Parameters related to the TLS
         displayName: TLS
         path: tls
@@ -45,6 +50,11 @@ spec:
       - description: TLS - Parameters related to the TLS
         displayName: TLS
         path: swiftProxy.tls
+      - description: Enabled - Whether SwiftRing service should be deployed and managed
+        displayName: Enabled
+        path: swiftRing.enabled
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: TLS - Parameters related to the TLS
         displayName: TLS
         path: swiftRing.tls

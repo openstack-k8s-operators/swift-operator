@@ -19,13 +19,12 @@ package v1beta1
 import (
 	"fmt"
 
-	"github.com/openstack-k8s-operators/lib-common/modules/common/service"
 	topologyv1 "github.com/openstack-k8s-operators/infra-operator/apis/topology/v1beta1"
+	"github.com/openstack-k8s-operators/lib-common/modules/common/service"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/validation/field"
-	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
@@ -37,7 +36,7 @@ type SwiftDefaults struct {
 	ContainerContainerImageURL string
 	ObjectContainerImageURL    string
 	ProxyContainerImageURL     string
-	ProxyAPITimeout int
+	ProxyAPITimeout            int
 }
 
 var swiftDefaults SwiftDefaults
@@ -49,16 +48,6 @@ func SetupSwiftDefaults(defaults SwiftDefaults) {
 	swiftDefaults = defaults
 	swiftlog.Info("Swift defaults initialized", "defaults", defaults)
 }
-
-func (r *Swift) SetupWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).
-		For(r).
-		Complete()
-}
-
-// TODO(user): EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-
-//+kubebuilder:webhook:path=/mutate-swift-openstack-org-v1beta1-swift,mutating=true,failurePolicy=fail,sideEffects=None,groups=swift.openstack.org,resources=swifts,verbs=create;update,versions=v1beta1,name=mswift.kb.io,admissionReviewVersions=v1
 
 var _ webhook.Defaulter = &Swift{}
 
@@ -102,18 +91,15 @@ func (spec *SwiftSpec) Default() {
 		spec.SwiftProxy.ContainerImageProxy = swiftDefaults.ProxyContainerImageURL
 	}
 
-    if spec.SwiftProxy.APITimeout == 0 {
-        spec.SwiftProxy.APITimeout = swiftDefaults.ProxyAPITimeout
-    }
+	if spec.SwiftProxy.APITimeout == 0 {
+		spec.SwiftProxy.APITimeout = swiftDefaults.ProxyAPITimeout
+	}
 }
 
 // Default - set defaults for this Swift core spec (this version is used by OpenStackControlplane webhooks)
 func (spec *SwiftSpecCore) Default() {
 	// nothing here yet
 }
-
-// TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
-//+kubebuilder:webhook:path=/validate-swift-openstack-org-v1beta1-swift,mutating=false,failurePolicy=fail,sideEffects=None,groups=swift.openstack.org,resources=swifts,verbs=create;update,versions=v1beta1,name=vswift.kb.io,admissionReviewVersions=v1
 
 var _ webhook.Validator = &Swift{}
 
