@@ -7,8 +7,6 @@
         - swift-operator-kuttl:
             dependencies:
               - openstack-k8s-operators-content-provider
-            voting: false
         - swift-operator-tempest:
             dependencies:
               - openstack-k8s-operators-content-provider
-            voting: false
