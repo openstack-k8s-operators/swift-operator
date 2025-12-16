@@ -349,7 +349,7 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	}
 
 	// Statefulset with all backend containers
-	sspec, err := swiftstorage.StatefulSet(instance, serviceLabels, serviceAnnotations, inputHash, topology)
+	sspec, err := swiftstorage.StatefulSet(instance, serviceLabels, serviceAnnotations, inputHash, topology, memcached)
 	if err != nil {
 		instance.Status.Conditions.Set(condition.FalseCondition(
 			swiftv1beta1.SwiftStorageReadyCondition,
