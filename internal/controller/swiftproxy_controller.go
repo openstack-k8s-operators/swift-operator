@@ -578,6 +578,20 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return ctrl.Result{}, err
 	}
 
+	// Get Application Credential data if available
+	useAC := false
+	acID := ""
+	acSecret := ""
+	// Try to get Application Credential for this service (via keystone api helper)
+	if acData, err := keystonev1.GetApplicationCredentialFromSecret(ctx, r.Client, instance.Namespace, swift.ServiceName); err != nil {
+		Log.Error(err, "Failed to get ApplicationCredential for service", "service", swift.ServiceName)
+	} else if acData != nil {
+		useAC = true
+		acID = acData.ID
+		acSecret = acData.Secret
+		Log.Info("Using ApplicationCredentials auth", "service", swift.ServiceName)
+	}
+
 	// Create a Secret populated with content from templates/
 	tpl := swiftproxy.SecretTemplates(
 		instance,
@@ -591,6 +605,9 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		os.GetRegion(),
 		transportURLString,
 		instance.Spec.APITimeout,
+		useAC,
+		acID,
+		acSecret,
 	)
 	err = secret.EnsureSecrets(ctx, helper, instance, tpl, &envVars)
 	if err != nil {
@@ -846,6 +863,42 @@ func (r *SwiftProxyReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Ma
 		return nil
 	}
 
+	// Application Credential secret watching function
+	acSecretFn := func(_ context.Context, o client.Object) []reconcile.Request {
+		name := o.GetName()
+		ns := o.GetNamespace()
+		result := []reconcile.Request{}
+
+		// Only handle Secret objects
+		if _, isSecret := o.(*corev1.Secret); !isSecret {
+			return nil
+		}
+
+		// Check if this is a swift AC secret by name pattern (ac-swift-secret)
+		expectedSecretName := keystonev1.GetACSecretName("swift")
+		if name == expectedSecretName {
+			// get all SwiftProxy CRs in this namespace
+			swiftProxies := &swiftv1beta1.SwiftProxyList{}
+			listOpts := []client.ListOption{
+				client.InNamespace(ns),
+			}
+			if err := r.List(context.Background(), swiftProxies, listOpts...); err != nil {
+				return nil
+			}
+
+			// Enqueue reconcile for all swift proxy instances
+			for _, cr := range swiftProxies.Items {
+				objKey := client.ObjectKey{
+					Namespace: ns,
+					Name:      cr.Name,
+				}
+				result = append(result, reconcile.Request{NamespacedName: objKey})
+			}
+		}
+
+		return result
+	}
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&swiftv1beta1.SwiftProxy{}).
 		Owns(&corev1.Secret{}).
@@ -859,6 +912,8 @@ func (r *SwiftProxyReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Ma
 			handler.EnqueueRequestsFromMapFunc(r.findObjectsForSrc),
 			builder.WithPredicates(predicate.ResourceVersionChangedPredicate{}),
 		).
+		Watches(&corev1.Secret{},
+			handler.EnqueueRequestsFromMapFunc(acSecretFn)).
 		Watches(&memcachedv1.Memcached{},
 			handler.EnqueueRequestsFromMapFunc(memcachedFn)).
 		Watches(&topologyv1.Topology{},
