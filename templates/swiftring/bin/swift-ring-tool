@@ -77,7 +77,7 @@ function metaswap() {
 from swift.common.ring import RingBuilder
 builder = RingBuilder.load("$1")
 for dev in builder.devs:
-    if dev.get('meta') and dev.get('device') == 'pv':
+    if dev and dev.get('meta') and dev.get('device') == 'pv':
         dev['meta'], dev['ip'] = dev['ip'], dev['meta']
 builder.save("$1")
 EOF
@@ -111,7 +111,7 @@ function drain() {
 
 function remove() {
     for f in *.builder; do
-        swift-ring-builder $f remove $1
+        swift-ring-builder $f remove --ip "$1"
     done
 }
 
