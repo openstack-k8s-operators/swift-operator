@@ -3,8 +3,8 @@ module github.com/openstack-k8s-operators/swift-operator/api
 go 1.24.4
 
 require (
-	github.com/openstack-k8s-operators/infra-operator/apis v0.6.1-0.20251205192058-5cfbada0ab96
-	github.com/openstack-k8s-operators/lib-common/modules/common v0.6.1-0.20251122131503-b76943960b6c
+	github.com/openstack-k8s-operators/infra-operator/apis v0.6.1-0.20251223124749-eedb97238c5f
+	github.com/openstack-k8s-operators/lib-common/modules/common v0.6.1-0.20251215094837-5c05ea64c324
 	k8s.io/apimachinery v0.31.14
 	sigs.k8s.io/controller-runtime v0.19.7
 )
@@ -36,6 +36,8 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.3-0.20250322232337-35a7c28c31ee // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
+	github.com/onsi/ginkgo/v2 v2.27.3 // indirect
+	github.com/onsi/gomega v1.38.3 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_golang v1.22.0 // indirect
 	github.com/prometheus/client_model v0.6.2 // indirect
