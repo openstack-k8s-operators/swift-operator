@@ -17,10 +17,10 @@ limitations under the License.
 package v1beta1
 
 import (
+	topologyv1 "github.com/openstack-k8s-operators/infra-operator/apis/topology/v1beta1"
 	condition "github.com/openstack-k8s-operators/lib-common/modules/common/condition"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	topologyv1 "github.com/openstack-k8s-operators/infra-operator/apis/topology/v1beta1"
 )
 
 const (
@@ -94,6 +94,11 @@ type SwiftSpecBase struct {
 	// TopologyRef to apply the Topology defined by the associated CR referenced
 	// by name
 	TopologyRef *topologyv1.TopoRef `json:"topologyRef,omitempty"`
+
+	// +kubebuilder:validation:Optional
+	// +operator-sdk:csv:customresourcedefinitions:type=spec
+	// Auth - Parameters related to authentication for all Swift services
+	Auth AuthSpec `json:"auth,omitempty"`
 
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default={swift-ring-files}
