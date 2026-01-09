@@ -42,6 +42,7 @@ import (
 	"github.com/openstack-k8s-operators/lib-common/modules/common/labels"
 	service "github.com/openstack-k8s-operators/lib-common/modules/common/service"
 	statefulset "github.com/openstack-k8s-operators/lib-common/modules/common/statefulset"
+	"github.com/openstack-k8s-operators/lib-common/modules/common/tls"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -177,6 +178,7 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		// as True and is still in the "Unknown" state, we `Mirror(` the actual
 		// failure/in-progress operation
 		condition.UnknownCondition(condition.ReadyCondition, condition.InitReason, condition.ReadyInitMessage),
+		condition.UnknownCondition(condition.TLSInputReadyCondition, condition.InitReason, condition.InputReadyInitMessage),
 		condition.UnknownCondition(condition.NetworkAttachmentsReadyCondition, condition.InitReason, condition.NetworkAttachmentsReadyInitMessage),
 		condition.UnknownCondition(swiftv1beta1.SwiftStorageReadyCondition, condition.InitReason, condition.ReadyInitMessage),
 	)
@@ -207,6 +209,42 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 
 	serviceLabels := swiftstorage.Labels()
 	envVars := make(map[string]env.Setter)
+
+	//
+	// TLS input validation
+	//
+	// Validate the CA cert secret if provided
+	if instance.Spec.TLS.CaBundleSecretName != "" {
+		hash, err := tls.ValidateCACertSecret(
+			ctx,
+			helper.GetClient(),
+			types.NamespacedName{
+				Name:      instance.Spec.TLS.CaBundleSecretName,
+				Namespace: instance.Namespace,
+			},
+		)
+		if err != nil {
+			if apierrors.IsNotFound(err) {
+				instance.Status.Conditions.Set(condition.FalseCondition(
+					condition.TLSInputReadyCondition,
+					condition.ErrorReason,
+					condition.SeverityWarning,
+					condition.TLSInputReadyWaitingMessage, instance.Spec.TLS.CaBundleSecretName))
+				return ctrl.Result{}, nil
+			}
+			instance.Status.Conditions.Set(condition.FalseCondition(
+				condition.TLSInputReadyCondition,
+				condition.ErrorReason,
+				condition.SeverityWarning,
+				condition.TLSInputErrorMessage,
+				err.Error()))
+			return ctrl.Result{}, err
+		}
+		if hash != "" {
+			envVars[tls.CABundleKey] = env.SetValue(hash)
+		}
+	}
+	instance.Status.Conditions.MarkTrue(condition.TLSInputReadyCondition, condition.InputReadyMessage)
 
 	bindIP, err := swift.GetBindIP(helper)
 	if err != nil {
@@ -349,7 +387,7 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 	}
 
 	// Statefulset with all backend containers
-	sspec, err := swiftstorage.StatefulSet(instance, serviceLabels, serviceAnnotations, inputHash, topology)
+	sspec, err := swiftstorage.StatefulSet(instance, serviceLabels, serviceAnnotations, inputHash, topology, memcached)
 	if err != nil {
 		instance.Status.Conditions.Set(condition.FalseCondition(
 			swiftv1beta1.SwiftStorageReadyCondition,
@@ -507,6 +545,17 @@ func (r *SwiftStorageReconciler) SetupWithManager(ctx context.Context, mgr ctrl.
 		return err
 	}
 
+	// index caBundleSecretNameField
+	if err := mgr.GetFieldIndexer().IndexField(context.Background(), &swiftv1beta1.SwiftStorage{}, caBundleSecretNameField, func(rawObj client.Object) []string {
+		cr := rawObj.(*swiftv1beta1.SwiftStorage)
+		if cr.Spec.TLS.CaBundleSecretName == "" {
+			return nil
+		}
+		return []string{cr.Spec.TLS.CaBundleSecretName}
+	}); err != nil {
+		return err
+	}
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&swiftv1beta1.SwiftStorage{}).
 		Owns(&corev1.ConfigMap{}).
@@ -518,6 +567,10 @@ func (r *SwiftStorageReconciler) SetupWithManager(ctx context.Context, mgr ctrl.
 		Watches(&topologyv1.Topology{},
 			handler.EnqueueRequestsFromMapFunc(r.findObjectsForSrc),
 			builder.WithPredicates(predicate.GenerationChangedPredicate{})).
+		Watches(
+			&corev1.Secret{},
+			handler.EnqueueRequestsFromMapFunc(r.findObjectsForSrc),
+			builder.WithPredicates(predicate.ResourceVersionChangedPredicate{})).
 		Complete(r)
 }
 

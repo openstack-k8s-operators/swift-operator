@@ -46,6 +46,7 @@ const (
 
 var (
 	swiftStorageWatchFields = []string{
+		caBundleSecretNameField,
 		topologyField,
 	}
 	swiftProxyWatchFields = []string{

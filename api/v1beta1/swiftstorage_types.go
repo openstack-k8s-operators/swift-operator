@@ -18,6 +18,7 @@ package v1beta1
 
 import (
 	condition "github.com/openstack-k8s-operators/lib-common/modules/common/condition"
+	"github.com/openstack-k8s-operators/lib-common/modules/common/tls"
 	topologyv1 "github.com/openstack-k8s-operators/infra-operator/apis/topology/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -45,6 +46,11 @@ type SwiftStorageSpec struct {
 	// +kubebuilder:validation:Required
 	// Image URL for Swift proxy service
 	ContainerImageProxy string `json:"containerImageProxy"`
+
+	// +kubebuilder:validation:Optional
+	// +operator-sdk:csv:customresourcedefinitions:type=spec
+	// TLS - Parameters related to the TLS
+	TLS tls.Ca `json:"tls,omitempty"`
 }
 
 // SwiftStorageSpecCore -

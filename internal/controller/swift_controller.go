@@ -482,6 +482,7 @@ func (r *SwiftReconciler) storageCreateOrUpdate(ctx context.Context, instance *s
 		ContainerImageContainer: instance.Spec.SwiftStorage.ContainerImageContainer,
 		ContainerImageObject:    instance.Spec.SwiftStorage.ContainerImageObject,
 		ContainerImageProxy:     instance.Spec.SwiftStorage.ContainerImageProxy,
+		TLS:                     instance.Spec.SwiftProxy.TLS.Ca,
 		SwiftStorageSpecCore: swiftv1.SwiftStorageSpecCore{
 			Replicas:                instance.Spec.SwiftStorage.Replicas,
 			StorageClass:            instance.Spec.SwiftStorage.StorageClass,

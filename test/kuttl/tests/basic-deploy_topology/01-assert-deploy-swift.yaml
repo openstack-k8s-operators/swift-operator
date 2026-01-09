@@ -26,6 +26,10 @@ status:
     reason: Ready
     status: "True"
     type: SwiftStorageReady
+  - message: Input data complete
+    reason: Ready
+    status: 'True'
+    type: TLSInputReady
   - message: Topology config create completed
     reason: Ready
     status: "True"
