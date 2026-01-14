@@ -33,6 +33,18 @@ func ConfigMapTemplates(instance *swiftv1beta1.SwiftStorage,
 	templateParameters := make(map[string]any)
 	templateParameters["MemcachedServers"] = mc.GetMemcachedServerListString()
 	templateParameters["MemcachedTLS"] = mc.GetMemcachedTLSSupport()
+
+	// MTLS params
+	if mc.Status.MTLSCert != "" {
+		templateParameters["MemcachedAuthCert"] = fmt.Sprint(memcachedv1.CertMountPath())
+		templateParameters["MemcachedAuthKey"] = fmt.Sprint(memcachedv1.KeyMountPath())
+		templateParameters["MemcachedAuthCa"] = fmt.Sprint(memcachedv1.CaMountPath())
+	} else {
+		templateParameters["MemcachedAuthCert"] = ""
+		templateParameters["MemcachedAuthKey"] = ""
+		templateParameters["MemcachedAuthCa"] = ""
+	}
+
 	templateParameters["BindIP"] = bindIP
 
 	customData := map[string]string{}
