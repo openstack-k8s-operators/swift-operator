@@ -7,10 +7,10 @@ require (
 	github.com/gophercloud/gophercloud/v2 v2.8.0
 	github.com/k8snetworkplumbingwg/network-attachment-definition-client v1.7.7
 	github.com/onsi/ginkgo/v2 v2.27.4
-	github.com/onsi/gomega v1.38.3
-	github.com/openstack-k8s-operators/barbican-operator/api v0.6.1-0.20260103080915-12e13441d600
-	github.com/openstack-k8s-operators/infra-operator/apis v0.6.1-0.20260108154501-11e5091cddf1
-	github.com/openstack-k8s-operators/keystone-operator/api v0.6.1-0.20260109123729-8c46aa6cb459
+	github.com/onsi/gomega v1.39.0
+	github.com/openstack-k8s-operators/barbican-operator/api v0.6.1-0.20260120161353-806412094e64
+	github.com/openstack-k8s-operators/infra-operator/apis v0.6.1-0.20260123105816-865d02e287a9
+	github.com/openstack-k8s-operators/keystone-operator/api v0.6.1-0.20260120112029-cd452f0497ba
 	github.com/openstack-k8s-operators/lib-common/modules/ansible v0.6.1-0.20251230215914-6ba873b49a35
 	github.com/openstack-k8s-operators/lib-common/modules/common v0.6.1-0.20251230215914-6ba873b49a35
 	github.com/openstack-k8s-operators/lib-common/modules/openstack v0.6.1-0.20251230215914-6ba873b49a35
