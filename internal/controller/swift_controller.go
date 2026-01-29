@@ -545,6 +545,7 @@ func (r *SwiftReconciler) proxyCreateOrUpdate(ctx context.Context, instance *swi
 			EncryptionEnabled:      instance.Spec.SwiftProxy.EncryptionEnabled,
 			RabbitMqClusterName:    instance.Spec.SwiftProxy.RabbitMqClusterName,
 			CeilometerEnabled:      instance.Spec.SwiftProxy.CeilometerEnabled,
+			NotificationsBus:       instance.Spec.SwiftProxy.NotificationsBus,
 			NodeSelector:           instance.Spec.SwiftProxy.NodeSelector,
 			TopologyRef:            instance.Spec.SwiftProxy.TopologyRef,
 			RingConfigMaps:         instance.Spec.RingConfigMaps,

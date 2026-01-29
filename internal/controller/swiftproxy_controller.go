@@ -1076,10 +1076,16 @@ func (r *SwiftProxyReconciler) transportURLCreateOrUpdate(
 	}
 
 	op, err := controllerutil.CreateOrUpdate(ctx, r.Client, transportURL, func() error {
-		transportURL.Spec.RabbitmqClusterName = instance.Spec.RabbitMqClusterName
-
-		err := controllerutil.SetControllerReference(instance, transportURL, r.Scheme)
-		return err
+		if instance.Spec.NotificationsBus != nil {
+			transportURL.Spec.RabbitmqClusterName = instance.Spec.NotificationsBus.Cluster
+			// Always set Username and Vhost to allow clearing/resetting them
+			// The infra-operator TransportURL controller handles empty values:
+			// - Empty Username: uses default cluster admin credentials
+			// - Empty Vhost: defaults to "/" vhost
+			transportURL.Spec.Username = instance.Spec.NotificationsBus.User
+			transportURL.Spec.Vhost = instance.Spec.NotificationsBus.Vhost
+		}
+		return controllerutil.SetControllerReference(instance, transportURL, r.Scheme)
 	})
 
 	return transportURL, op, err

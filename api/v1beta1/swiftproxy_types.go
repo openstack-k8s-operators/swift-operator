@@ -17,6 +17,7 @@ limitations under the License.
 package v1beta1
 
 import (
+	rabbitmqv1 "github.com/openstack-k8s-operators/infra-operator/apis/rabbitmq/v1beta1"
 	topologyv1 "github.com/openstack-k8s-operators/infra-operator/apis/topology/v1beta1"
 	condition "github.com/openstack-k8s-operators/lib-common/modules/common/condition"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/service"
@@ -80,10 +81,10 @@ type SwiftProxySpecCore struct {
 	// Memcached instance name.
 	MemcachedInstance string `json:"memcachedInstance"`
 
-	// +kubebuilder:validation:Required
-	// +kubebuilder:default=rabbitmq
+	// +kubebuilder:validation:Optional
+	// Deprecated: Use NotificationsBus.Cluster instead
 	// RabbitMQ instance name to request a transportURL for Ceilometer middleware
-	RabbitMqClusterName string `json:"rabbitMqClusterName"`
+	RabbitMqClusterName string `json:"rabbitMqClusterName,omitempty"`
 
 	// +kubebuilder:validation:Optional
 	// +operator-sdk:csv:customresourcedefinitions:type=spec
@@ -128,6 +129,10 @@ type SwiftProxySpecCore struct {
 	// +listType=atomic
 	// List of ring ConfigMaps
 	RingConfigMaps []string `json:"ringConfigMaps"`
+
+	// +kubebuilder:validation:Optional
+	// NotificationsBus configuration (username, vhost, and cluster)
+	NotificationsBus *rabbitmqv1.RabbitMqConfig `json:"notificationsBus,omitempty"`
 }
 
 // ProxyOverrideSpec to override the generated manifest of several child resources.
