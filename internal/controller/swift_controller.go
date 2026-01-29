@@ -540,6 +540,7 @@ func (r *SwiftReconciler) proxyCreateOrUpdate(ctx context.Context, instance *swi
 			NetworkAttachments:     instance.Spec.SwiftProxy.NetworkAttachments,
 			MemcachedInstance:      instance.Spec.MemcachedInstance,
 			TLS:                    instance.Spec.SwiftProxy.TLS,
+			Auth:                   instance.Spec.SwiftProxy.Auth,
 			DefaultConfigOverwrite: instance.Spec.SwiftProxy.DefaultConfigOverwrite,
 			EncryptionEnabled:      instance.Spec.SwiftProxy.EncryptionEnabled,
 			RabbitMqClusterName:    instance.Spec.SwiftProxy.RabbitMqClusterName,

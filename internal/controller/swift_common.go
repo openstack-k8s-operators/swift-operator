@@ -22,14 +22,14 @@ import (
 	"fmt"
 	"time"
 
+	topologyv1 "github.com/openstack-k8s-operators/infra-operator/apis/topology/v1beta1"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/condition"
+	"github.com/openstack-k8s-operators/lib-common/modules/common/env"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/helper"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/secret"
-	"k8s.io/apimachinery/pkg/types"
 
-	topologyv1 "github.com/openstack-k8s-operators/infra-operator/apis/topology/v1beta1"
-	"github.com/openstack-k8s-operators/lib-common/modules/common/env"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -42,6 +42,7 @@ const (
 	tlsAPIInternalField     = ".spec.tls.api.internal.secretName"
 	tlsAPIPublicField       = ".spec.tls.api.public.secretName"
 	topologyField           = ".spec.topologyRef.Name"
+	authAppCredSecretField  = ".spec.auth.applicationCredentialSecret" //nolint:gosec // G101:
 )
 
 var (
@@ -55,6 +56,7 @@ var (
 		tlsAPIInternalField,
 		tlsAPIPublicField,
 		topologyField,
+		authAppCredSecretField,
 	}
 )
 
