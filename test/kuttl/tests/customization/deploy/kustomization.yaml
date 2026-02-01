@@ -13,6 +13,10 @@ patches:
     - op: replace
       path: /spec/swiftProxy/ceilometerEnabled
       value: true
+    - op: add
+      path: /spec/swiftProxy/notificationsBus
+      value:
+        cluster: rabbitmq
     - op: replace
       path: /spec/swiftProxy/encryptionEnabled
       value: true

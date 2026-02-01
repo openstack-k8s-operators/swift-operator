@@ -296,6 +296,10 @@ func main() {
 			setupLog.Error(err, "unable to create webhook", "webhook", "Swift")
 			os.Exit(1)
 		}
+		if err := webhookv1beta1.SetupSwiftProxyWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "SwiftProxy")
+			os.Exit(1)
+		}
 		checker = mgr.GetWebhookServer().StartedChecker()
 	}
 	// +kubebuilder:scaffold:builder

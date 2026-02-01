@@ -24,6 +24,26 @@ webhooks:
     resources:
     - swifts
   sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-swift-openstack-org-v1beta1-swiftproxy
+  failurePolicy: Fail
+  name: mswiftproxy-v1beta1.kb.io
+  rules:
+  - apiGroups:
+    - swift.openstack.org
+    apiVersions:
+    - v1beta1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - swiftproxies
+  sideEffects: None
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
@@ -49,4 +69,24 @@ webhooks:
     - UPDATE
     resources:
     - swifts
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-swift-openstack-org-v1beta1-swiftproxy
+  failurePolicy: Fail
+  name: vswiftproxy-v1beta1.kb.io
+  rules:
+  - apiGroups:
+    - swift.openstack.org
+    apiVersions:
+    - v1beta1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - swiftproxies
   sideEffects: None

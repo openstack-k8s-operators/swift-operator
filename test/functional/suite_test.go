@@ -78,7 +78,8 @@ var _ = BeforeSuite(func() {
 	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
 
 	var err error
-	ctx := context.TODO()
+	var ctx context.Context
+	ctx, cancel = context.WithCancel(context.TODO())
 
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{
@@ -164,6 +165,8 @@ var _ = BeforeSuite(func() {
 	swiftv1.SetupDefaults()
 
 	err = webhookv1.SetupSwiftWebhookWithManager(k8sManager)
+	Expect(err).NotTo(HaveOccurred())
+	err = webhookv1.SetupSwiftProxyWebhookWithManager(k8sManager)
 	Expect(err).NotTo(HaveOccurred())
 	go func() {
 		defer GinkgoRecover()
