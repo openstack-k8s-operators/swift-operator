@@ -96,6 +96,33 @@ continue to run on the controlplane, and all Swift storage services will run on
 dataplane nodes. It is recommended to not mix storage on PVs and dataplane
 nodes permanently.
 
+> **_NOTE:_** If there are no Swift dataplane nodes configured and `swiftStorage`
+> replicas are set to 0 ring building is not possible (because there are no
+> nodes/disks until dataplane nodes are defined), and as a result `swiftProxy`
+> won't start until the dataplane is created. Therefore it is recommended to
+> start Swift proxies after creating the dataplane and set both `swiftProxy` as
+> well as `swiftStorage` replicas to 0 when creating the OpenStackControlPlane
+> CR, for example:
+
+```
+apiVersion: core.openstack.org/v1beta1
+kind: OpenStackControlPlane
+metadata:
+  name: openstack-galera-network-isolation
+  namespace: openstack
+spec:
+  ...
+  swift:
+    enabled: true
+    template:
+      swiftProxy:
+        replicas: 0
+      swiftRing:
+        ringReplicas: 3
+      swiftStorage:
+        replicas: 0
+```
+
 An `OpenStackDataPlaneDeployment` can use one or more
 `OpenStackDataPlaneNodeSet`. Each `OpenStackDataPlaneNodeSet` can use different
 disk and configuration settings to allow fine-grained control. Further
@@ -106,8 +133,7 @@ To deploy and run Swift storage services on dataplane nodes, you need to create
 an `OpenStackDataPlaneNodeSet` with the following properties:
 
 1. Included `swift` service
-2. Sysctl setting to allow binding on port 873 for unprivileged rsync process
-3. List of disks to be used for storage in Swift
+2. List of disks to be used for storage in Swift
 
 You also need to enable DNS forwarding to resolve dataplane hostnames within
 the controlplane pods. First get the `clusterIP` of the resolver:
@@ -158,24 +184,6 @@ to the end of the services list, for example:
 ```
 
 This runs the required playbooks to configure Swift storage services.
-
-### Add required sysctl setting for rsync
-
-<!-- TODO: this section needs to be removed once this is set by default -->
-Rsync is used to replicate data between nodes. It uses port 873 for this, which
-is a privileged port by default. However, rsync is running unprivileged within
-rootless podman, and thus needs an additional setting to allow binding to port
-873.
-This setting needs to be added to the `nodeTemplate` section, for example:
-
-```
-  nodeTemplate:
-    ansible:
-      ansibleVars:
-        edpm_kernel_sysctl_extra_settings:
-          net.ipv4.ip_unprivileged_port_start:
-            value: 873
-```
 
 ### Define disks to be used by Swift on the dataplane nodes
 
