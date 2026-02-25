@@ -497,12 +497,13 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return ctrl.Result{}, err
 	}
 
+	validateFields := map[string]secret.Validator{
+		instance.Spec.PasswordSelectors.Service: secret.PasswordValidator{},
+	}
 	result, err = verifyServiceSecret(
 		ctx,
 		types.NamespacedName{Namespace: instance.Namespace, Name: instance.Spec.Secret},
-		[]string{
-			instance.Spec.PasswordSelectors.Service,
-		},
+		validateFields,
 		helper.GetClient(),
 		&instance.Status.Conditions,
 		time.Duration(10)*time.Second,
