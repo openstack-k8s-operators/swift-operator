@@ -165,6 +165,7 @@ func Deployment(
 							Command:                  []string{"/usr/sbin/httpd"},
 							Args:                     []string{"-DFOREGROUND"},
 							TerminationMessagePolicy: corev1.TerminationMessageFallbackToLogsOnError,
+							Resources:                instance.Spec.Resources,
 						},
 						{
 							Image:           instance.Spec.ContainerImageProxy,
@@ -180,6 +181,7 @@ func Deployment(
 							LivenessProbe:  livenessProbe,
 							VolumeMounts:   volumeMounts,
 							Command:        []string{"/usr/bin/swift-proxy-server", "/etc/swift/proxy-server.conf.d", "-v"},
+							Resources:      instance.Spec.Resources,
 						},
 					},
 				},
