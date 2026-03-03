@@ -274,6 +274,7 @@ func (in *SwiftProxySpecCore) DeepCopyInto(out *SwiftProxySpecCore) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	in.Resources.DeepCopyInto(&out.Resources)
 	in.TLS.DeepCopyInto(&out.TLS)
 	out.Auth = in.Auth
 	if in.DefaultConfigOverwrite != nil {
@@ -712,6 +713,7 @@ func (in *SwiftStorageSpecCore) DeepCopyInto(out *SwiftStorageSpecCore) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	in.Resources.DeepCopyInto(&out.Resources)
 	if in.DefaultConfigOverwrite != nil {
 		in, out := &in.DefaultConfigOverwrite, &out.DefaultConfigOverwrite
 		*out = make(map[string]string, len(*in))

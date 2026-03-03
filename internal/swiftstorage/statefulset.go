@@ -52,6 +52,7 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage, env []corev1.
 			VolumeMounts:    volumeMounts,
 			Command:         []string{"/usr/bin/swift-account-server", "/etc/swift/account-server.conf.d", "-v"},
 			Env:             env,
+			Resources:       swiftstorage.Spec.Resources,
 		},
 		{
 			Name:            "account-replicator",
@@ -89,6 +90,7 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage, env []corev1.
 			VolumeMounts:    volumeMounts,
 			Command:         []string{"/usr/bin/swift-container-server", "/etc/swift/container-server.conf.d", "-v"},
 			Env:             env,
+			Resources:       swiftstorage.Spec.Resources,
 		},
 		{
 			Name:            "container-replicator",
@@ -126,6 +128,7 @@ func getStorageContainers(swiftstorage *swiftv1beta1.SwiftStorage, env []corev1.
 			VolumeMounts:    volumeMounts,
 			Command:         []string{"/usr/bin/swift-object-server", "/etc/swift/object-server.conf.d", "-v"},
 			Env:             env,
+			Resources:       swiftstorage.Spec.Resources,
 		},
 		{
 			Name:            "object-replicator",
