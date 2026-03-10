@@ -1,10 +1,8 @@
 apiVersion: kuttl.dev/v1beta1
 kind: TestStep
-delete:
-- apiVersion: swift.openstack.org/v1beta1
-  kind: Swift
-  name: swift
 commands:
+- script: |
+    oc kustomize deploy | oc delete --wait=true -n $NAMESPACE -f -
 - script: |
     oc delete --ignore-not-found=true -n $NAMESPACE pvc swift-swift-storage-0
     oc delete --ignore-not-found=true -n $NAMESPACE pvc swift-swift-storage-1
