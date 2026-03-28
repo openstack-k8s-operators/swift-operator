@@ -494,6 +494,7 @@ func (r *SwiftReconciler) storageCreateOrUpdate(ctx context.Context, instance *s
 			NodeSelector:            instance.Spec.SwiftStorage.NodeSelector,
 			TopologyRef:             instance.Spec.SwiftProxy.TopologyRef,
 			RingConfigMaps:          instance.Spec.RingConfigMaps,
+			Resources:               instance.Spec.SwiftStorage.Resources,
 		},
 	}
 
@@ -549,6 +550,7 @@ func (r *SwiftReconciler) proxyCreateOrUpdate(ctx context.Context, instance *swi
 			NodeSelector:           instance.Spec.SwiftProxy.NodeSelector,
 			TopologyRef:            instance.Spec.SwiftProxy.TopologyRef,
 			RingConfigMaps:         instance.Spec.RingConfigMaps,
+			Resources:              instance.Spec.SwiftProxy.Resources,
 		},
 	}
 
