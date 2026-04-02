@@ -19,7 +19,6 @@ package controller
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"time"
 
@@ -440,15 +439,18 @@ func (r *SwiftStorageReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		for _, swiftPod := range podList.Items {
 			dnsIP := ""
 			if len(instance.Spec.NetworkAttachments) > 0 {
-				dnsIP, err = getPodIPInNetwork(swiftPod, instance.Namespace, "storagemgmt")
-
-				if err != nil {
-					previousErr := err
-					dnsIP, err = getPodIPInNetwork(swiftPod, instance.Namespace, "storage")
+				for _, network := range []string{"storage", "storagemgmt"} {
+					dnsIP, err = getPodIPInNetwork(swiftPod, instance.Namespace, network)
 					if err != nil {
-						err = errors.Join(previousErr, err)
 						return ctrl.Result{}, err
 					}
+					if dnsIP != "" {
+						break
+					}
+				}
+				// If this is reached it means that no IP was found, construct error and return
+				if dnsIP == "" {
+					return ctrl.Result{}, fmt.Errorf("%w %s", swift.ErrPodIPAddressRetrieval, swiftPod.Name)
 				}
 			}
 
@@ -640,7 +642,6 @@ func getPodIPInNetwork(swiftPod corev1.Pod, namespace string, networkAttachment 
 		}
 	}
 
-	// If this is reached it means that no IP was found, construct error and return
-	err = fmt.Errorf("%w %s in network %s", swift.ErrPodIPAddressRetrieval, swiftPod.Name, networkAttachment)
-	return "", err
+	// Network not found on this pod - return empty string, not an error
+	return "", nil
 }
