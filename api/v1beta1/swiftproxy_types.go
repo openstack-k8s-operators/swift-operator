@@ -173,6 +173,9 @@ type SwiftProxyStatus struct {
 	// TransportURLSecret - Secret containing RabbitMQ transportURL
 	TransportURLSecret string `json:"transportURLSecret,omitempty"`
 
+	// ApplicationCredentialSecret - Secret that SwiftProxy is actively consuming (AC consumer finalizer present)
+	ApplicationCredentialSecret string `json:"applicationCredentialSecret,omitempty"`
+
 	// ObservedGeneration - the most recent generation observed for this
 	// service. If the observed generation is less than the spec generation,
 	// then the controller has not processed the latest changes injected by
