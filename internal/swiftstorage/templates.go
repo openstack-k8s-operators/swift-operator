@@ -60,5 +60,12 @@ func ConfigMapTemplates(instance *swiftv1beta1.SwiftStorage,
 			ConfigOptions: templateParameters,
 			CustomData:    customData,
 		},
+		{
+			Name:         XattrRestoreScriptConfigMap,
+			Namespace:    instance.Namespace,
+			Type:         util.TemplateTypeScripts,
+			InstanceType: instance.Kind,
+			Labels:       labels,
+		},
 	}
 }

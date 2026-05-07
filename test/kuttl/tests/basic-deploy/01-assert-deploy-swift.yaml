@@ -68,6 +68,11 @@ status:
       started: true
 ---
 apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: swift-xattr-restore-script
+---
+apiVersion: v1
 kind: Pod
 metadata:
   labels:
@@ -75,6 +80,11 @@ metadata:
     service: swift
   name: swift-storage-0
 spec:
+  initContainers:
+  - name: xattr-restore
+    command:
+    - sh
+    - /scripts/xattr-restore.sh
   containers:
   - command:
     - /usr/bin/swift-account-server

@@ -18,6 +18,7 @@ package swiftstorage
 
 import (
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/utils/ptr"
 
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
 	"github.com/openstack-k8s-operators/swift-operator/internal/swift"
@@ -121,6 +122,17 @@ func getStorageVolumes(instance *swiftv1beta1.SwiftStorage) []corev1.Volume {
 			Name: "lock",
 			VolumeSource: corev1.VolumeSource{
 				EmptyDir: &corev1.EmptyDirVolumeSource{Medium: ""},
+			},
+		},
+		{
+			Name: "xattr-scripts",
+			VolumeSource: corev1.VolumeSource{
+				ConfigMap: &corev1.ConfigMapVolumeSource{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: XattrRestoreScriptConfigMap,
+					},
+					DefaultMode: ptr.To(int32(0755)),
+				},
 			},
 		},
 	}

@@ -19,4 +19,7 @@ package swiftstorage
 const (
 	// ComponentName -
 	ComponentName = "swift-storage"
+
+	// XattrRestoreScriptConfigMap is the ConfigMap name for the xattr restore script
+	XattrRestoreScriptConfigMap = "swift-xattr-restore-script"
 )
