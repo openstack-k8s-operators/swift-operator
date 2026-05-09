@@ -8,12 +8,12 @@ require (
 	github.com/k8snetworkplumbingwg/network-attachment-definition-client v1.7.7
 	github.com/onsi/ginkgo/v2 v2.28.2
 	github.com/onsi/gomega v1.40.0
-	github.com/openstack-k8s-operators/barbican-operator/api v0.6.1-0.20260428063333-0a225c8d5510
-	github.com/openstack-k8s-operators/infra-operator/apis v0.6.1-0.20260429072348-e2e8eaa49a92
-	github.com/openstack-k8s-operators/keystone-operator/api v0.6.1-0.20260425213537-3fb7aab1c5a4
-	github.com/openstack-k8s-operators/lib-common/modules/ansible v0.6.1-0.20260430090237-a4265c18a162
-	github.com/openstack-k8s-operators/lib-common/modules/common v0.6.1-0.20260430090237-a4265c18a162
-	github.com/openstack-k8s-operators/lib-common/modules/openstack v0.6.1-0.20260430090237-a4265c18a162
+	github.com/openstack-k8s-operators/barbican-operator/api v0.6.1-0.20260503170320-6895f6339b76
+	github.com/openstack-k8s-operators/infra-operator/apis v0.6.1-0.20260508091801-73f228e6af31
+	github.com/openstack-k8s-operators/keystone-operator/api v0.6.1-0.20260507114237-f0b612d6c21f
+	github.com/openstack-k8s-operators/lib-common/modules/ansible v0.6.1-0.20260506154724-30a976ba8ef0
+	github.com/openstack-k8s-operators/lib-common/modules/common v0.6.1-0.20260506154724-30a976ba8ef0
+	github.com/openstack-k8s-operators/lib-common/modules/openstack v0.6.1-0.20260506154724-30a976ba8ef0
 	github.com/openstack-k8s-operators/swift-operator/api v0.3.1-0.20240523121736-379011b2cfac
 	k8s.io/api v0.31.14
 	k8s.io/apimachinery v0.31.14
@@ -61,7 +61,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.3-0.20250322232337-35a7c28c31ee // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/openshift/api v3.9.0+incompatible // indirect
-	github.com/openstack-k8s-operators/lib-common/modules/storage v0.6.1-0.20260417092244-81c71b39e981 // indirect
+	github.com/openstack-k8s-operators/lib-common/modules/storage v0.6.1-0.20260430090237-a4265c18a162 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_golang v1.22.0 // indirect
 	github.com/prometheus/client_model v0.6.2 // indirect
