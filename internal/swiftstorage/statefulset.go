@@ -306,6 +306,30 @@ func StatefulSet(
 	statefulset.Spec.Template.Spec.Volumes = volumes
 	statefulset.Spec.Template.Spec.Containers = getStorageContainers(swiftstorage, env, volumeMounts)
 
+	// Add init container to restore xattrs from dump before Swift services start.
+	// On normal startup (no dump file), the script exits immediately.
+	securityContext := swift.GetSecurityContext()
+	statefulset.Spec.Template.Spec.InitContainers = []corev1.Container{
+		{
+			Name:    "xattr-restore",
+			Image:   swiftstorage.Spec.ContainerImageObject,
+			Command: []string{"sh", "/scripts/xattr-restore.sh"},
+			VolumeMounts: []corev1.VolumeMount{
+				{
+					Name:      swift.ClaimName,
+					MountPath: "/srv/node/pv",
+					ReadOnly:  false,
+				},
+				{
+					Name:      "xattr-scripts",
+					MountPath: "/scripts",
+					ReadOnly:  true,
+				},
+			},
+			SecurityContext: &securityContext,
+		},
+	}
+
 	if swiftstorage.Spec.NodeSelector != nil {
 		statefulset.Spec.Template.Spec.NodeSelector = *swiftstorage.Spec.NodeSelector
 	}
