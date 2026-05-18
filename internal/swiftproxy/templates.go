@@ -94,13 +94,14 @@ func SecretTemplates(
 
 	return []util.Template{
 		{
-			Name:          fmt.Sprintf("%s-config-data", instance.Name),
-			Namespace:     instance.Namespace,
-			Type:          util.TemplateTypeConfig,
-			InstanceType:  instance.Kind,
-			ConfigOptions: templateParameters,
-			Labels:        labels,
-			CustomData:    customData,
+			Name:            fmt.Sprintf("%s-config-data", instance.Name),
+			Namespace:       instance.Namespace,
+			Type:            util.TemplateTypeConfig,
+			InstanceType:    instance.Kind,
+			ConfigOptions:   templateParameters,
+			Labels:          labels,
+			CustomData:      customData,
+			CommonTemplates: []string{"ssl.conf"},
 		},
 	}
 }
