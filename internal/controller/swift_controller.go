@@ -38,6 +38,7 @@ import (
 	"github.com/openstack-k8s-operators/lib-common/modules/common/condition"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/env"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/helper"
+	"github.com/openstack-k8s-operators/lib-common/modules/common/object"
 	common_rbac "github.com/openstack-k8s-operators/lib-common/modules/common/rbac"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/secret"
 	swiftv1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
@@ -240,8 +241,8 @@ func (r *SwiftReconciler) reconcileNormal(ctx context.Context, instance *swiftv1
 
 	instance.Status.Conditions.MarkTrue(condition.ServiceConfigReadyCondition, condition.ServiceConfigReadyMessage)
 
-	// Ensure backup labels on the swift-conf Secret for existing environments
-	if err := r.reconcileSwiftConfLabels(ctx, instance); err != nil {
+	// Ensure backup labels and finalizer on the swift-conf Secret
+	if err := r.reconcileSwiftConfMetaData(ctx, instance, helper); err != nil {
 		return ctrl.Result{}, err
 	}
 
@@ -420,9 +421,10 @@ func (r *SwiftReconciler) reconcileNormal(ctx context.Context, instance *swiftv1
 	return ctrl.Result{}, nil
 }
 
-// reconcileSwiftConfLabels ensures backup labels are set on the swift-conf
-// Secret for existing environments that were created before backup support.
-func (r *SwiftReconciler) reconcileSwiftConfLabels(ctx context.Context, instance *swiftv1.Swift) error {
+// reconcileSwiftConfMetaData ensures backup labels and a finalizer are set on
+// the swift-conf Secret. The finalizer prevents accidental deletion which would
+// cause regeneration of swift_hash_path_prefix/suffix and data loss.
+func (r *SwiftReconciler) reconcileSwiftConfMetaData(ctx context.Context, instance *swiftv1.Swift, h *helper.Helper) error {
 	swiftConfSecret := &corev1.Secret{}
 	err := r.Get(ctx, client.ObjectKey{
 		Name:      swift.SwiftConfSecretName,
@@ -437,6 +439,10 @@ func (r *SwiftReconciler) reconcileSwiftConfLabels(ctx context.Context, instance
 
 	if _, err := backup.EnsureBackupLabels(ctx, r.Client, swiftConfSecret,
 		backup.GetRestoreLabels(backup.RestoreOrder10, backup.CategoryControlPlane)); err != nil {
+		return err
+	}
+
+	if err := object.AddConsumerFinalizer(ctx, h, swiftConfSecret, h.GetFinalizer()); err != nil {
 		return err
 	}
 	return nil
@@ -455,12 +461,27 @@ func (r *SwiftReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func (r *SwiftReconciler) reconcileDelete(ctx context.Context, instance *swiftv1.Swift, helper *helper.Helper) (ctrl.Result, error) {
+func (r *SwiftReconciler) reconcileDelete(ctx context.Context, instance *swiftv1.Swift, h *helper.Helper) (ctrl.Result, error) {
 	Log := r.GetLogger(ctx)
 	Log.Info(fmt.Sprintf("Reconciling Service '%s' delete", instance.Name))
 
+	// Remove the finalizer from the swift-conf Secret so it can be removed
+	swiftConfSecret := &corev1.Secret{}
+	err := r.Get(ctx, client.ObjectKey{
+		Name:      swift.SwiftConfSecretName,
+		Namespace: instance.Namespace,
+	}, swiftConfSecret)
+	if err != nil && !apierrors.IsNotFound(err) {
+		return ctrl.Result{}, err
+	}
+	if err == nil {
+		if err := object.RemoveConsumerFinalizer(ctx, h, swiftConfSecret, h.GetFinalizer()); err != nil {
+			return ctrl.Result{}, err
+		}
+	}
+
 	// Service is deleted so remove the finalizer.
-	controllerutil.RemoveFinalizer(instance, helper.GetFinalizer())
+	controllerutil.RemoveFinalizer(instance, h.GetFinalizer())
 	Log.Info(fmt.Sprintf("Reconciled Service '%s' delete successfully", instance.Name))
 
 	return ctrl.Result{}, nil
