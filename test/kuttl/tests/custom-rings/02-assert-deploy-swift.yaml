@@ -1,0 +1,46 @@
+# Assert that the Swift CR is deployed and ready
+apiVersion: swift.openstack.org/v1beta1
+kind: Swift
+metadata:
+  name: swift
+---
+# Verify that the Swift CR is ready and custom ring files are properly deployed
+apiVersion: kuttl.dev/v1beta1
+kind: TestAssert
+timeout: 600
+commands:
+  - script: |
+      # Wait for Swift CR to be Ready
+      oc wait --for=condition=Ready swift/swift -n $NAMESPACE --timeout=300s
+
+      # Wait for swift-storage-0 pod to be Ready
+      oc wait --for=condition=Ready pod/swift-storage-0 -n $NAMESPACE --timeout=300s
+
+      # Verify the live Swift deployment is using the externally generated object ring
+      echo "Checking object.ring.gz..."
+      if oc exec -n $NAMESPACE swift-storage-0 -c object-server -- zcat /etc/swift/object.ring.gz | grep -q -a "external ring testing"; then
+        echo "object.ring.gz: External ring metadata found"
+      else
+        echo "object.ring.gz: External ring marker NOT found!"
+        exit 1
+      fi
+
+      # Verify account.ring.gz
+      echo "Checking account.ring.gz..."
+      if oc exec -n $NAMESPACE swift-storage-0 -c account-server -- zcat /etc/swift/account.ring.gz | grep -q -a "external ring testing"; then
+        echo "account.ring.gz: External ring metadata found"
+      else
+        echo "account.ring.gz: External ring marker NOT found!"
+        exit 1
+      fi
+
+      # Verify container.ring.gz
+      echo "Checking container.ring.gz..."
+      if oc exec -n $NAMESPACE swift-storage-0 -c container-server -- zcat /etc/swift/container.ring.gz | grep -q -a "external ring testing"; then
+        echo "container.ring.gz: External ring metadata found"
+      else
+        echo "container.ring.gz: External ring marker NOT found!"
+        exit 1
+      fi
+
+      echo "SUCCESS: All custom ring files validated"

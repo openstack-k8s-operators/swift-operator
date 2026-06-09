@@ -1,0 +1,15 @@
+apiVersion: swift.openstack.org/v1beta1
+kind: Swift
+metadata:
+  name: swift
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app.kubernetes.io/name: SwiftProxy
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: swift-storage-0
