@@ -1,0 +1,14 @@
+apiVersion: swift.openstack.org/v1beta1
+kind: Swift
+metadata:
+  name: swift
+spec:
+  swiftRing:
+    ringReplicas: 1
+  swiftStorage:
+    storageClass: local-storage
+    replicas: 1
+  swiftProxy:
+    replicas: 1
+    passwordSelectors:
+      service: SwiftPassword

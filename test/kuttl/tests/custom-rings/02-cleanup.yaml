@@ -1,0 +1,13 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestStep
+commands:
+  - script: |
+      echo "Cleaning up replica for custom-ring tests..."
+      oc delete swift swift -n $NAMESPACE --wait=true --timeout=180s || true
+      oc delete configmap swift-ring-files -n $NAMESPACE --wait=true || true
+
+      # Extra insurance: wait for pods to fully terminate
+      echo "Waiting for pods to terminate"
+      timeout 60 bash -c 'while oc get pods -n '$NAMESPACE' 2>/dev/null | grep -q swift-storage; do sleep 3; done' || true
+
+      echo "Cleanup complete"

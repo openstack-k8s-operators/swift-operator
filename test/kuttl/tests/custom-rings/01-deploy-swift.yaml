@@ -1,0 +1,16 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestStep
+commands:
+  - script: |
+      # 1. Cleanup from previous test
+      oc delete swift swift -n $NAMESPACE --wait=true || true
+      oc delete configmap swift-ring-files -n $NAMESPACE --wait=true || true
+
+      # 2. Re-create the ConfigMap using custom-rings binaries
+      oc create configmap swift-ring-files --from-file=./rings/ -n $NAMESPACE --dry-run=client -o yaml | oc apply -f -
+
+      # 3. Pull a fresh sample configuration to overlay against
+      cp ../../../../config/samples/swift_v1beta1_swift.yaml deploy/
+
+      # 4. Deploy swift replica, custom-ring environment
+      oc kustomize deploy | oc apply -n $NAMESPACE -f -
