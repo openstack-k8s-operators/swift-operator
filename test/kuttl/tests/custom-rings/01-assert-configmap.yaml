@@ -1,0 +1,7 @@
+# This assertion verifies that the swift-ring-files ConfigMap was successfully created
+# by the 01-configmap.yaml step. It only checks for the existence of the ConfigMap resource.
+# The actual validation of ring file contents happens in 02-assert.yaml when checking
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: swift-ring-files

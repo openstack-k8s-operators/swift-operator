@@ -1,0 +1,11 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestStep
+commands:
+  - script: |
+      # Step 2: Deploy Swift application
+
+      # Pull a fresh sample configuration to overlay against
+      cp ../../../../config/samples/swift_v1beta1_swift.yaml deploy/
+
+      # Deploy swift replica, custom-ring environment
+      oc kustomize deploy | oc apply -n $NAMESPACE -f -

@@ -1,0 +1,17 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestStep
+commands:
+  - script: |
+      # Step 1: Create ConfigMap with compressed ring files
+
+      # Compress ring files
+      mkdir -p /tmp/rings-compressed
+      for ring in ./rings/*.ring; do
+        gzip -c "$ring" > "/tmp/rings-compressed/$(basename $ring).gz"
+      done
+
+      # Create the ConfigMap with compressed ring files
+      oc create configmap swift-ring-files --from-file=/tmp/rings-compressed/ -n $NAMESPACE --dry-run=client -o yaml | oc apply -f -
+
+      # Cleanup temporary compressed files
+      rm -rf /tmp/rings-compressed
