@@ -76,7 +76,7 @@ func getRingVolumes(instance *swiftv1beta1.SwiftRing) []corev1.Volume {
 		{
 			Name: "dispersionconf",
 			VolumeSource: corev1.VolumeSource{
-				Secret: &corev1.SecretVolumeSource{
+				Secret: &corev1.SecretVolumeSource{ //nolint:gosec
 					SecretName: "swift-proxy-config-data",
 					Optional:   &trueVal,
 					Items: []corev1.KeyToPath{
