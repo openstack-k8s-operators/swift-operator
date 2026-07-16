@@ -25,7 +25,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -43,8 +42,6 @@ func SetupSwiftProxyDefaults(defaults SwiftProxyDefaults) {
 	swiftProxyDefaults = defaults
 	swiftproxylog.Info("SwiftProxy defaults initialized", "defaults", defaults)
 }
-
-var _ webhook.Defaulter = &SwiftProxy{}
 
 // Default implements webhook.Defaulter so a webhook will be registered for the type
 func (r *SwiftProxy) Default() {
@@ -64,8 +61,6 @@ func (spec *SwiftProxySpecCore) Default() {
 	// Migration from deprecated fields is handled by openstack-operator
 	// This ensures users make a conscious choice about which cluster to use for notifications
 }
-
-var _ webhook.Validator = &SwiftProxy{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
 func (r *SwiftProxy) ValidateCreate() (admission.Warnings, error) {
