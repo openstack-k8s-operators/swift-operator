@@ -120,10 +120,10 @@ github.com/openshift/api v0.0.0-20250711200046-c86d80652a9e h1:E1OdwSpqWuDPCedyU
 github.com/openshift/api v0.0.0-20250711200046-c86d80652a9e/go.mod h1:Shkl4HanLwDiiBzakv+con/aMGnVE2MAGvoKp5oyYUo=
 github.com/openstack-k8s-operators/barbican-operator/api v0.6.1-0.20260709095505-acf75638b7a4 h1:SP4j+xw6fQtPPgpYtHH2Xo3QRMqrRmGG1wq7fih1u+E=
 github.com/openstack-k8s-operators/barbican-operator/api v0.6.1-0.20260709095505-acf75638b7a4/go.mod h1:a+wFPiqQhtGtTF/227if/bnnfKC4tW6M6xsIxwNz/d8=
-github.com/openstack-k8s-operators/infra-operator/apis v0.6.1-0.20260710164830-340f812c81ca h1:9n506eeVVRF7UaRF1stYZl6qPQxJsd3BxtV0eidnJSg=
-github.com/openstack-k8s-operators/infra-operator/apis v0.6.1-0.20260710164830-340f812c81ca/go.mod h1:fcTuxQ/hzNBPxCf99vbsBt7dgZ3W12gUthaCXSvkPr8=
-github.com/openstack-k8s-operators/keystone-operator/api v0.6.1-0.20260704172639-4075e9e6846e h1:myeVNLjWjxppDwCoZX2J1PFl/OBHvE5xTF3z4Z4diAg=
-github.com/openstack-k8s-operators/keystone-operator/api v0.6.1-0.20260704172639-4075e9e6846e/go.mod h1:D3WzG1jp6dc5MYWLjT9nOou3crgRUR/Z1xKWAjRpz3A=
+github.com/openstack-k8s-operators/infra-operator/apis v0.6.1-0.20260714061029-2a213855a69a h1:yumCTOswIap5yrBfxolgxKyOE3+9QdOn/dAU3pQvxlY=
+github.com/openstack-k8s-operators/infra-operator/apis v0.6.1-0.20260714061029-2a213855a69a/go.mod h1:fcTuxQ/hzNBPxCf99vbsBt7dgZ3W12gUthaCXSvkPr8=
+github.com/openstack-k8s-operators/keystone-operator/api v0.6.1-0.20260714171609-17efb11fedd9 h1:3yVxqPHPcQkEmq69J+2YV09PVcSQKgK36lcU3k48Kwg=
+github.com/openstack-k8s-operators/keystone-operator/api v0.6.1-0.20260714171609-17efb11fedd9/go.mod h1:D3WzG1jp6dc5MYWLjT9nOou3crgRUR/Z1xKWAjRpz3A=
 github.com/openstack-k8s-operators/lib-common/modules/ansible v0.6.1-0.20260618132757-fe8e60d1d8a6 h1:ANxnGopxqws+5bAqg409p0Ov7O/ORvSjTkhw70YE3sM=
 github.com/openstack-k8s-operators/lib-common/modules/ansible v0.6.1-0.20260618132757-fe8e60d1d8a6/go.mod h1:tXxVkkk8HlATwTmDA5RTP3b+c8apfuMM15mZ2wW5iNs=
 github.com/openstack-k8s-operators/lib-common/modules/common v0.6.1-0.20260618132757-fe8e60d1d8a6 h1:aIc5ECO3dubv265jjUZ66oi56kf5iUt8Y1DWmCPrzOc=
