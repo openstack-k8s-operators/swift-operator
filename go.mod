@@ -3,17 +3,17 @@ module github.com/openstack-k8s-operators/swift-operator
 go 1.26.3
 
 require (
-	github.com/go-logr/logr v1.4.3
+	github.com/go-logr/logr v1.4.4
 	github.com/gophercloud/gophercloud/v2 v2.13.0
 	github.com/k8snetworkplumbingwg/network-attachment-definition-client v1.7.7
 	github.com/onsi/ginkgo/v2 v2.32.0
 	github.com/onsi/gomega v1.42.1
-	github.com/openstack-k8s-operators/barbican-operator/api v0.6.1-0.20260725064144-56d4ccd62ace
-	github.com/openstack-k8s-operators/infra-operator/apis v0.6.1-0.20260723061748-8e83ce5712b8
-	github.com/openstack-k8s-operators/keystone-operator/api v0.6.1-0.20260720124128-6bf975c3f1fa
-	github.com/openstack-k8s-operators/lib-common/modules/ansible v0.6.1-0.20260720124130-43c2e8c4a368
-	github.com/openstack-k8s-operators/lib-common/modules/common v0.6.1-0.20260720124130-43c2e8c4a368
-	github.com/openstack-k8s-operators/lib-common/modules/openstack v0.6.1-0.20260720124130-43c2e8c4a368
+	github.com/openstack-k8s-operators/barbican-operator/api v0.6.1-0.20260729083246-3e216723b71f
+	github.com/openstack-k8s-operators/infra-operator/apis v0.6.1-0.20260730063539-63801d0ec158
+	github.com/openstack-k8s-operators/keystone-operator/api v0.6.1-0.20260728100426-1496c8fa744f
+	github.com/openstack-k8s-operators/lib-common/modules/ansible v0.6.1-0.20260725150913-e043d277ea5b
+	github.com/openstack-k8s-operators/lib-common/modules/common v0.6.1-0.20260725150913-e043d277ea5b
+	github.com/openstack-k8s-operators/lib-common/modules/openstack v0.6.1-0.20260725150913-e043d277ea5b
 	github.com/openstack-k8s-operators/swift-operator/api v0.0.0-00010101000000-000000000000
 	k8s.io/api v0.33.13
 	k8s.io/apimachinery v0.33.13
