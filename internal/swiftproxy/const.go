@@ -25,4 +25,6 @@ const (
 
 	// ACConsumerFinalizer is added to AC secrets that SwiftProxy is actively consuming
 	ACConsumerFinalizer = "openstack.org/swiftproxy-ac-consumer"
+	// TransportConsumerFinalizer is added to transport URL secrets that SwiftProxy is actively consuming
+	TransportConsumerFinalizer = "openstack.org/swiftproxy-transport-consumer"
 )
