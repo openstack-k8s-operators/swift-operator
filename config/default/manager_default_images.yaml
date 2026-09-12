@@ -12,10 +12,10 @@ spec:
       - name: manager
         env:
         - name: RELATED_IMAGE_SWIFT_PROXY_IMAGE_URL_DEFAULT
-          value: quay.io/podified-antelope-centos9/openstack-swift-proxy-server:current-podified
+          value: quay.io/openstack-k8s-operators/openstack-swift-proxy-server:master-latest
         - name: RELATED_IMAGE_SWIFT_ACCOUNT_IMAGE_URL_DEFAULT
-          value: quay.io/podified-antelope-centos9/openstack-swift-account:current-podified
+          value: quay.io/openstack-k8s-operators/openstack-swift-account:master-latest
         - name: RELATED_IMAGE_SWIFT_CONTAINER_IMAGE_URL_DEFAULT
-          value: quay.io/podified-antelope-centos9/openstack-swift-container:current-podified
+          value: quay.io/openstack-k8s-operators/openstack-swift-container:master-latest
         - name: RELATED_IMAGE_SWIFT_OBJECT_IMAGE_URL_DEFAULT
-          value: quay.io/podified-antelope-centos9/openstack-swift-object:current-podified
+          value: quay.io/openstack-k8s-operators/openstack-swift-object:master-latest

@@ -472,7 +472,7 @@ The following defines a shell alias to swift-ring-builder, executed by podman
 using a container image and mounts the current directory into the container:
 
 ```
-alias swift-ring-builder="podman run -it --userns=keep-id:uid=42445 -v .:/etc/swift:Z -w /etc/swift quay.io/podified-antelope-centos9/openstack-swift-proxy-server:current-podified swift-ring-builder"
+alias swift-ring-builder="podman run -it --userns=keep-id:uid=42445 -v .:/etc/swift:Z -w /etc/swift quay.io/openstack-k8s-operators/openstack-swift-proxy-server:master-latest swift-ring-builder"
 ```
 
 It is recommended to use a dedicated directory for the swift ring files and
