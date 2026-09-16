@@ -25,10 +25,10 @@ import (
 
 const (
 	// Container image fall-back defaults
-	ContainerImageAccount   = "quay.io/podified-antelope-centos9/openstack-swift-account:current-podified"
-	ContainerImageContainer = "quay.io/podified-antelope-centos9/openstack-swift-container:current-podified"
-	ContainerImageObject    = "quay.io/podified-antelope-centos9/openstack-swift-object:current-podified"
-	ContainerImageProxy     = "quay.io/podified-antelope-centos9/openstack-swift-proxy-server:current-podified"
+	ContainerImageAccount   = "quay.io/openstack-k8s-operators/openstack-swift-account:master-latest"
+	ContainerImageContainer = "quay.io/openstack-k8s-operators/openstack-swift-container:master-latest"
+	ContainerImageObject    = "quay.io/openstack-k8s-operators/openstack-swift-object:master-latest"
+	ContainerImageProxy     = "quay.io/openstack-k8s-operators/openstack-swift-proxy-server:master-latest"
 
 	// ProxyAPITimeoutDefault  - Default timeout in seconds for HAProxy and Apache
 	ProxyAPITimeout = 60
