@@ -12,10 +12,10 @@ spec:
       - name: manager
         env:
         - name: RELATED_IMAGE_SWIFT_PROXY_IMAGE_URL_DEFAULT
-          value: quay.io/openstack-k8s-operators/openstack-swift-proxy-server:master-latest
+          value: quay.io/openstack-s2i-containers/openstack-swift-proxy-server:master-latest
         - name: RELATED_IMAGE_SWIFT_ACCOUNT_IMAGE_URL_DEFAULT
-          value: quay.io/openstack-k8s-operators/openstack-swift-account:master-latest
+          value: quay.io/openstack-s2i-containers/openstack-swift-account:master-latest
         - name: RELATED_IMAGE_SWIFT_CONTAINER_IMAGE_URL_DEFAULT
-          value: quay.io/openstack-k8s-operators/openstack-swift-container:master-latest
+          value: quay.io/openstack-s2i-containers/openstack-swift-container:master-latest
         - name: RELATED_IMAGE_SWIFT_OBJECT_IMAGE_URL_DEFAULT
-          value: quay.io/openstack-k8s-operators/openstack-swift-object:master-latest
+          value: quay.io/openstack-s2i-containers/openstack-swift-object:master-latest
