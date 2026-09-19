@@ -122,8 +122,8 @@ github.com/openstack-k8s-operators/barbican-operator/api v0.6.1-0.20260905071939
 github.com/openstack-k8s-operators/barbican-operator/api v0.6.1-0.20260905071939-59d9fb7e0ffc/go.mod h1:pIDJCOVT0omZo/mZl1ew0MBMHxL4Ggzd+KeMgU1V5Ek=
 github.com/openstack-k8s-operators/infra-operator/apis v0.6.1-0.20260819062923-cd3a98825751 h1:+iCqRE+yDaIXKKliozCpCrsEx8AsO/e7VuM1ESfle4o=
 github.com/openstack-k8s-operators/infra-operator/apis v0.6.1-0.20260819062923-cd3a98825751/go.mod h1:fcTuxQ/hzNBPxCf99vbsBt7dgZ3W12gUthaCXSvkPr8=
-github.com/openstack-k8s-operators/keystone-operator/api v0.6.1-0.20260822073001-151656f3723d h1:u6RpI0hsS/uAuzdqlj1KQYn43G0d+72wpsq/aKhbiDk=
-github.com/openstack-k8s-operators/keystone-operator/api v0.6.1-0.20260822073001-151656f3723d/go.mod h1:pKukBEnDWy0roCpev6BBse7mflux83dOr3LjYy/7EWU=
+github.com/openstack-k8s-operators/keystone-operator/api v0.6.1-0.20260913082219-f8eae4b7b167 h1:87ys2GgRqCNbHXrycErUHeElicFBWhaik01w8kuA/r4=
+github.com/openstack-k8s-operators/keystone-operator/api v0.6.1-0.20260913082219-f8eae4b7b167/go.mod h1:pKukBEnDWy0roCpev6BBse7mflux83dOr3LjYy/7EWU=
 github.com/openstack-k8s-operators/lib-common/modules/ansible v0.6.1-0.20260618132757-fe8e60d1d8a6 h1:ANxnGopxqws+5bAqg409p0Ov7O/ORvSjTkhw70YE3sM=
 github.com/openstack-k8s-operators/lib-common/modules/ansible v0.6.1-0.20260618132757-fe8e60d1d8a6/go.mod h1:tXxVkkk8HlATwTmDA5RTP3b+c8apfuMM15mZ2wW5iNs=
 github.com/openstack-k8s-operators/lib-common/modules/common v0.6.1-0.20260618132757-fe8e60d1d8a6 h1:aIc5ECO3dubv265jjUZ66oi56kf5iUt8Y1DWmCPrzOc=
