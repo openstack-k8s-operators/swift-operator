@@ -25,10 +25,10 @@ import (
 
 const (
 	// Container image fall-back defaults
-	ContainerImageAccount   = "quay.io/openstack-k8s-operators/openstack-swift-account:master-latest"
-	ContainerImageContainer = "quay.io/openstack-k8s-operators/openstack-swift-container:master-latest"
-	ContainerImageObject    = "quay.io/openstack-k8s-operators/openstack-swift-object:master-latest"
-	ContainerImageProxy     = "quay.io/openstack-k8s-operators/openstack-swift-proxy-server:master-latest"
+	ContainerImageAccount   = "quay.io/openstack-s2i-containers/openstack-swift-account:master-latest"
+	ContainerImageContainer = "quay.io/openstack-s2i-containers/openstack-swift-container:master-latest"
+	ContainerImageObject    = "quay.io/openstack-s2i-containers/openstack-swift-object:master-latest"
+	ContainerImageProxy     = "quay.io/openstack-s2i-containers/openstack-swift-proxy-server:master-latest"
 
 	// ProxyAPITimeoutDefault  - Default timeout in seconds for HAProxy and Apache
 	ProxyAPITimeout = 60
