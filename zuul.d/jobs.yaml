@@ -45,7 +45,7 @@
         - swift/swift-proxy-server
 
 - job:
-    name: swift-s2i-tempest
+    name: swift-s2i-test
     parent: s2i-test-base
     description: |
       Validate speculatively-built s2i swift images against a live
