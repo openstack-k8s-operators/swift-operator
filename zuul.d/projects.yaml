@@ -11,7 +11,7 @@
             dependencies:
               - openstack-k8s-operators-content-provider
         - swift-s2i-content-provider
-        - swift-s2i-tempest:
+        - swift-s2i-test:
             dependencies:
               - openstack-k8s-operators-content-provider
               - swift-s2i-content-provider
