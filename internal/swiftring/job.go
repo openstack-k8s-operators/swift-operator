@@ -18,7 +18,9 @@ package swiftring
 
 import (
 	"fmt"
+	"maps"
 
+	"github.com/openstack-k8s-operators/lib-common/modules/common"
 	"github.com/openstack-k8s-operators/lib-common/modules/common/env"
 
 	swiftv1beta1 "github.com/openstack-k8s-operators/swift-operator/api/v1beta1"
@@ -52,14 +54,21 @@ func GetRingJob(instance *swiftv1beta1.SwiftRing, labels map[string]string) *bat
 		volumeMounts = append(volumeMounts, instance.Spec.TLS.CreateVolumeMounts(nil)...)
 	}
 
+	podLabels := maps.Clone(labels)
+	podLabels[common.AppSelector] = swift.ServiceName
+	podLabels[common.ComponentSelector] = ComponentName
+
 	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      instance.Name + "-rebalance",
 			Namespace: instance.Namespace,
-			Labels:    labels,
+			Labels:    podLabels,
 		},
 		Spec: batchv1.JobSpec{
 			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: podLabels,
+				},
 				Spec: corev1.PodSpec{
 					RestartPolicy:      "OnFailure",
 					ServiceAccountName: swift.ServiceAccount,
