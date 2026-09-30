@@ -56,8 +56,3 @@
       cifmw_test_operator_tempest_include_list: |
         ^tempest.api.object_storage.
         ^tempest.scenario.test_object_storage_basic_ops..*
-      # Reenable when tempest >=43.0.0 is avilable, and namely:
-      # https://review.opendev.org/c/openstack/tempest/+/937416 (Idcaacfed5e0203760e9cb2911d93700d8cb63cb5)
-      # https://review.opendev.org/c/openstack/tempest/+/937782 (Id93acb1b75b3eda11fb770c86459b024640f1515)
-      cifmw_test_operator_tempest_expected_failures_list: |
-        tempest.api.object_storage.test_container_services.ContainerTest.test_create_container_with_metadata_value
