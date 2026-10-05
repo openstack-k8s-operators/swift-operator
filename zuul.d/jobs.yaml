@@ -19,17 +19,6 @@
         - swift
 
 - job:
-    name: swift-operator-antelope-tempest
-    parent: podified-multinode-edpm-deployment-crc-2comp
-    description: |
-      Test the old antelope containers with the newer operators.
-    irrelevant-files: *common-irrelevant-files
-    vars:
-      cifmw_test_operator_concurrency: 3
-      cifmw_test_operator_tempest_include_list: |
-        ^tempest.api.object_storage.
-
-- job:
     name: swift-s2i-content-provider
     parent: s2i-openstack-container-content-provider
     description: |

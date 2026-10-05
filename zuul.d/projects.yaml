@@ -35,9 +35,6 @@
         - swift-operator-kuttl:
             dependencies:
               - openstack-k8s-operators-content-provider
-        - swift-operator-antelope-tempest:
-            dependencies:
-              - openstack-k8s-operators-content-provider
         - swift-s2i-content-provider
         - swift-s2i-test:
             dependencies:
