@@ -20,7 +20,7 @@ import (
 	"fmt"
 
 	"github.com/openstack-k8s-operators/lib-common/modules/common/service"
-	common_webhook "github.com/openstack-k8s-operators/lib-common/modules/common/webhook"
+	"github.com/openstack-k8s-operators/lib-common/modules/common/webhook"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -37,6 +37,13 @@ var swiftProxyDefaults SwiftProxyDefaults
 
 // log is for logging in this package.
 var swiftproxylog = logf.Log.WithName("swiftproxy-resource")
+
+func validateServicePortNames(
+	basePath *field.Path,
+	overrides map[service.Endpoint]service.RoutedOverrideSpec,
+) field.ErrorList {
+	return webhook.ValidatePortNameOverrides(basePath, overrides, webhook.DefaultServicePortNames())
+}
 
 func SetupSwiftProxyDefaults(defaults SwiftProxyDefaults) {
 	swiftProxyDefaults = defaults
@@ -99,6 +106,7 @@ func (spec *SwiftProxySpecCore) ValidateCreate(basePath *field.Path, namespace s
 
 	// validate the service override key is valid
 	allErrs = append(allErrs, service.ValidateRoutedOverrides(basePath.Child("override").Child("service"), spec.Override.Service)...)
+	allErrs = append(allErrs, validateServicePortNames(basePath.Child("override").Child("service"), spec.Override.Service)...)
 
 	// validate TopologyRef namespace
 	allErrs = append(allErrs, spec.ValidateTopology(basePath, namespace)...)
@@ -157,6 +165,7 @@ func (spec *SwiftProxySpecCore) ValidateUpdate(old SwiftProxySpecCore, basePath 
 
 	// validate the service override key is valid
 	allErrs = append(allErrs, service.ValidateRoutedOverrides(basePath.Child("override").Child("service"), spec.Override.Service)...)
+	allErrs = append(allErrs, validateServicePortNames(basePath.Child("override").Child("service"), spec.Override.Service)...)
 
 	// validate TopologyRef namespace
 	allErrs = append(allErrs, spec.ValidateTopology(basePath, namespace)...)
@@ -181,14 +190,14 @@ func (r *SwiftProxy) ValidateDelete() (admission.Warnings, error) {
 }
 
 // getDeprecatedFields returns the centralized list of deprecated fields for SwiftProxySpecCore
-func (spec *SwiftProxySpecCore) getDeprecatedFields(old *SwiftProxySpecCore) []common_webhook.DeprecatedFieldUpdate {
+func (spec *SwiftProxySpecCore) getDeprecatedFields(old *SwiftProxySpecCore) []webhook.DeprecatedFieldUpdate {
 	// Handle NewValue pointer - NotificationsBus can be nil
 	var newValue *string
 	if spec.NotificationsBus != nil {
 		newValue = &spec.NotificationsBus.Cluster
 	}
 
-	deprecatedFields := []common_webhook.DeprecatedFieldUpdate{
+	deprecatedFields := []webhook.DeprecatedFieldUpdate{
 		{
 			DeprecatedFieldName: "rabbitMqClusterName",
 			NewFieldPath:        []string{"notificationsBus", "cluster"},
@@ -211,9 +220,9 @@ func (spec *SwiftProxySpecCore) validateDeprecatedFieldsCreate(basePath *field.P
 	deprecatedFieldsUpdate := spec.getDeprecatedFields(nil)
 
 	// Convert to DeprecatedField list for CREATE validation
-	deprecatedFields := make([]common_webhook.DeprecatedField, len(deprecatedFieldsUpdate))
+	deprecatedFields := make([]webhook.DeprecatedField, len(deprecatedFieldsUpdate))
 	for i, df := range deprecatedFieldsUpdate {
-		deprecatedFields[i] = common_webhook.DeprecatedField{
+		deprecatedFields[i] = webhook.DeprecatedField{
 			DeprecatedFieldName: df.DeprecatedFieldName,
 			NewFieldPath:        df.NewFieldPath,
 			DeprecatedValue:     df.NewDeprecatedValue,
@@ -221,12 +230,12 @@ func (spec *SwiftProxySpecCore) validateDeprecatedFieldsCreate(basePath *field.P
 		}
 	}
 
-	return common_webhook.ValidateDeprecatedFieldsCreate(deprecatedFields, basePath), nil
+	return webhook.ValidateDeprecatedFieldsCreate(deprecatedFields, basePath), nil
 }
 
 // validateDeprecatedFieldsUpdate validates deprecated fields during UPDATE operations
 func (spec *SwiftProxySpecCore) validateDeprecatedFieldsUpdate(old SwiftProxySpecCore, basePath *field.Path) ([]string, field.ErrorList) {
 	// Get deprecated fields list with old values
 	deprecatedFields := spec.getDeprecatedFields(&old)
-	return common_webhook.ValidateDeprecatedFieldsUpdate(deprecatedFields, basePath)
+	return webhook.ValidateDeprecatedFieldsUpdate(deprecatedFields, basePath)
 }
