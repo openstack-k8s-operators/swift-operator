@@ -130,6 +130,9 @@ func (r *SwiftSpec) ValidateCreate(basePath *field.Path, namespace string) field
 	allErrs = append(allErrs, service.ValidateRoutedOverrides(
 		basePath.Child("swiftProxy").Child("override").Child("service"),
 		r.SwiftProxy.Override.Service)...)
+	allErrs = append(allErrs, validateServicePortNames(
+		basePath.Child("swiftProxy").Child("override").Child("service"),
+		r.SwiftProxy.Override.Service)...)
 
 	return allErrs
 }
@@ -142,6 +145,9 @@ func (r *SwiftSpecCore) ValidateCreate(basePath *field.Path, namespace string) f
 
 	// validate the service override key is valid
 	allErrs = append(allErrs, service.ValidateRoutedOverrides(
+		basePath.Child("swiftProxy").Child("override").Child("service"),
+		r.SwiftProxy.Override.Service)...)
+	allErrs = append(allErrs, validateServicePortNames(
 		basePath.Child("swiftProxy").Child("override").Child("service"),
 		r.SwiftProxy.Override.Service)...)
 
@@ -204,6 +210,9 @@ func (r *SwiftSpec) ValidateUpdate(old SwiftSpec, basePath *field.Path, namespac
 	allErrs = append(allErrs, service.ValidateRoutedOverrides(
 		basePath.Child("swiftProxy").Child("override").Child("service"),
 		r.SwiftProxy.Override.Service)...)
+	allErrs = append(allErrs, validateServicePortNames(
+		basePath.Child("swiftProxy").Child("override").Child("service"),
+		r.SwiftProxy.Override.Service)...)
 
 	return allErrs
 }
@@ -235,6 +244,9 @@ func (r *SwiftSpecCore) ValidateUpdate(old SwiftSpecCore, basePath *field.Path, 
 
 	// validate the service override key is valid
 	allErrs = append(allErrs, service.ValidateRoutedOverrides(
+		basePath.Child("swiftProxy").Child("override").Child("service"),
+		r.SwiftProxy.Override.Service)...)
+	allErrs = append(allErrs, validateServicePortNames(
 		basePath.Child("swiftProxy").Child("override").Child("service"),
 		r.SwiftProxy.Override.Service)...)
 

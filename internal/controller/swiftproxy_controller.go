@@ -345,7 +345,7 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 				Labels:    exportLabels,
 				Selector:  serviceLabels,
 				Port: service.GenericServicePort{
-					Name:     endpointName,
+					Name:     endpointTypeStr,
 					Port:     data.Port,
 					Protocol: corev1.ProtocolTCP,
 				},
@@ -368,6 +368,10 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 			service.AnnotationEndpointKey: endpointTypeStr,
 		})
 
+		// Drop a hostname registration left by a previous release or a former
+		// LoadBalancer; it is re-added below only when still wanted.
+		svc.RemoveAnnotation(service.AnnotationHostnameKey)
+
 		// add Annotation to whether creating an ingress is required or not
 		if endpointType == service.EndpointPublic && svc.GetServiceType() == corev1.ServiceTypeClusterIP {
 			svc.AddAnnotation(map[string]string{
@@ -377,7 +381,10 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 			svc.AddAnnotation(map[string]string{
 				service.AnnotationIngressCreateKey: "false",
 			})
-			if svc.GetServiceType() == corev1.ServiceTypeLoadBalancer {
+			// The public endpoint's DNS is user-managed (its hostname is the
+			// endpointURL host, not the in-cluster Service name), so skip
+			// registering it in dnsmasq even when it is a LoadBalancer.
+			if svc.GetServiceType() == corev1.ServiceTypeLoadBalancer && endpointType != service.EndpointPublic {
 				svc.AddAnnotation(map[string]string{
 					service.AnnotationHostnameKey: svc.GetServiceHostname(), // add annotation to register service name in dnsmasq
 				})
@@ -628,7 +635,7 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	}
 
 	// Create a Secret populated with content from templates/
-	tpl := swiftproxy.SecretTemplates(
+	tpl, err := swiftproxy.SecretTemplates(
 		instance,
 		serviceLabels,
 		keystonePublicURL,
@@ -644,6 +651,15 @@ func (r *SwiftProxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		acID,
 		acSecret,
 	)
+	if err != nil {
+		instance.Status.Conditions.Set(condition.FalseCondition(
+			condition.ServiceConfigReadyCondition,
+			condition.ErrorReason,
+			condition.SeverityWarning,
+			condition.ServiceConfigReadyErrorMessage,
+			err.Error()))
+		return ctrl.Result{}, err
+	}
 	err = secret.EnsureSecrets(ctx, helper, instance, tpl, &envVars)
 	if err != nil {
 		instance.Status.Conditions.Set(condition.FalseCondition(
