@@ -87,71 +87,127 @@ spec:
     - /scripts/xattr-restore.sh
   containers:
   - command:
+    - /usr/bin/dumb-init
+    args:
+    - --single-child
+    - --
     - /usr/bin/swift-account-server
     - /etc/swift/account-server.conf.d
     - -v
     name: account-server
   - command:
+    - /usr/bin/dumb-init
+    args:
+    - --single-child
+    - --
     - /usr/bin/swift-account-replicator
     - /etc/swift/account-server.conf.d
     - -v
     name: account-replicator
   - command:
+    - /usr/bin/dumb-init
+    args:
+    - --single-child
+    - --
     - /usr/bin/swift-account-auditor
     - /etc/swift/account-server.conf.d
     - -v
     name: account-auditor
   - command:
+    - /usr/bin/dumb-init
+    args:
+    - --single-child
+    - --
     - /usr/bin/swift-account-reaper
     - /etc/swift/account-server.conf.d
     - -v
     name: account-reaper
   - command:
+    - /usr/bin/dumb-init
+    args:
+    - --single-child
+    - --
     - /usr/bin/swift-container-server
     - /etc/swift/container-server.conf.d
     - -v
     name: container-server
   - command:
+    - /usr/bin/dumb-init
+    args:
+    - --single-child
+    - --
     - /usr/bin/swift-container-replicator
     - /etc/swift/container-server.conf.d
     - -v
     name: container-replicator
   - command:
+    - /usr/bin/dumb-init
+    args:
+    - --single-child
+    - --
     - /usr/bin/swift-container-auditor
     - /etc/swift/container-server.conf.d
     - -v
     name: container-auditor
   - command:
+    - /usr/bin/dumb-init
+    args:
+    - --single-child
+    - --
     - /usr/bin/swift-container-updater
     - /etc/swift/container-server.conf.d
     - -v
     name: container-updater
   - command:
+    - /usr/bin/dumb-init
+    args:
+    - --single-child
+    - --
     - /usr/bin/swift-object-server
     - /etc/swift/object-server.conf.d
     - -v
     name: object-server
   - command:
+    - /usr/bin/dumb-init
+    args:
+    - --single-child
+    - --
     - /usr/bin/swift-object-replicator
     - /etc/swift/object-server.conf.d
     - -v
     name: object-replicator
   - command:
+    - /usr/bin/dumb-init
+    args:
+    - --single-child
+    - --
     - /usr/bin/swift-object-auditor
     - /etc/swift/object-server.conf.d
     - -v
     name: object-auditor
   - command:
+    - /usr/bin/dumb-init
+    args:
+    - --single-child
+    - --
     - /usr/bin/swift-object-updater
     - /etc/swift/object-server.conf.d
     - -v
     name: object-updater
   - command:
+    - /usr/bin/dumb-init
+    args:
+    - --single-child
+    - --
     - /usr/bin/swift-object-expirer
     - /etc/swift/object-expirer.conf.d
     - -v
     name: object-expirer
   - command:
+    - /usr/bin/dumb-init
+    args:
+    - --single-child
+    - --
     - /usr/bin/rsync
     - --daemon
     - --no-detach
@@ -159,6 +215,10 @@ spec:
     - --log-file=/dev/stdout
     name: rsync
   - command:
+    - /usr/bin/dumb-init
+    args:
+    - --single-child
+    - --
     - sh
     - -c
     - while true; do /usr/bin/swift-recon-cron /etc/swift/object-server.conf.d
