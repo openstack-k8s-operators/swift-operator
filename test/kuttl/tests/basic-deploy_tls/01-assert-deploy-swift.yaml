@@ -126,9 +126,12 @@ spec:
     spec:
       containers:
       - args:
+        - --single-child
+        - --
+        - /usr/sbin/httpd
         - -DFOREGROUND
         command:
-        - /usr/sbin/httpd
+        - /usr/bin/dumb-init
         livenessProbe:
           httpGet:
             scheme: HTTPS
@@ -172,6 +175,10 @@ spec:
           readOnly: true
           subPath: tls.key
       - command:
+        - /usr/bin/dumb-init
+        args:
+        - --single-child
+        - --
         - /usr/bin/swift-proxy-server
         - /etc/swift/proxy-server.conf.d
         - -v
