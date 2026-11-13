@@ -5,4 +5,13 @@ commands:
   - script: |
       # Make sure possibly reclaimed PV does not contain any old plaintext data before creating new data
       oc -n $NAMESPACE rsh -c object-server swift-storage-0 /bin/sh -c "rm -rf /srv/node/pv/objects/*"
-      oc debug -n $NAMESPACE --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c 'swift-ring-tool get && swift-dispersion-populate --object-only'
+      # The shared memcached may still hold account info cached by the previous
+      # test (recheck_account_existence, 60s). This test uses a different
+      # swift.conf hash and part power, so a stale hit makes the proxy skip
+      # account autocreate and the container PUT returns 404. Retry until the
+      # cache entry expired.
+      for i in $(seq 1 8); do
+        oc debug -n $NAMESPACE --keep-labels=true job/swift-ring-rebalance -- /bin/sh -c 'swift-ring-tool get && swift-dispersion-populate --object-only' && exit 0
+        sleep 10
+      done
+      exit 1

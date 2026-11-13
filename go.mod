@@ -11,9 +11,10 @@ require (
 	github.com/openstack-k8s-operators/barbican-operator/api v0.6.1-0.20261106092301-699ad9a7bc52
 	github.com/openstack-k8s-operators/infra-operator/apis v0.6.1-0.20261103163710-492c1c9c64d0
 	github.com/openstack-k8s-operators/keystone-operator/api v0.6.1-0.20261106113705-926c49438ebe
-	github.com/openstack-k8s-operators/lib-common/modules/ansible v0.6.1-0.20261102122626-a5970f05c6a9
-	github.com/openstack-k8s-operators/lib-common/modules/common v0.6.1-0.20261102122626-a5970f05c6a9
-	github.com/openstack-k8s-operators/lib-common/modules/openstack v0.6.1-0.20261102122626-a5970f05c6a9
+	github.com/openstack-k8s-operators/lib-common/modules/ansible v0.6.1-0.20261111093153-d3e5c656b371
+	github.com/openstack-k8s-operators/lib-common/modules/common v0.6.1-0.20261111093153-d3e5c656b371
+	github.com/openstack-k8s-operators/lib-common/modules/openstack v0.6.1-0.20261111093153-d3e5c656b371
+	github.com/openstack-k8s-operators/lib-common/modules/test v0.6.1-0.20261029132259-9d025389145b
 	github.com/openstack-k8s-operators/swift-operator/api v0.0.0-00010101000000-000000000000
 	k8s.io/api v0.33.13
 	k8s.io/apimachinery v0.33.13

@@ -29,9 +29,16 @@ import (
 	. "github.com/onsi/ginkgo/v2" //revive:disable:dot-imports
 	. "github.com/onsi/gomega"    //revive:disable:dot-imports
 
+	memcachedv1 "github.com/openstack-k8s-operators/infra-operator/apis/memcached/v1beta1"
+	rabbitmqv1 "github.com/openstack-k8s-operators/infra-operator/apis/rabbitmq/v1beta1"
+	topologyv1 "github.com/openstack-k8s-operators/infra-operator/apis/topology/v1beta1"
+	keystonev1 "github.com/openstack-k8s-operators/keystone-operator/api/v1beta1"
+	"github.com/openstack-k8s-operators/lib-common/modules/test"
+
 	//revive:disable-next-line:dot-imports
 	. "github.com/openstack-k8s-operators/lib-common/modules/common/test/helpers"
 
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
@@ -77,9 +84,15 @@ func TestAPIs(t *testing.T) {
 var _ = BeforeSuite(func() {
 	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
 
-	var err error
 	var ctx context.Context
 	ctx, cancel = context.WithCancel(context.TODO())
+
+	keystoneCRDs, err := test.GetCRDDirFromModule(
+		"github.com/openstack-k8s-operators/keystone-operator/api", "../../go.mod", "bases")
+	Expect(err).ShouldNot(HaveOccurred())
+	infraCRDs, err := test.GetCRDDirFromModule(
+		"github.com/openstack-k8s-operators/infra-operator/apis", "../../go.mod", "bases")
+	Expect(err).ShouldNot(HaveOccurred())
 
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{
@@ -89,6 +102,8 @@ var _ = BeforeSuite(func() {
 		ControlPlaneStopTimeout: 120 * time.Second,
 		CRDDirectoryPaths: []string{
 			filepath.Join("..", "..", "config", "crd", "bases"),
+			keystoneCRDs,
+			infraCRDs,
 		},
 		ErrorIfCRDPathMissing: true,
 		WebhookInstallOptions: envtest.WebhookInstallOptions{
@@ -115,6 +130,11 @@ var _ = BeforeSuite(func() {
 
 	err = swiftv1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
+	for _, add := range []func(*runtime.Scheme) error{
+		keystonev1.AddToScheme, memcachedv1.AddToScheme, rabbitmqv1.AddToScheme, topologyv1.AddToScheme,
+	} {
+		Expect(add(scheme.Scheme)).To(Succeed())
+	}
 	//+kubebuilder:scaffold:scheme
 
 	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme.Scheme})

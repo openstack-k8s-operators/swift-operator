@@ -43,7 +43,7 @@ func SecretTemplates(
 	useApplicationCredentials bool,
 	applicationCredentialID string,
 	applicationCredentialSecret string,
-) []util.Template {
+) ([]util.Template, error) {
 	templateParameters := make(map[string]any)
 	templateParameters["ServiceUser"] = instance.Spec.ServiceUser
 	templateParameters["ServicePassword"] = password
@@ -79,7 +79,16 @@ func SecretTemplates(
 	httpdVhostConfig := map[string]any{}
 	for _, endpt := range []service.Endpoint{service.EndpointInternal, service.EndpointPublic} {
 		endptConfig := map[string]any{}
-		endptConfig["ServerName"] = fmt.Sprintf("%s-%s.%s.svc", swift.ServiceName, endpt.String(), instance.Namespace)
+		defaultName := fmt.Sprintf("%s-%s.%s.svc", swift.ServiceName, endpt.String(), instance.Namespace)
+		serverName, serverAliases, err := service.GetVHostServerName(
+			instance.Spec.Override.Service[endpt],
+			defaultName,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("get %s vhost server name: %w", endpt, err)
+		}
+		endptConfig["ServerName"] = serverName
+		endptConfig["ServerAliases"] = serverAliases
 		endptConfig["TLS"] = false // default TLS to false, and set it bellow to true if enabled
 		if instance.Spec.TLS.API.Enabled(endpt) {
 			endptConfig["TLS"] = true
@@ -103,5 +112,5 @@ func SecretTemplates(
 			CustomData:      customData,
 			CommonTemplates: []string{"ssl.conf"},
 		},
-	}
+	}, nil
 }
