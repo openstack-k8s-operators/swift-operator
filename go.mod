@@ -139,3 +139,7 @@ replace k8s.io/kube-openapi => k8s.io/kube-openapi v0.0.0-20250318190949-c8a335a
 replace github.com/google/gnostic-models => github.com/google/gnostic-models v0.6.9 //allow-merging
 
 replace sigs.k8s.io/controller-runtime => sigs.k8s.io/controller-runtime v0.21.0 //allow-merging
+
+replace github.com/openstack-k8s-operators/lib-common/modules/common => github.com/fmount/lib-common/modules/common v0.0.0-20261119133733-b9adb5ae4b86
+
+replace github.com/openstack-k8s-operators/lib-common/modules/test => github.com/fmount/lib-common/modules/test v0.0.0-20261119133733-b9adb5ae4b86
