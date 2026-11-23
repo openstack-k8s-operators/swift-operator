@@ -89,6 +89,7 @@ func (r *SwiftProxyReconciler) GetLogger(ctx context.Context) logr.Logger {
 //+kubebuilder:rbac:groups=keystone.openstack.org,resources=keystoneendpoints,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=keystone.openstack.org,resources=keystoneservices,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=core,resources=secrets,verbs=get;list;watch;create;update;patch;delete;
+//+kubebuilder:rbac:groups=core,resources=configmaps,verbs=get;list;watch;
 //+kubebuilder:rbac:groups=k8s.cni.cncf.io,resources=network-attachment-definitions,verbs=get;list;watch
 //+kubebuilder:rbac:groups=memcached.openstack.org,resources=memcacheds,verbs=get;list;watch;
 //+kubebuilder:rbac:groups=barbican.openstack.org,resources=barbicanapis,verbs=get;list;watch
@@ -1038,6 +1039,11 @@ func (r *SwiftProxyReconciler) SetupWithManager(ctx context.Context, mgr ctrl.Ma
 		Watches(&keystonev1.KeystoneAPI{},
 			handler.EnqueueRequestsFromMapFunc(r.findObjectForSrc),
 			builder.WithPredicates(keystonev1.KeystoneAPIStatusChangedPredicate)).
+		// Reconcile when the well-known TLS profile ConfigMap maintained by
+		// the openstack-operator changes, so rendered configs pick up the
+		// new cluster-wide TLS defaults.
+		Watches(&corev1.ConfigMap{},
+			util.WatchDefaultTemplateConfigMap(r.Client, &swiftv1beta1.SwiftProxy{})).
 		Complete(r)
 }
 
